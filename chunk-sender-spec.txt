@@ -50,8 +50,9 @@ chunking data for batch model analysis
 
 Using Java 8, given a comma-separated file called "data.csv" with the following structure:
 line 1 : header
-Each line after line 1 consists of a "quote enclosed string", number (either zero or one)
-within the quote enclosed string are space-separated tokens
+Each line after line 1 consists of a "quote enclosed string", then a comma, and then a digit (either zero or one).
+This digit is known as the label.
+Within the "quote enclosed string" are space-separated tokens
 
 From the lines in "data.csv", generate a number of other files. Each of these other files
 will contain processed data from each line of "data.csv". The processed data will comprise
@@ -70,20 +71,17 @@ the file generated when k = 8 and m = 64 will  be named "data_8_64.csv".
 Each line in the file "data_k_m.csv" will be generated as follows:
 For each of the data lines (line 2 and above) in the original file "data.csv", create a new set of lines in "data_k_m.csv" as follows (assume that currentLine refers to the line being processed in "data.csv". Each line
 will be terminated by a newline character :
-write out the first k tokens from the currentLine
-write out the first 2*k tokens from the currentLine
-write out the first 3*k tokens from the currentLine
+write out the first k tokens from the currentLine (within double quotes) followed by a comma, and then the label
+write out the first 2*k tokens from the currentLine (within double quotes) followed by a comma, and then the label
+write out the first 3*k tokens from the currentLine (within double quotes) followed by a comma, and then the label
 ....
-write out (m-1)*k tokens from the current line
-write out m*k tokens from the current line
+write out (m-1)*k tokens from the current line (within double quotes) followed by a comma, and then the label
+write out m*k tokens from the current line (within double quotes) followed by a comma, and then the label
 
-For the remaining tokens in the currentLine - starting from (m+1)th token :
+For the remaining tokens in the currentLine :
 
-concatenate the prior (m-1)*k tokens with the next k tokens
-and keep doing this until all the tokens on the the current line have been processed.
-
-If the line is less than 512 tokens, then generate as many newlines as possible from the currentLine
-using the rules above.
+concatenate the prior (m-1)*k tokens with the next k tokens (within double quotes) followed by a comma, and then the label
+Keep advancing as described above (k tokens at a time) until all the tokens on the the current line have been processed.
 
 Put as much of the code as possible into a method or methods, and minimize the code in the main method.
 
@@ -116,14 +114,16 @@ public class ProcessCsv {
 
             try (BufferedWriter writer = Files.newBufferedWriter(outputPath)) {
                 for (String currentLine : lines) {
-                    String[] tokens = currentLine.split(",")[0].replaceAll("\"", "").split(" ");
+                    String[] parts = currentLine.split(",");
+                    String[] tokens = parts[0].replaceAll("\"", "").split(" ");
+                    String label = parts[1];
 
                     for (int i = 1; i <= m; i++) {
-                        writeTokens(writer, tokens, 0, i * k);
+                        writeTokens(writer, tokens, 0, i * k, label);
                     }
 
                     for (int i = m * k; i < tokens.length - k; i += k) {
-                        writeTokens(writer, tokens, i - (m - 1) * k, i + k);
+                        writeTokens(writer, tokens, i - (m - 1) * k, i + k, label);
                     }
                 }
             }
@@ -132,11 +132,12 @@ public class ProcessCsv {
         }
     }
 
-    private static void writeTokens(BufferedWriter writer, String[] tokens, int start, int end) throws IOException {
+    private static void writeTokens(BufferedWriter writer, String[] tokens, int start, int end, String label) throws IOException {
         List<String> subList = Arrays.asList(tokens).subList(start, Math.min(end, tokens.length));
-        String line = String.join(" ", subList) + "\n";
+        String line = "\"" + String.join(" ", subList) + "\"," + label + "\n";
         writer.write(line);
     }
 }
+
 
 
