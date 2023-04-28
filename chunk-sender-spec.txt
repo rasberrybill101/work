@@ -17,26 +17,29 @@ private void sendBatch(List<Chunk> chunksToSend, Set<Integer> sentIds) {
 public void sendChunks(List<Chunk> chunksToSend, int minInterval, int maxInterval) {
     int batchSize = (int) chunksToSend.stream().map(Chunk::getConvID).distinct().count();
 
-    List<Chunk> remainingChunks = new ArrayList<>(chunksToSend);
-
-    while (!remainingChunks.isEmpty()) {
+    while (true) {
         Set<Integer> sentIds = new HashSet<>();
 
-        Iterator<Chunk> iterator = remainingChunks.iterator();
-        while (iterator.hasNext() && sentIds.size() < batchSize) {
-            Chunk chunk = iterator.next();
-            if (!sentIds.contains(chunk.getConvID())) {
-                receiveChunk(chunk.getConvID(), chunk.getText(), chunk.isEndOfConversation());
-                sentIds.add(chunk.getConvID());
-                iterator.remove();
-            }
+        while (sentIds.size() < batchSize) {
+            sendBatch(chunksToSend, sentIds);
         }
-		Random random = new Random();
-        int waitDuration = minInterval + random.nextInt(maxInterval - minInterval + 1);
+
+        int interval = ThreadLocalRandom.current().nextInt(minInterval, maxInterval + 1);
         try {
-            Thread.sleep(waitDuration);
+            Thread.sleep(interval);
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
     }
+}
+
+public static int findMaxValue(HashMap<String, Integer> map) {
+	if (map == null || map.isEmpty()) {
+		throw new IllegalArgumentException("The hashmap must not be null or empty.");
+	}
+
+	return map.values().stream()
+			   .mapToInt(Integer::intValue)
+			   .max()
+			   .orElseThrow(() -> new NoSuchElementException("Cannot find max value in an empty hashmap"));
 }
