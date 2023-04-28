@@ -43,3 +43,100 @@ public static int findMaxValue(HashMap<String, Integer> map) {
 			   .max()
 			   .orElseThrow(() -> new NoSuchElementException("Cannot find max value in an empty hashmap"));
 }
+
+======================================
+chunking data for batch model analysis
+======================================
+
+Using Java 8, given a comma-separated file called "data.csv" with the following structure:
+line 1 : header
+Each line after line 1 consists of a "quote enclosed string", number (either zero or one)
+within the quote enclosed string are space-separated tokens
+
+From the lines in "data.csv", generate a number of other files. Each of these other files
+will contain processed data from each line of "data.csv". The processed data will comprise
+lines generated as follows:
+For each line in "data.csv", two integer values "k" and "m" will be used to generate the lines
+for a file which will be named "data_k_m.csv" where k and m are integers such that the product
+of "k" and "m" is the largest integer less than or equal to 512.
+Thus, given k, then  m is the integer result of 512 divided by k. For example:
+if k == 1, then m == 512
+if k == 2, then m == 256
+if k == 3, then m == 178
+etc.
+A method is to be written, passing in the initial value of "k". From this value, "m" will be calculated.
+Then k and m will be applied to each line in "data.csv" to generate a new file "data_k_m.csv". For instance,
+the file generated when k = 8 and m = 64 will  be named "data_8_64.csv".
+Each line in the file "data_k_m.csv" will be generated as follows:
+For each of the data lines (line 2 and above) in the original file "data.csv", create a new set of lines in "data_k_m.csv" as follows (assume that currentLine refers to the line being processed in "data.csv". Each line
+will be terminated by a newline character :
+write out the first k tokens from the currentLine
+write out the first 2*k tokens from the currentLine
+write out the first 3*k tokens from the currentLine
+....
+write out (m-1)*k tokens from the current line
+write out m*k tokens from the current line
+
+For the remaining tokens in the currentLine - starting from (m+1)th token :
+
+concatenate the prior (m-1)*k tokens with the next k tokens
+and keep doing this until all the tokens on the the current line have been processed.
+
+If the line is less than 512 tokens, then generate as many newlines as possible from the currentLine
+using the rules above.
+
+Put as much of the code as possible into a method or methods, and minimize the code in the main method.
+
+import java.io.BufferedWriter;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.Arrays;
+import java.util.List;
+
+public class ProcessCsv {
+    public static void main(String[] args) {
+        int k = 8; // You can change this value
+        processCsvFile(k, "data.csv");
+    }
+
+    private static void processCsvFile(int k, String inputFilename) {
+        int m = 512 / k;
+        String outputFilename = "data_" + k + "_" + m + ".csv";
+
+        try {
+            Path inputPath = Paths.get(inputFilename);
+            Path outputPath = Paths.get(outputFilename);
+
+            List<String> lines = Files.readAllLines(inputPath);
+
+            // Skip the header line
+            lines.remove(0);
+
+            try (BufferedWriter writer = Files.newBufferedWriter(outputPath)) {
+                for (String currentLine : lines) {
+                    String[] tokens = currentLine.split(",")[0].replaceAll("\"", "").split(" ");
+
+                    for (int i = 1; i <= m; i++) {
+                        writeTokens(writer, tokens, 0, i * k);
+                    }
+
+                    for (int i = m * k; i < tokens.length - k; i += k) {
+                        writeTokens(writer, tokens, i - (m - 1) * k, i + k);
+                    }
+                }
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private static void writeTokens(BufferedWriter writer, String[] tokens, int start, int end) throws IOException {
+        List<String> subList = Arrays.asList(tokens).subList(start, Math.min(end, tokens.length));
+        String line = String.join(" ", subList) + "\n";
+        writer.write(line);
+    }
+}
+
+
