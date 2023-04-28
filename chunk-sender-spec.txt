@@ -85,6 +85,10 @@ Keep advancing as described above (k tokens at a time) until all the tokens on t
 
 Put as much of the code as possible into a method or methods, and minimize the code in the main method.
 
+There is a major mistake in this code. Let's fix the first one. The input lines in the csv file has one part that is quoted and the other part that is a number like this:
+"this is the first part, and it is quoted, and contains commas",1
+"again another first part for another line",0
+
 import java.io.BufferedWriter;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -92,6 +96,8 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public class ProcessCsv {
     public static void main(String[] args) {
@@ -114,16 +120,20 @@ public class ProcessCsv {
 
             try (BufferedWriter writer = Files.newBufferedWriter(outputPath)) {
                 for (String currentLine : lines) {
-                    String[] parts = currentLine.split(",");
-                    String[] tokens = parts[0].replaceAll("\"", "").split(" ");
-                    String label = parts[1];
+                    Pattern pattern = Pattern.compile("\"([^\"]*)\",(\\d)");
+                    Matcher matcher = pattern.matcher(currentLine);
+                    
+                    if (matcher.find()) {
+                        String[] tokens = matcher.group(1).split(" ");
+                        String label = matcher.group(2);
 
-                    for (int i = 1; i <= m; i++) {
-                        writeTokens(writer, tokens, 0, i * k, label);
-                    }
+                        for (int i = 1; i <= m; i++) {
+                            writeTokens(writer, tokens, 0, i * k, label);
+                        }
 
-                    for (int i = m * k; i < tokens.length - k; i += k) {
-                        writeTokens(writer, tokens, i - (m - 1) * k, i + k, label);
+                        for (int i = m * k; i < tokens.length - k; i += k) {
+                            writeTokens(writer, tokens, i - (m - 1) * k, i + k, label);
+                        }
                     }
                 }
             }
@@ -138,6 +148,3 @@ public class ProcessCsv {
         writer.write(line);
     }
 }
-
-
-
