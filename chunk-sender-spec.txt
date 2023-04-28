@@ -1,0 +1,42 @@
+In the ChunkProcessor class, change the way the chunks are sent in the sendChunk method as follows:
+send a batch of chunks immediately such that all chunks in the set have different ids.
+Wait for a random interval then send the next batch. For example
+send chunk with id 1, chunk with id 2, chunk with id 3 ... chunk with id n
+wait a random interval
+repeat the process for n distinct ids at a time
+
+private void sendBatch(List<Chunk> chunksToSend, Set<Integer> sentIds) {
+    for (Chunk chunk : chunksToSend) {
+        if (!sentIds.contains(chunk.getConvID())) {
+            receiveChunk(chunk.getConvID(), chunk.getText(), chunk.isEndOfConversation());
+            sentIds.add(chunk.getConvID());
+        }
+    }
+}
+
+public void sendChunks(List<Chunk> chunksToSend, int minInterval, int maxInterval) {
+    int batchSize = (int) chunksToSend.stream().map(Chunk::getConvID).distinct().count();
+
+    List<Chunk> remainingChunks = new ArrayList<>(chunksToSend);
+
+    while (!remainingChunks.isEmpty()) {
+        Set<Integer> sentIds = new HashSet<>();
+
+        Iterator<Chunk> iterator = remainingChunks.iterator();
+        while (iterator.hasNext() && sentIds.size() < batchSize) {
+            Chunk chunk = iterator.next();
+            if (!sentIds.contains(chunk.getConvID())) {
+                receiveChunk(chunk.getConvID(), chunk.getText(), chunk.isEndOfConversation());
+                sentIds.add(chunk.getConvID());
+                iterator.remove();
+            }
+        }
+		Random random = new Random();
+        int waitDuration = minInterval + random.nextInt(maxInterval - minInterval + 1);
+        try {
+            Thread.sleep(waitDuration);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+    }
+}
