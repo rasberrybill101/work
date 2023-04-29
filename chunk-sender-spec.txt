@@ -221,7 +221,7 @@ public class TestDataGenerator {
         int start = 0;
         int stop = 0;
 
-        String currentLine = dataLine.substring(1, dataLine.length() - 4);
+        String currentLine = dataLine.substring(1, dataLine.length() - 3);
         String label = dataLine.substring(dataLine.length() - 1);
         List<String> lineTokens = Arrays.asList(currentLine.split(" "));
 
