@@ -148,3 +148,121 @@ public class ProcessCsv {
         writer.write(line);
     }
 }
+
+-----------------------------------------------
+chunking spec 2
+-----------------------------------------------
+Given a line with the following structure
+A starting quote character
+A number of string tokens
+An ending quote character
+A comma
+A digit
+For example:
+"tok1 tok2 ... tokN",0
+Create a java method named createNewLines which takes 3 inputs
+a string (dataLine) that matches the pattern in the description and example above
+an integer k
+an integer windowSize
+The method createNewLines will return a list of new lines according to
+the following pseudocode:
+initialize:
+	List<String> result = new ArrayList<>();
+	int start = 0;
+	int stop = 0;
+	currentLine = dataLine.substring(1, currentLine.length-3); // this will extract the section within quotes
+	label = dataLine.substring(currentLine.length-3, currentLine.length); // this will extract the label
+	List<String> lineTokens = get the space-separated tokens in currentLine
+logic and rules:
+	while (stop < lineTokens.size()) {
+	  if (stop < windowSize) then start = 0 else start = start + k;
+	  stop = stop + k;
+	  String newDataLine = create a space-separated string of the tokens between start and stop index of lineTokens
+	  enclose newDataLine in quotes
+	  append a comma and the label to the updated newDataLine
+	  result.add(updated newDataLine);
+	}
+	return result;
+
+Create a second method named generateTestData that takes a directory, an input filename, k, windowSize
+and does the following:
+	set the input path = directory + inputFilename
+    set the output path = directory + "data_k_m.csv"
+	calculate m as integer division of windowSize/k
+	for example: given k = 8 and windowSize = 512, then m = 512/8 = 64
+	In this case, the output path will be "data_8_64"
+	for each line in the input path
+	  get a list of lines by calling createNewLines(k, windowSize)
+	  for each line in the returned list of lines
+	    write the line to the outputpath
+
+Write a main method that calls generateTestData to generate the output file
+
+import java.io.BufferedWriter;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+
+public class TestDataGenerator {
+    public static void main(String[] args) {
+        String directory = "./"; // Change this to the desired directory
+        String inputFilename = "data.csv";
+        int k = 8;
+        int windowSize = 512;
+        generateTestData(directory, inputFilename, k, windowSize);
+    }
+
+    public static List<String> createNewLines(String dataLine, int k, int windowSize) {
+        List<String> result = new ArrayList<>();
+        int start = 0;
+        int stop = 0;
+
+        String currentLine = dataLine.substring(1, dataLine.length() - 4);
+        String label = dataLine.substring(dataLine.length() - 1);
+        List<String> lineTokens = Arrays.asList(currentLine.split(" "));
+
+        while (stop < lineTokens.size()) {
+            if (stop < windowSize) {
+                start = 0;
+            } else {
+                start = start + k;
+            }
+            stop = stop + k;
+
+            String newDataLine = String.join(" ", lineTokens.subList(start, Math.min(stop, lineTokens.size())));
+            String updatedDataLine = "\"" + newDataLine + "\"," + label;
+            result.add(updatedDataLine);
+        }
+
+        return result;
+    }
+
+    public static void generateTestData(String directory, String inputFilename, int k, int windowSize) {
+        Path inputPath = Paths.get(directory, inputFilename);
+        int m = windowSize / k;
+        String outputFilename = "data_" + k + "_" + m + ".csv";
+        Path outputPath = Paths.get(directory, outputFilename);
+
+        try {
+            List<String> inputLines = Files.readAllLines(inputPath);
+            // Skip the header line
+            inputLines.remove(0);
+
+            try (BufferedWriter writer = Files.newBufferedWriter(outputPath)) {
+                for (String inputLine : inputLines) {
+                    List<String> newLines = createNewLines(inputLine, k, windowSize);
+                    for (String newLine : newLines) {
+                        writer.write(newLine + "\n");
+                    }
+                }
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+}
+
