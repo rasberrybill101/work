@@ -1,0 +1,13 @@
+Each csv file in the directory '/chunk-complaint/chunk_test_data_50' consists of 2 comma-separated columns. The first column is a quoted string, it is followed by a comma, then a number. For example:
+"thank you very much",0
+For each row in the input file, extract the string between quotes and do the following:
+	chunk = value of the string between quote marks
+	tokens = tokenizer(chunk, return_tensors="tf")      # use this line verbatim
+	confidence = model(**tokens).logits._numpy()[0][0]  # use this line verbatim
+	prediction = model(**tokens).logits._numpy().argmax()  # use this line verbatim
+	write a new line for each row to an output file.
+
+Each output file has the same name as the input file, but with the suffix results. For example:
+if input file is named "data_5_10.csv", then the output file will be named "data_5_10_prediction.csv"
+
+This process should be repeated for all the csv files in the directory.
