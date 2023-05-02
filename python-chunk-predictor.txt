@@ -1,3 +1,4 @@
+Implement in python:
 Each csv file in the directory '/chunk-complaint/chunk_test_data_50' consists of 2 comma-separated columns. The first column is a quoted string, it is followed by a comma, then a number. For example:
 "thank you very much",0
 For each row in the input file, extract the string between quotes and do the following:
@@ -11,3 +12,34 @@ Each output file has the same name as the input file, but with the suffix result
 if input file is named "data_5_10.csv", then the output file will be named "data_5_10_prediction.csv"
 
 This process should be repeated for all the csv files in the directory.
+
+import os
+import csv
+import glob
+from transformers import AutoTokenizer, TFAutoModelForSequenceClassification
+
+# Load the model and tokenizer
+model_name = "distilbert-base-uncased-finetuned-sst-2-english"
+tokenizer = AutoTokenizer.from_pretrained(model_name)
+model = TFAutoModelForSequenceClassification.from_pretrained(model_name)
+
+# Directory path
+input_dir = "/chunk-complaint/chunk_test_data_50"
+
+# Process each CSV file
+for csv_file in glob.glob(os.path.join(input_dir, "*.csv")):
+    output_file = os.path.splitext(csv_file)[0] + "_prediction.csv"
+
+    with open(csv_file, "r") as infile, open(output_file, "w") as outfile:
+        reader = csv.reader(infile)
+        writer = csv.writer(outfile)
+
+        # Process each row
+        for row in reader:
+            chunk = row[0].strip('"')
+            tokens = tokenizer(chunk, return_tensors="tf")
+            confidence = model(**tokens).logits.numpy()[0][0]
+            prediction = model(**tokens).logits.numpy().argmax()
+
+            # Write the output
+            writer.writerow([chunk, confidence, prediction])
