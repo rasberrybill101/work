@@ -1,0 +1,44 @@
+Use fast api to set up a rest endpoint that takes an input string and returns a json result.
+For instance:
+predict(inputString) should return the following example json:
+{ 
+	"utterance" : "the input string",
+	"history" : "the previous 4 chunks",
+	"isComplaint" : false,
+	"elapsedMillis" : 400
+}
+
+=====================
+
+pip install fastapi uvicorn
+
+=====================
+
+from fastapi import FastAPI
+import time
+
+app = FastAPI()
+
+# Dummy history data
+previous_chunks = ["chunk1", "chunk2", "chunk3", "chunk4"]
+
+
+@app.post("/predict")
+async def predict(input_string: str):
+    start_time = time.time()
+    # Implement your prediction logic here
+    is_complaint = False
+
+    elapsed_millis = int((time.time() - start_time) * 1000)
+
+    return {
+        "utterance": input_string,
+        "history": previous_chunks[-4:],  # Return the last 4 chunks
+        "isComplaint": is_complaint,
+        "elapsedMillis": elapsed_millis
+    }
+
+
+if __name__ == "__main__":
+    import uvicorn
+    uvicorn.run(app, host="127.0.0.1", port=8000)
