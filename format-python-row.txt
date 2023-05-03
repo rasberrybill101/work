@@ -1,0 +1,38 @@
+Given the following:
+writer = csv.writer(outfile, quoting = csv.QUOTE_NONNUMERIC)
+writer.writerow([row[0], row[1], float_value1, float_value2, float_value3)
+The following is a typical line that is output:
+"the first column","1",1,3.148776,403.887766554544
+However:
+Only the first column should be quoted, all other columns should not have quote marks
+the 4th column should be to a precision of 3 decimal places
+The 5th (last) column should be to a precision of 1 decimal places
+
+Therefore the desired row should look like this:
+"the first column",1,1,3.148,403.8
+
+============================
+
+def format_value(value, precision=None):
+    if isinstance(value, str):
+        return f'"{value}"'
+    elif precision is not None:
+        return f'{value:.{precision}f}'
+    else:
+        return str(value)
+
+with open("output.csv", "w") as outfile:
+    # Don't set the quoting option for csv.writer
+    writer = csv.writer(outfile)
+
+    row = ["the first column", 1, 1, 3.148776, 403.887766554544]
+
+    formatted_row = [
+        format_value(row[0]),  # First column: quoted string
+        row[1],                # Second column: integer
+        row[2],                # Third column: integer
+        format_value(row[3], 3),  # Fourth column: float with 3 decimal places
+        format_value(row[4], 1)   # Fifth column: float with 1 decimal place
+    ]
+
+    writer.writerow(formatted_row)
