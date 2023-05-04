@@ -1,6 +1,7 @@
 To put a mobile device in kiosk mode:
 
 In the web app, place a vStation device on the map.  There are various settings on the Device, Data, and Power tabs that control its behavior.  The Guido test account has one already configured.
+
 In the mobile app, navigate to an account with a kiosk icon (an Android tablet icon).  View the vStation device and select “Assign this Device”. 
 Restart the app and it will be in kiosk mode.  It will go directly to the kiosk account’s map on startup and I think will prevent users from exiting the app.
  

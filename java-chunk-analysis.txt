@@ -1,0 +1,28 @@
+Given a line of csv text with the following five fields:
+1. quoted string called "frame"
+2. a number called "label"
+3. a number called "predicted"
+4. a double called "spread"
+5. a double called "duration"
+The second number in the line may also be quoted.
+An example csv line:
+"the input chunk",0,1,3.2335,400.8876
+Another example csv line (with quoted label):
+"an input chunk","0",1,4.553,300.8876
+From these 5 pieces of data, create an instance of the class "InputLine"
+with the following fields:
+String frame
+int label
+int predicted
+double spread
+double duration
+List<String> tokens // list of space-separated tokens of frame
+int chunkStart // to be computed
+int chunkCount // to be computed
+
+Given a list of "InputLine" objects, create a list of "Conversation" objects
+Each Conversation object has the following fields:
+List<InputLine> inputLines // list of input lines that belong to this
+Conversation
+Characteristics characteristics // instance of class "Characteristics"
+
