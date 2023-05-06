@@ -11,13 +11,14 @@ Given a line of csv text with the following eight fields:
 Here is an example csv line:
 "the input chunk, which may have, commas",0,1,5,10,3.2335,400.8876,2234_6654.mp4
 
-From each cvs line, an InputLine object is created with the following fields:
+Method createInputLine(String text) returns an InputLine object from a line of
+csv text. InputLine is defined as:
+String convID
 String frame 
 int label
 int predicted
 double spread
 double duration
-String convID
 int chunkStart
 int chunkEnd
 List<String> chunk
@@ -25,8 +26,12 @@ List<String> history
 
 "chunk" and "history" are created during construction of the
 InputLine object: 
-Given an int k, and the frame String:
-chunk is the list of the last k tokens in the frame
+Method getChunk(int k, String frame) returns a List<String> representing the
+chunk:
+return the list of the last k tokens in the frame
+
+Method getHistory(int k, String frame) returns all but the last k tokens in
+frame
 history is the list of all tokens prior to the chunk
 for example, given the frame: "t1 t2 t3 t4 t5 t6 t7 t8 t9", and k=3
 chunk is the list "t7 t8 t9"
@@ -34,46 +39,46 @@ history is the list "t1 t2 t3 t4 t5 t6"
 
 Given a list of "InputLine" objects, create a list of "Conversation" objects.
 Each Conversation object consists of:
-  convID // the conversation ID
-  List<InputLine> inputLines // list of input lines that have convID
-  List<TransitionFrame> transitionFrameBand // A list of contiguous transition frames in
-conversation
-  List<TransitionFrameBand> transitionFrameBands // list of TransitionFrameBands
+  convID // the conversation ID 
+  List<InputLine> inputLines // list of input lines with convID 
+  List<List<TransitionFrame>> transitionFrameBandList // A list that consists of lists of contiguous transition frames within a conversation
 
-TransitionFrame objects are created from the frame string of conversation
-InputLines and have the following structure:
-String text // set from the inputLine frame
-int start // set from inputLine chunkStart
-int end // set from inputLine chunkEnd
+TransitionFrame objects have the following structure:
+String text // inputLine "frame" 
+int start // inputLine "chunkStart"
+int end // inputLine "chunkEnd"
 int length // end minus start
-String type // set as described below
+String type // created as described below
 
-TransitionFrames are created as follows:
-start with an empty list
-for each InputLine object
-  if there is a previous inputLine AND previous prediction is different from
-current prediction:
-    create a new transitionFrame object and set it up according to same named
-field in inputLine object. To set the "type":
-    if previous prediction is 0 and current prediction is 1
-     set type to "UP"
-    if previous prediction is 1 and current prediction is 1
-     set type to "HOLD"
-    if previous prediction is 1 and current prediction is 0
-     set type to "DOWN"
+Method createTransitionFrameBandList(List<InputLine> inputLines) returns
+List<List<TransitionFrame>> and is defined as follows:
+initialize resultList to an empty list
+initialize currenTransitionBand to null 
+for each inputLine in the list of inputLines
+  if there exists a previous inputLine && previous inputLine prediction == 0 &&  current inputLine prediction == 1, then:
+      currentTransitionBand = new List
+      currentTransitionFrame = createTransitionFrame(inputLine)
+      add currentTransitionFrame to currentTransitionBand
 
-if there is a previous inputLine AND 
-begin with an empty TransitionFrameBand object
-A TransitionFrameBand object is a list of TransitionFrame objects. A
-TransitionFrameBand class has the following fields:
-  int startChunk
-  int endChunk
-  int length
-  String type
+  if currentTransitionBand != null && previous inputLine prediction == 1 &&  current inputLine prediction == 1, then:
+      currentTransitionFrame = createTransitionFrame(inputLine)
+      add currentTransitionFrame to currentTransitionBand
 
-InputLine objects of a Conversation as follows:
-TransitionFrame objects are created from the Frame objects within the
+  if currentTransitionBand != null && previous inputLine prediction == 1 &&  current inputLine prediction == 0, then:
+      currentTransitionFrame = createTransitionFrame(inputLine)
+      add currentTransitionFrame to currentTransitionBand
+      add currentTransitionBand to resultList
+      currentTransitionBand = null 
+return resultList
 
-
-
- 
+Method createTransitionFrame(InputLine inputLine) returns a TransitionFrame
+object, and is defined as follows: 
+    create a transitionFrame object based on the fields of inputLine
+    "type" of the transitionFrame is set as follows:
+      if previous prediction is 0 and current prediction is 1
+       set type to "UP"
+      if previous prediction is 1 and current prediction is 1
+       set type to "HOLD"
+      if previous prediction is 1 and current prediction is 0
+       set type to "DOWN"
+    return transitionFrame
