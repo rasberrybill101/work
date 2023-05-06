@@ -26,6 +26,7 @@ List<String> history
 
 "chunk" and "history" are created during construction of the
 InputLine object: 
+
 Method getChunk(int k, String frame) returns a List<String> representing the
 chunk:
 return the list of the last k tokens in the frame
@@ -71,14 +72,14 @@ for each inputLine in the list of inputLines
       currentTransitionBand = null 
 return resultList
 
-Method createTransitionFrame(InputLine inputLine) returns a TransitionFrame
+Method createTransitionFrame(InputLine previous, InputLine current) returns a TransitionFrame
 object, and is defined as follows: 
-    create a transitionFrame object based on the fields of inputLine
+    create a transitionFrame object based on the fields of current
     "type" of the transitionFrame is set as follows:
-      if previous prediction is 0 and current prediction is 1
+      if previous.prediction is 0 and current.prediction is 1
        set type to "UP"
-      if previous prediction is 1 and current prediction is 1
+      if previous.prediction is 1 and current.prediction is 1
        set type to "HOLD"
-      if previous prediction is 1 and current prediction is 0
+      if previous.prediction is 1 and current.prediction is 0
        set type to "DOWN"
     return transitionFrame
