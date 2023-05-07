@@ -1,4 +1,4 @@
-Given a line of csv text with the following eight fields:
+Given a line of csv text with the following 8 fields:
 1. quoted string called "frame"
 2. a number called "label"
 3. a number called "predicted"
