@@ -1,0 +1,39 @@
+Given a list of InputLine objects create a HashMap<convID, Conversation> in such a way that each conversation object contains a list of InputLine object in the same order as in the original input list. Only inputLine objects with matching convID can belong to the same conversation. Use the previously provided definitions of InputLine and Conversation classes.
+
+import java.util.HashMap;
+import java.util.List;
+import java.util.ArrayList;
+
+public class Conversation {
+    String convID;
+    List<InputLine> inputLines;
+
+    public Conversation(String convID) {
+        this.convID = convID;
+        this.inputLines = new ArrayList<>();
+    }
+
+    public void addInputLine(InputLine inputLine) {
+        this.inputLines.add(inputLine);
+    }
+
+    // ... (other class members and methods)
+}
+
+public HashMap<String, Conversation> createConversationMap(List<InputLine> inputLines) {
+    HashMap<String, Conversation> conversationMap = new HashMap<>();
+
+    for (InputLine inputLine : inputLines) {
+        String convID = inputLine.convID;
+        Conversation conversation = conversationMap.get(convID);
+
+        if (conversation == null) {
+            conversation = new Conversation(convID);
+            conversationMap.put(convID, conversation);
+        }
+
+        conversation.addInputLine(inputLine);
+    }
+
+    return conversationMap;
+}
