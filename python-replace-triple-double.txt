@@ -1,0 +1,15 @@
+def replace_triple_double_quotes(file_path):
+    # Read the content of the file
+    with open(file_path, mode='r', encoding='utf-8') as file:
+        content = file.read()
+
+    # Replace triple double quotes with single double quotes
+    content = content.replace('"""', '"')
+
+    # Write the modified content back to the file
+    with open(file_path, mode='w', encoding='utf-8') as file:
+        file.write(content)
+
+# Usage example
+filename = 'input.txt'
+replace_triple_double_quotes(filename)
