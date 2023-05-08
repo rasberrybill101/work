@@ -45,6 +45,16 @@ public class InputLine {
         this.chunk = getChunk(k, frame);
         this.history = getHistory(k, frame);
     }
+	
+	public static List<String> getChunk(int k, String frame) {
+        List<String> tokens = Arrays.asList(frame.split(" "));
+        return tokens.subList(Math.max(0, tokens.size() - k), tokens.size());
+    }
+
+    public static List<String> getHistory(int k, String frame) {
+        List<String> tokens = Arrays.asList(frame.split(" "));
+        return tokens.subList(0, Math.max(0, tokens.size() - k));
+    }
 }
 
 ===============================================
