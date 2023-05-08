@@ -37,3 +37,17 @@ public HashMap<String, Conversation> createConversationMap(List<InputLine> input
 
     return conversationMap;
 }
+
+==================================================================
+
+Given the ConversationMap just created, go through it and call the method createTransitionFrameBand for each conversation in the conversationMap
+
+import java.util.HashMap;
+import java.util.Map;
+
+public void processConversations(HashMap<String, Conversation> conversationMap) {
+    for (Map.Entry<String, Conversation> entry : conversationMap.entrySet()) {
+        Conversation conversation = entry.getValue();
+        conversation.createTransitionFrameBand();
+    }
+}
