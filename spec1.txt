@@ -1,1 +1,12 @@
-Spec 1
+from fastapi import FastAPI, Query
+
+app = FastAPI()
+
+@app.get("/example")
+async def example(param1: str = Query(...), param2: int = Query(...)):
+    response = {
+        "param1": param1,
+        "param2": param2,
+        "sum": param1 * param2
+    }
+    return response
