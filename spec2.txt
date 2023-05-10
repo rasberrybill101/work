@@ -3,3 +3,8 @@ Confirm that what is reported as "chunk" and "history" actually match what is ex
 Compare the prediction from the batch model to the labeled ground truth.
 Use a heat map to highlight the differences.
 Use a confusion matrix to provide numerical metrics from the heat map.
+For the heat map, compare (chunk conv id label) to (conv id label)
+Number of UP chunks in a conversation
+Number of tokens before the first UP chunk
+Length of the first UP chunk should be equal to, or greater than the number of history chunks (this is the "effective sustained" length of the traveling chunk.
+Are there transition frames more significant than the first transition frame? What determines such significance.
