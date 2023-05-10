@@ -1,1 +1,5 @@
-Spec 2
+Given a conv. id, check if a given substring is present in any of the chunks associated with the conversation.
+Confirm that what is reported as "chunk" and "history" actually match what is expected.
+Compare the prediction from the batch model to the labeled ground truth.
+Use a heat map to highlight the differences.
+Use a confusion matrix to provide numerical metrics from the heat map.
