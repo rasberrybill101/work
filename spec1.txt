@@ -10,3 +10,9 @@ async def example(param1: str = Query(...), param2: int = Query(...)):
         "sum": param1 * param2
     }
     return response
+
+===================================================================
+Python fast api POST method that receives a JSON input of the form:
+{ "chunk": "this is the input text",
+  "history": "these are the previous chunks"
+}
