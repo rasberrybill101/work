@@ -16,3 +16,16 @@ Python fast api POST method that receives a JSON input of the form:
 { "chunk": "this is the input text",
   "history": "these are the previous chunks"
 }
+
+from fastapi import FastAPI
+from pydantic import BaseModel
+
+class Chunk(BaseModel):
+    chunk: str
+    history: str
+
+app = FastAPI()
+
+@app.post("/chunks/")
+async def create_chunk(chunk: Chunk):
+    return chunk
