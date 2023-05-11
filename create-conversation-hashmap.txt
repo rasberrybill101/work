@@ -95,4 +95,66 @@ public List<TransitionFrame> bandsContainFrame(String text, List<List<Transition
     }
     return null;
 }
+
+=============================================================
+
+Given a HashMap<String Conversation> return the conversation and List<TransitionFrame> in the conversation that contains the text
+
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+public class TextSearchResult {
+    Conversation conversation;
+    List<TransitionFrame> transitionFrames;
+
+    public TextSearchResult(Conversation conversation, List<TransitionFrame> transitionFrames) {
+        this.conversation = conversation;
+        this.transitionFrames = transitionFrames;
+    }
+}
+
+public TextSearchResult findTextInConversations(HashMap<String, Conversation> conversationMap, String text) {
+    for (Map.Entry<String, Conversation> entry : conversationMap.entrySet()) {
+        Conversation conversation = entry.getValue();
+        List<TransitionFrame> frames = conversation.bandsContainFrame(text);
+        if (frames != null) {
+            return new TextSearchResult(conversation, frames);
+        }
+    }
+    return null;
+}
+
+================================================
+
+Simplify the code, given that the Conversation class already contains a list of a list of TransitionFrames List<List<TransitionFrame>> transitionFrameBandList;   Use transitionFrameBandList within each Conversation in the HashMap to search for the text
+
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+public class TextSearchResult {
+    Conversation conversation;
+    List<TransitionFrame> transitionFrames;
+
+    public TextSearchResult(Conversation conversation, List<TransitionFrame> transitionFrames) {
+        this.conversation = conversation;
+        this.transitionFrames = transitionFrames;
+    }
+}
+
+public TextSearchResult findTextInConversations(HashMap<String, Conversation> conversationMap, String text) {
+    for (Map.Entry<String, Conversation> entry : conversationMap.entrySet()) {
+        Conversation conversation = entry.getValue();
+        for (List<TransitionFrame> frames : conversation.transitionFrameBandList) {
+            for (TransitionFrame frame : frames) {
+                if (frame.text.contains(text)) {
+                    return new TextSearchResult(conversation, frames);
+                }
+            }
+        }
+    }
+    return null;
+}
+
 	
