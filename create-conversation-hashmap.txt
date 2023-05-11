@@ -81,4 +81,18 @@ write this method:
 	public List<TransitionFrame> bandsContainFrame(String text, transitionFrameBandList)
 
 which returns the TransitionFrame that contains "text" or null if the text is not present in any of the TransitionFrame objects in transitionFrameBandList
+
+=============================================================
+import java.util.List;
+
+public List<TransitionFrame> bandsContainFrame(String text, List<List<TransitionFrame>> transitionFrameBandList) {
+    for (List<TransitionFrame> band : transitionFrameBandList) {
+        for (TransitionFrame frame : band) {
+            if (frame.text.contains(text)) {
+                return band;
+            }
+        }
+    }
+    return null;
+}
 	
