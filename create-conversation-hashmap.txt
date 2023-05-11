@@ -51,3 +51,34 @@ public void processConversations(HashMap<String, Conversation> conversationMap) 
         conversation.createTransitionFrameBand();
     }
 }
+
+
+====================================================================
+
+Given:
+	String text;
+    List<List<TransitionFrame>> transitionFrameBandList;
+
+where:
+
+public class TransitionFrame {
+    String text;
+    int start;
+    int end;
+    int length;
+    String type;
+
+    public TransitionFrame(String text, int start, int end, String type) {
+        this.text = text;
+        this.start = start;
+        this.end = end;
+        this.length = end - start;
+        this.type = type;
+    }
+}
+
+write this method:
+	public List<TransitionFrame> bandsContainFrame(String text, transitionFrameBandList)
+
+which returns the TransitionFrame that contains "text" or null if the text is not present in any of the TransitionFrame objects in transitionFrameBandList
+	
