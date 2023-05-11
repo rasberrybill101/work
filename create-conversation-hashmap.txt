@@ -157,4 +157,31 @@ public TextSearchResult findTextInConversations(HashMap<String, Conversation> co
     return null;
 }
 
+==================================================
+Given a List<List<TransitionFrame>> return a Pair of integers comprising:
+getStart() of first TransitionFrame in the first item of List<List<TransitionFrame>>
+getEnd() of last TransitionFrame in the last item of List<List<TransitionFrame>>
+
+import java.util.AbstractMap;
+import java.util.List;
+import java.util.Map;
+
+public Map.Entry<Integer, Integer> getStartAndEnd(List<List<TransitionFrame>> transitionFrameBandList) {
+    if (transitionFrameBandList == null || transitionFrameBandList.isEmpty()) {
+        return null;
+    }
+
+    List<TransitionFrame> firstBand = transitionFrameBandList.get(0);
+    List<TransitionFrame> lastBand = transitionFrameBandList.get(transitionFrameBandList.size() - 1);
+
+    if (firstBand == null || firstBand.isEmpty() || lastBand == null || lastBand.isEmpty()) {
+        return null;
+    }
+
+    int start = firstBand.get(0).start;
+    int end = lastBand.get(lastBand.size() - 1).end;
+
+    return new AbstractMap.SimpleEntry<>(start, end);
+}
+
 	
