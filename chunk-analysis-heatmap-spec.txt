@@ -63,3 +63,47 @@ for col in grouped.columns:
     sns.heatmap(grouped[[col]], cmap=cmap[col], vmin=0)
     plt.title(col)
     plt.show()
+	
+===============================================================
+iteration 2
+===============================================================
+
+import pandas as pd
+import seaborn as sns
+import matplotlib.pyplot as plt
+import matplotlib.colors as mcolors
+
+# Load the CSV file
+df = pd.read_csv('your_file.csv', skipinitialspace=True)
+
+# Compute the new columns
+df['correct'] = (df['expected'] == df['predicted']).astype(int)
+grouped = df.groupby('convID').agg({
+    'correct': 'mean', 
+    'position': 'max', 
+    'chunkStart': 'min', 
+    'spread': 'min', 
+    'frameLength': 'sum'
+}).rename(columns={
+    'correct': 'correct',
+    'position': 'bands',
+    'chunkStart': 'earliestStart',
+    'spread': 'spread',
+    'frameLength': 'frameLength'
+})
+
+# Create a custom colormap for the 'correct' column and standard colormaps for the others
+cmap = {
+    'correct': mcolors.ListedColormap(['red', 'black']),
+    'bands': sns.cubehelix_palette(as_cmap=True),
+    'earliestStart': sns.cubehelix_palette(start=2.8, rot=.1, as_cmap=True),
+    'spread': sns.cubehelix_palette(start=2, rot=-.2, light=0.8, dark=0.2, as_cmap=True),
+    'frameLength': sns.cubehelix_palette(start=2.8, rot=-.1, as_cmap=True)
+}
+
+# Plot each column separately
+for col in grouped.columns:
+    plt.figure(figsize=(10, 8))
+    sns.heatmap(grouped[[col]], cmap=cmap[col], vmin=0)
+    plt.title(col)
+    plt.show()
