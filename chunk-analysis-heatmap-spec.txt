@@ -370,3 +370,92 @@ public class Viewer {
         }
     }
 }
+
+===========================
+iteration 3 
+===========================
+public static void createHeatmap(Map<String, Integer> correct, Map<String, Integer> bands, Map<String, Integer> earliestStart, Map<String, Float> spread, Map<String, Integer> frameLength) {
+    final DefaultXYZDataset dataset = new DefaultXYZDataset();
+    
+    List<String> convIDs = new ArrayList<>(correct.keySet());
+
+    for (int i = 0; i < convIDs.size(); i++) {
+        String convID = convIDs.get(i);
+        double[][] data = new double[3][5];
+
+        data[0][0] = i;
+        data[1][0] = RANGE_CORRECT + correct.get(convID);
+        data[2][0] = 1;
+
+        data[0][1] = i;
+        data[1][1] = RANGE_BANDS + bands.get(convID);
+        data[2][1] = 1;
+
+        data[0][2] = i;
+        data[1][2] = RANGE_EARLIEST_START + earliestStart.get(convID);
+        data[2][2] = 1;
+
+        data[0][3] = i;
+        data[1][3] = RANGE_SPREAD + spread.get(convID);
+        data[2][3] = 1;
+
+        data[0][4] = i;
+        data[1][4] = RANGE_FRAME_LENGTH + frameLength.get(convID);
+        data[2][4] = 1;
+
+        dataset.addSeries(convID, data);
+    }
+
+    // Create lookup paint scale
+    LookupPaintScale paintScale = new LookupPaintScale(0, 6000, Color.WHITE);
+    paintScale.add(RANGE_CORRECT, Color.BLACK);
+    paintScale.add(RANGE_BANDS, Color.BLUE);
+    paintScale.add(RANGE_EARLIEST_START, Color.BLUE);
+    paintScale.add(RANGE_SPREAD, Color.YELLOW);
+    paintScale.add(RANGE_FRAME_LENGTH, Color.GREEN);
+
+    // Create renderer and set the paint scale
+    XYBlockRenderer renderer = new XYBlockRenderer();
+    renderer.setPaintScale(paintScale);
+
+    // Create the chart using the dataset and renderer
+    JFreeChart chart = ChartFactory.createScatterPlot(
+        "Heatmap", 
+        "X", 
+        "Y", 
+        dataset, 
+        PlotOrientation.VERTICAL, 
+        true, 
+        true, 
+        false
+    );
+
+    XYPlot plot = (XYPlot) chart.getPlot();
+    plot.setRenderer(renderer);
+
+    // Create and display a frame for the heatmap
+    ChartFrame frame = new ChartFrame("Heatmap", chart);
+    frame.setVisible(true);
+    frame.setSize(600, 500);
+}
+
+
+import java.util.*;
+
+public class Viewer {
+
+    public static void main(String[] args) {
+        String filename = "your_file.csv";  // replace with your csv file path
+
+        ConvLineUtils utils = new ConvLineUtils();
+        List<ConvLine> convLines = utils.extractDataFromCSV(filename);
+
+        Map<String, Integer> correct = utils.calculateCorrect(convLines);
+        Map<String, Integer> bands = utils.calculateBands(convLines);
+        Map<String, Integer> earliestStart = utils.calculateEarliestStart(convLines);
+        Map<String, Float> spread = utils.calculateSpread(convLines);
+        Map<String, Integer> frameLength = utils.calculateFrameLength(convLines);
+
+        HeatmapCreator.createHeatmap(correct, bands, earliestStart, spread, frameLength);
+    }
+}
