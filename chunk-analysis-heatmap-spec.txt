@@ -315,6 +315,13 @@ import org.jfree.chart.axis.NumberAxis;
 import org.jfree.chart.renderer.GrayPaintScale;
 
 public class HeatmapCreator {
+    // Ranges for the columns, these should not overlap.
+    private static final int RANGE_CORRECT = 1000;
+    private static final int RANGE_BANDS = 2000;
+    private static final int RANGE_EARLIEST_START = 3000;
+    private static final int RANGE_SPREAD = 4000;
+    private static final int RANGE_FRAME_LENGTH = 5000;
+	
     public void createHeatmap(List<ConvLine> lines) {
         DefaultXYZDataset dataset = new DefaultXYZDataset();
 
@@ -375,6 +382,7 @@ public class Viewer {
 iteration 3 
 ===========================
 public static void createHeatmap(Map<String, Integer> correct, Map<String, Integer> bands, Map<String, Integer> earliestStart, Map<String, Float> spread, Map<String, Integer> frameLength) {
+	
     final DefaultXYZDataset dataset = new DefaultXYZDataset();
     
     List<String> convIDs = new ArrayList<>(correct.keySet());
