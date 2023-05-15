@@ -311,6 +311,8 @@ import org.jfree.chart.plot.*;
 import org.jfree.chart.renderer.xy.*;
 import org.jfree.data.xy.*;
 import org.jfree.chart.ui.*;
+import org.jfree.chart.axis.NumberAxis;
+import org.jfree.chart.renderer.GrayPaintScale;
 
 public class HeatmapCreator {
     public void createHeatmap(List<ConvLine> lines) {
@@ -355,7 +357,7 @@ public class HeatmapCreator {
 import java.io.IOException;
 import java.util.List;
 
-public class Visualizer {
+public class Viewer {
     public static void main(String[] args) {
         String filename = args[0];
         CSVReader csvReader = new CSVReader();
