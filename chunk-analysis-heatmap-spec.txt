@@ -107,3 +107,39 @@ for col in grouped.columns:
     sns.heatmap(grouped[[col]], cmap=cmap[col], vmin=0)
     plt.title(col)
     plt.show()
+
+================================
+iteration 3 : all cols on same map
+================================
+import pandas as pd
+import seaborn as sns
+import matplotlib.pyplot as plt
+from sklearn.preprocessing import MinMaxScaler
+
+# Load the CSV file
+df = pd.read_csv('your_file.csv', skipinitialspace=True)
+
+# Compute the new columns
+df['correct'] = (df['expected'] == df['predicted']).astype(int)
+grouped = df.groupby('convID').agg({
+    'correct': 'mean', 
+    'position': 'max', 
+    'chunkStart': 'min', 
+    'spread': 'min', 
+    'frameLength': 'sum'
+}).rename(columns={
+    'correct': 'correct',
+    'position': 'bands',
+    'chunkStart': 'earliestStart',
+    'spread': 'spread',
+    'frameLength': 'frameLength'
+})
+
+# Normalize the DataFrame using MinMaxScaler
+scaler = MinMaxScaler()
+scaled_df = pd.DataFrame(scaler.fit_transform(grouped), columns=grouped.columns)
+
+# Generate a single heatmap for the entire DataFrame
+plt.figure(figsize=(10, 8))
+sns.heatmap(scaled_df, cmap='coolwarm')
+plt.show()
