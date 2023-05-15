@@ -143,3 +143,228 @@ scaled_df = pd.DataFrame(scaler.fit_transform(grouped), columns=grouped.columns)
 plt.figure(figsize=(10, 8))
 sns.heatmap(scaled_df, cmap='coolwarm')
 plt.show()
+
+======================== java iteration =========================
+public class ConvLine {
+    private String convID;
+    private int expected;
+    private int predicted;
+    private int position;
+    private String history;
+    private String chunk;
+    private int chunkStart;
+    private int frameLength;
+    private float spread;
+
+    // Add constructors, getters and setters here
+}
+
+import org.apache.commons.csv.*;
+import java.nio.file.*;
+import java.io.*;
+import java.util.*;
+
+public class CSVReader {
+    public List<ConvLine> readCsvFile(String path) throws IOException {
+        List<ConvLine> lines = new ArrayList<>();
+
+        Reader reader = Files.newBufferedReader(Paths.get(path));
+        CSVFormat format = CSVFormat.DEFAULT.withHeader().withSkipHeaderRecord().withTrim();
+        CSVParser csvParser = new CSVParser(reader, format);
+
+        for (CSVRecord record : csvParser) {
+            ConvLine line = new ConvLine();
+            line.setConvID(record.get("convID"));
+            line.setExpected(Integer.parseInt(record.get("expected")));
+            line.setPredicted(Integer.parseInt(record.get("predicted")));
+            line.setPosition(Integer.parseInt(record.get("position")));
+            line.setHistory(record.get("history"));
+            line.setChunk(record.get("chunk"));
+            line.setChunkStart(Integer.parseInt(record.get("chunkStart")));
+            line.setFrameLength(Integer.parseInt(record.get("frameLength")));
+            line.setSpread(Float.parseFloat(record.get("spread")));
+            lines.add(line);
+        }
+
+        csvParser.close();
+
+        return lines;
+    }
+}
+
+=================== spec for java heatmap
+Using java jfreechart, create a heatmap from the data in the list of ConvLine objects where:
+the rows of the heatmap are the convIDs
+the columns are:
+col 1) 1 if expected == predicted otherwise 0. The color of col 1 should be black if 1 and red if 0
+col 2) max position for a given convID, with column name "bands". column color is blue
+col 3) min value of chunkStart for a given convID, with column name "earliestStart". column color is blue.
+col 4) min value of spread for a given convID, with col name "spread". column color is yellow
+col 5) sum of values of frameLength for given convID, with name "frameLength". column color is green.
+
+Darker colors imply higher values. Write methods to calculate this data and display the heatmap based on the calculated data
+
+====================
+java iteration 2
+====================
+
+public class ConvLine {
+    private String convID;
+    private int expected;
+    private int predicted;
+    private int position;
+    private String history;
+    private String chunk;
+    private int chunkStart;
+    private int frameLength;
+    private float spread;
+
+    // Constructors, getters and setters here
+    // ...
+}
+
+import org.apache.commons.csv.*;
+import java.nio.file.*;
+import java.io.*;
+import java.util.*;
+
+public class CSVReader {
+    public List<ConvLine> readCsvFile(String path) throws IOException {
+        List<ConvLine> lines = new ArrayList<>();
+
+        Reader reader = Files.newBufferedReader(Paths.get(path));
+        CSVFormat format = CSVFormat.DEFAULT.withHeader().withSkipHeaderRecord().withTrim();
+        CSVParser csvParser = new CSVParser(reader, format);
+
+        for (CSVRecord record : csvParser) {
+            ConvLine line = new ConvLine();
+            line.setConvID(record.get("convID"));
+            line.setExpected(Integer.parseInt(record.get("expected")));
+            line.setPredicted(Integer.parseInt(record.get("predicted")));
+            line.setPosition(Integer.parseInt(record.get("position")));
+            line.setHistory(record.get("history"));
+            line.setChunk(record.get("chunk"));
+            line.setChunkStart(Integer.parseInt(record.get("chunkStart")));
+            line.setFrameLength(Integer.parseInt(record.get("frameLength")));
+            line.setSpread(Float.parseFloat(record.get("spread")));
+            lines.add(line);
+        }
+
+        csvParser.close();
+
+        return lines;
+    }
+}
+
+import java.util.*;
+import java.util.stream.*;
+
+public class ConvLineUtils {
+    public static Map<String, Integer> calculateCorrect(List<ConvLine> lines) {
+        return lines.stream().collect(Collectors.toMap(
+            ConvLine::getConvID, 
+            line -> line.getExpected() == line.getPredicted() ? 1 : 0, 
+            (a, b) -> a
+        ));
+    }
+
+    public static Map<String, Integer> calculateBands(List<ConvLine> lines) {
+        return lines.stream().collect(Collectors.groupingBy(
+            ConvLine::getConvID, 
+            Collectors.mapping(ConvLine::getPosition, Collectors.maxBy(Integer::compare))
+        )).entrySet().stream().collect(Collectors.toMap(
+            Map.Entry::getKey, 
+            entry -> entry.getValue().orElse(0)
+        ));
+    }
+
+    public static Map<String, Integer> calculateEarliestStart(List<ConvLine> lines) {
+        return lines.stream().collect(Collectors.groupingBy(
+            ConvLine::getConvID,
+            Collectors.mapping(ConvLine::getChunkStart, Collectors.minBy(Integer::compare))
+        )).entrySet().stream().collect(Collectors.toMap(
+            Map.Entry::getKey,
+            entry -> entry.getValue().orElse(0)
+        ));
+    }
+
+    public static Map<String, Float> calculateSpread(List<ConvLine> lines) {
+        return lines.stream().collect(Collectors.groupingBy(
+            ConvLine::getConvID,
+            Collectors.mapping(ConvLine::getSpread, Collectors.minBy(Float::compare))
+        )).entrySet().stream().collect(Collectors.toMap(
+            Map.Entry::getKey,
+            entry -> entry.getValue().orElse(0f)
+        ));
+    }
+
+    public static Map<String, Integer> calculateFrameLength(List<ConvLine> lines) {
+        return lines.stream().collect(Collectors.groupingBy(
+            ConvLine::getConvID,
+            Collectors.summingInt(ConvLine::getFrameLength)
+        ));
+    }
+}
+
+import org.jfree.chart.*;
+import org.jfree.chart.plot.*;
+import org.jfree.chart.renderer.xy.*;
+import org.jfree.data.xy.*;
+import org.jfree.chart.ui.*;
+
+public class HeatmapCreator {
+    public void createHeatmap(List<ConvLine> lines) {
+        DefaultXYZDataset dataset = new DefaultXYZDataset();
+
+        // Calculate data for each column
+        Map<String, Integer> correct = ConvLineUtils.calculateCorrect(lines);
+        Map<String, Integer> bands = ConvLineUtils.calculateBands(lines);
+        Map<String, Integer> earliestStart = ConvLineUtils.calculateEarliestStart(lines);
+        Map<String, Float> spread = ConvLineUtils.calculateSpread(lines);
+        Map<String, Integer> frameLength = ConvLineUtils.calculateFrameLength(lines);
+
+        // Add data to dataset
+        for (int i = 0; i < lines.size(); i++) {
+            ConvLine line = lines.get(i);
+            String convID = line.getConvID();
+            double x = i;
+            double y1 = correct.get(convID);
+            double y2 = bands.get(convID);
+            double y3 = earliestStart.get(convID);
+            double y4 = spread.get(convID);
+            double y5 = frameLength.get(convID);
+            dataset.addSeries("Series" + i, new double[][] {{x, x, x, x, x}, {y1, y2, y3, y4, y5}, {1, 1, 1, 1, 1}});
+        }
+
+        // Create chart
+        NumberAxis xAxis = new NumberAxis("convID");
+        NumberAxis yAxis = new NumberAxis("Value");
+        XYBlockRenderer renderer = new XYBlockRenderer();
+        PaintScale scale = new GrayPaintScale(0, 1);  // Adjust this to match your data
+        renderer.setPaintScale(scale);
+        XYPlot plot = new XYPlot(dataset, xAxis, yAxis, renderer);
+        JFreeChart chart = new JFreeChart("Heatmap", JFreeChart.DEFAULT_TITLE_FONT, plot, false);
+
+        // Display chart
+        ChartFrame frame = new ChartFrame("Heatmap", chart);
+        frame.pack();
+        frame.setVisible(true);
+    }
+}
+
+import java.io.IOException;
+import java.util.List;
+
+public class Visualizer {
+    public static void main(String[] args) {
+        String filename = args[0];
+        CSVReader csvReader = new CSVReader();
+        try {
+            List<ConvLine> lines = csvReader.readCsvFile(filename);
+            HeatmapCreator heatmapCreator = new HeatmapCreator();
+            heatmapCreator.createHeatmap(lines);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+}
