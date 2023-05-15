@@ -1,0 +1,23 @@
+Given a CSV file with header:
+convID, expected, predicted, position, history, chunk, chunkStart, frameLength, spread
+where
+convID is String
+expectd is int
+predicted is int
+position is int
+history is String
+chunk is String
+chunkStart is int
+frameLength is int
+spread is a float
+
+Using python, create a heatmap from the data where:
+the rows are the convIDs
+the columns are:
+col 1) 1 if expected == predicted otherwise 0. The color of col 1 should be black if 1 and red if 0
+col 2) max position for a given convID, with column name "bands". heatmap color is blue
+col 3) min value of chunkStart for a given convID, with column name "earliestStart". heatmap color is blue.
+col 4) min value of spread for a given convID, with col name "spread". heatmap color is yellow
+col 5) sum of values of frameLength for given convID, with name "frameLength". heatmap color is green.
+
+Darker colors imply higher values.
