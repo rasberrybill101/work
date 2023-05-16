@@ -1,9 +1,9 @@
 Given a csv file with header:
-convID,expected,time_to_first_token,token_count
+convID,is_complaint,earliest_detected_transition,token_count
 where convID is a string and all other columns are integers
 In python, create a scatter plot of time_to_first_token (x-axis) vs token_count (y-axis)
-use a red dot to mark the position of each convID that has expected=0
-use a blue dot to mark the position of each convID that has expected=1
+use a red dot to mark the position of each convID that has is_complaint=0
+use a blue dot to mark the position of each convID that has is_complaint=1
 
 import pandas as pd
 import matplotlib.pyplot as plt
@@ -11,16 +11,16 @@ import matplotlib.pyplot as plt
 # Read the csv file
 df = pd.read_csv('data.csv')
 
-# Separate the data based on 'expected' value
-df_0 = df[df['expected'] == 0]
-df_1 = df[df['expected'] == 1]
+# Separate the data based on 'is_complaint' value
+df_0 = df[df['is_complaint'] == 0]
+df_1 = df[df['is_complaint'] == 1]
 
 # Create the scatter plots
-plt.scatter(df_0['time_to_first_token'], df_0['token_count'], color='red', label='expected=0')
-plt.scatter(df_1['time_to_first_token'], df_1['token_count'], color='blue', label='expected=1')
+plt.scatter(df_0['earliest_detected_transition'], df_0['token_count'], color='red', label='is_complaint=0')
+plt.scatter(df_1['earliest_detected_transition'], df_1['token_count'], color='blue', label='is_complaint=1')
 
 # Label the axes
-plt.xlabel('time_to_first_token')
+plt.xlabel('earliest_detected_transition')
 plt.ylabel('token_count')
 
 # Add a legend
