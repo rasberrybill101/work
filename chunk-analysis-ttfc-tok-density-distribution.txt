@@ -10,6 +10,7 @@ In python, create the following scatter plots:
 
 use a red dot to mark the position of each convID that has is_complaint=0
 use a blue dot to mark the position of each convID that has is_complaint=1
+Show the convID when the mouse is over a dot
 
 import pandas as pd
 import matplotlib.pyplot as plt
@@ -51,3 +52,35 @@ create_plot(df_0['earliest_detected_transition'], df_0['zerod'],
 create_plot(df_0['earliest_detected_transition'], 5*df_0['zerod'], 
             df_1['earliest_detected_transition'], 5*df_1['zerod'], 
             'earliest_detected_transition', '5*zerod')
+
+
+========================= interactive plotly version to mouse over convID
+import pandas as pd
+import plotly.express as px
+
+# Read the csv file
+df = pd.read_csv('data.csv')
+
+# Create a color column based on 'is_complaint' value
+df['color'] = df['is_complaint'].apply(lambda x: 'red' if x == 0 else 'blue')
+
+# Define a function to create a scatter plot
+def create_plot(x, y):
+    fig = px.scatter(df, x=x, y=y, color='color', hover_data=['convID'])
+    fig.show()
+
+# earliest_detected_transition vs token_count
+create_plot('earliest_detected_transition', 'token_count')
+
+# zeros vs ones
+create_plot('zeros', 'ones')
+
+# zerod vs oned
+create_plot('zerod', 'oned')
+
+# earliest_detected_transition vs zerod
+create_plot('earliest_detected_transition', 'zerod')
+
+# earliest_detected_transition vs 5*zerod
+df['5*zerod'] = 5 * df['zerod']
+create_plot('earliest_detected_transition', '5*zerod')
