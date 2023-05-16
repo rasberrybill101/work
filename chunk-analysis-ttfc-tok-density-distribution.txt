@@ -84,3 +84,44 @@ create_plot('earliest_detected_transition', 'zerod')
 # earliest_detected_transition vs 5*zerod
 df['5*zerod'] = 5 * df['zerod']
 create_plot('earliest_detected_transition', '5*zerod')
+
+================================= hover with mplcursors
+
+import pandas as pd
+import matplotlib.pyplot as plt
+import mplcursors
+
+# Read the csv file
+df = pd.read_csv('data.csv')
+
+# Separate the data based on 'is_complaint' value
+df_0 = df[df['is_complaint'] == 0]
+df_1 = df[df['is_complaint'] == 1]
+
+# Create scatter plots
+def create_plot(df_0, df_1, x, y):
+    plt.figure(figsize=(10, 8))
+    plt.scatter(df_0[x], df_0[y], color='red', label='is_complaint=0')
+    plt.scatter(df_1[x], df_1[y], color='blue', label='is_complaint=1')
+    plt.xlabel(x)
+    plt.ylabel(y)
+    plt.legend()
+    mplcursors.cursor(hover=True)
+    plt.show()
+
+# earliest_detected_transition vs token_count
+create_plot(df_0, df_1, 'earliest_detected_transition', 'token_count')
+
+# zeros vs ones
+create_plot(df_0, df_1, 'zeros', 'ones')
+
+# zerod vs oned
+create_plot(df_0, df_1, 'zerod', 'oned')
+
+# earliest_detected_transition vs zerod
+create_plot(df_0, df_1, 'earliest_detected_transition', 'zerod')
+
+# earliest_detected_transition vs 5*zerod
+df_0['5*zerod'] = 5 * df_0['zerod']
+df_1['5*zerod'] = 5 * df_1['zerod']
+create_plot(df_0, df_1, 'earliest_detected_transition', '5*zerod')
