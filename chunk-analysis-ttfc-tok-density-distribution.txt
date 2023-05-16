@@ -11,4 +11,55 @@ In python, create the following scatter plots:
 use a red dot to mark the position of each convID that has is_complaint=0
 use a blue dot to mark the position of each convID that has is_complaint=1
 
+import pandas as pd
+import matplotlib.pyplot as plt
+
+# Read the csv file
+df = pd.read_csv('data.csv')
+
+# Separate the data based on 'is_complaint' value
+df_0 = df[df['is_complaint'] == 0]
+df_1 = df[df['is_complaint'] == 1]
+
+# Create the scatter plots
+fig, axs = plt.subplots(5, figsize=(8, 40))
+
+# earliest_detected_transition vs token_count
+axs[0].scatter(df_0['earliest_detected_transition'], df_0['token_count'], color='red', label='is_complaint=0')
+axs[0].scatter(df_1['earliest_detected_transition'], df_1['token_count'], color='blue', label='is_complaint=1')
+axs[0].set_xlabel('earliest_detected_transition')
+axs[0].set_ylabel('token_count')
+axs[0].legend()
+
+# zeros vs ones
+axs[1].scatter(df_0['zeros'], df_0['ones'], color='red', label='is_complaint=0')
+axs[1].scatter(df_1['zeros'], df_1['ones'], color='blue', label='is_complaint=1')
+axs[1].set_xlabel('zeros')
+axs[1].set_ylabel('ones')
+axs[1].legend()
+
+# zerod vs oned
+axs[2].scatter(df_0['zerod'], df_0['oned'], color='red', label='is_complaint=0')
+axs[2].scatter(df_1['zerod'], df_1['oned'], color='blue', label='is_complaint=1')
+axs[2].set_xlabel('zerod')
+axs[2].set_ylabel('oned')
+axs[2].legend()
+
+# earliest_detected_transition vs zerod
+axs[3].scatter(df_0['earliest_detected_transition'], df_0['zerod'], color='red', label='is_complaint=0')
+axs[3].scatter(df_1['earliest_detected_transition'], df_1['zerod'], color='blue', label='is_complaint=1')
+axs[3].set_xlabel('earliest_detected_transition')
+axs[3].set_ylabel('zerod')
+axs[3].legend()
+
+# earliest_detected_transition vs 5*zerod
+axs[4].scatter(df_0['earliest_detected_transition'], 5*df_0['zerod'], color='red', label='is_complaint=0')
+axs[4].scatter(df_1['earliest_detected_transition'], 5*df_1['zerod'], color='blue', label='is_complaint=1')
+axs[4].set_xlabel('earliest_detected_transition')
+axs[4].set_ylabel('5*zerod')
+axs[4].legend()
+
+# Show the plot
+plt.tight_layout()
+plt.show()
 
