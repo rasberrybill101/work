@@ -1,8 +1,97 @@
-Given a csv file with the following structure:
-conv_id
-segment_id
-complaint_disat
-call_duration
-reason_level_1
-reason_level_2
-plain_whisper
+Given two csv files, each with the following structure:
+convID - string
+label - integer
+earliest_detected_transition - integer
+token_count - integer
+zeros - integer
+ones - integer
+zerod - integer
+oned - integer
+spread - float
+min_spread - float
+max_spread - float
+eigen_complaint - float
+
+The first file named "batch_chunking_training.txt" contains training data
+The second file named "batch_chunking_testing.txt" contains testing data
+
+In the csv file, only the following columns are to be used to train a neural network:
+1) "label" is the expected value and is the desired output
+2) "eigen_complaint" is an input value
+3) "earliest_detected_transition" is another input value
+
+Based on the 2 input columns, the goal is to predict a label that matches the "label" columns
+
+Write a python implentation that:
+takes the training and testing files
+creates a neural network
+provides Precision, Recall, and accuracy metrics
+provides a confusion matrix for the metrics (seaborn would be nice)
+
+============================= implementation 1 =======================
+import pandas as pd
+from tensorflow import keras
+from tensorflow.keras import layers
+from sklearn.model_selection import train_test_split
+from sklearn.metrics import precision_score, recall_score, accuracy_score, confusion_matrix
+import seaborn as sns
+import matplotlib.pyplot as plt
+
+# load data
+train_df = pd.read_csv('batch_chunking_training.txt')
+test_df = pd.read_csv('batch_chunking_testing.txt')
+
+# select columns
+train_data = train_df[['eigen_complaint', 'earliest_detected_transition']]
+train_labels = train_df['label']
+
+test_data = test_df[['eigen_complaint', 'earliest_detected_transition']]
+test_labels = test_df['label']
+
+# normalize data
+train_data = (train_data - train_data.mean()) / train_data.std()
+test_data = (test_data - test_data.mean()) / test_data.std()
+
+# build neural network
+model = keras.Sequential([
+    layers.Dense(64, activation='relu', input_shape=[2]),
+    layers.Dense(64, activation='relu'),
+    layers.Dense(1, activation='sigmoid'),
+])
+
+model.compile(
+    optimizer='adam',
+    loss='binary_crossentropy',
+    metrics=['binary_accuracy'],
+)
+
+# train the model
+model.fit(
+    train_data, train_labels,
+    validation_split=0.2,
+    batch_size=64,
+    epochs=10,
+)
+
+# test the model
+predictions = model.predict(test_data)
+predictions = [1 if p > 0.5 else 0 for p in predictions]
+
+# calculate metrics
+precision = precision_score(test_labels, predictions)
+recall = recall_score(test_labels, predictions)
+accuracy = accuracy_score(test_labels, predictions)
+
+print(f'Precision: {precision}')
+print(f'Recall: {recall}')
+print(f'Accuracy: {accuracy}')
+
+# generate confusion matrix
+matrix = confusion_matrix(test_labels, predictions)
+
+# plot confusion matrix
+plt.figure(figsize=(10,7))
+sns.heatmap(matrix, annot=True, cmap='Blues')
+plt.xlabel('Predicted')
+plt.ylabel('Actual')
+plt.show()
