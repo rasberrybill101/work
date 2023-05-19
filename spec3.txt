@@ -379,4 +379,19 @@ for i, (train_index, test_index) in enumerate(kf.split(data)):
         print(f'Precision: {precision}')
         print(f'Recall: {recall}')
 
+======================================== heatmap blue/red
+
+# ... previous code ...
+
+from matplotlib.colors import LinearSegmentedColormap
+
+# Define a colormap
+cmap = LinearSegmentedColormap.from_list("Custom", ["red", "blue"], N=2)
+
+# Create confusion matrix
+cm = confusion_matrix(y_true, y_pred)
+
+# Plot confusion matrix
+sns.heatmap(cm, annot=True, fmt='d', cmap=cmap)
+plt.show()
 
