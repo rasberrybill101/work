@@ -197,4 +197,108 @@ plt.xlabel('Predicted')
 plt.ylabel('Actual')
 plt.show()
 
-=========================== iteration 3 - Pytorch
+=========================== iteration 3 - Make label categorical
+import pandas as pd
+from tensorflow import keras
+from tensorflow.keras import layers
+from tensorflow.keras.utils import to_categorical
+from sklearn.model_selection import KFold
+from sklearn.metrics import precision_score, recall_score, accuracy_score, confusion_matrix
+import seaborn as sns
+import matplotlib.pyplot as plt
+import numpy as np
+
+# load data
+train_df = pd.read_csv('batch_chunking_training.txt')
+test_df = pd.read_csv('batch_chunking_testing.txt')
+
+# convert integer labels to strings
+train_df['label'] = train_df['label'].astype(str)
+test_df['label'] = test_df['label'].astype(str)
+
+# convert string labels to one-hot encoded format
+labels = pd.get_dummies(train_df['label']).values
+test_labels = pd.get_dummies(test_df['label']).values
+
+# select columns
+data = train_df[['eigen_complaint', 'earliest_detected_transition']]
+test_data = test_df[['eigen_complaint', 'earliest_detected_transition']]
+
+# normalize data
+data = (data - data.mean()) / data.std()
+test_data = (test_data - test_data.mean()) / test_data.std()
+
+# initialize results
+acc_scores = []
+prec_scores = []
+rec_scores = []
+
+# set up k-fold cross-validation
+k = 5
+kfold = KFold(n_splits=k, shuffle=True)
+
+# iterate over each fold
+for train_indices, val_indices in kfold.split(data):
+    # generate training data
+    train_data = data.iloc[train_indices]
+    train_labels = labels[train_indices]
+    
+    # generate validation data
+    val_data = data.iloc[val_indices]
+    val_labels = labels[val_indices]
+    
+    # build neural network
+    model = keras.Sequential([
+        layers.Dense(64, activation='relu', input_shape=[2]),
+        layers.Dense(64, activation='relu'),
+        layers.Dense(2, activation='softmax'),
+    ])
+
+    model.compile(
+        optimizer='adam',
+        loss='categorical_crossentropy',
+        metrics=['accuracy'],
+    )
+
+    # train the model
+    model.fit(
+        train_data, train_labels,
+        validation_data=(val_data, val_labels),
+        batch_size=64,
+        epochs=10,
+        verbose=0
+    )
+
+    # make predictions on validation set
+    predictions = np.argmax(model.predict(val_data), axis=-1)
+
+    # calculate and save metrics
+    acc_scores.append(accuracy_score(np.argmax(val_labels, axis=-1), predictions))
+    prec_scores.append(precision_score(np.argmax(val_labels, axis=-1), predictions, average='weighted'))
+    rec_scores.append(recall_score(np.argmax(val_labels, axis=-1), predictions, average='weighted'))
+
+# print average metrics
+print(f'Average accuracy: {np.mean(acc_scores)}')
+print(f'Average precision: {np.mean(prec_scores)}')
+print(f'Average recall: {np.mean(rec_scores)}')
+
+# retrain the model on all the training data
+model.fit(
+    data, labels,
+    batch_size=64,
+    epochs=10,
+)
+
+# make predictions on the test set using the final model
+test_predictions = np.argmax(model.predict(test_data), axis=-1)
+
+# generate confusion matrix for the test set
+matrix = confusion_matrix(np.argmax(test_labels, axis=-1), test_predictions)
+
+# plot confusion matrix
+plt.figure(figsize=(10,7))
+sns.heatmap(matrix, annot=True, fmt='d')
+plt.xlabel('Predicted Label')
+plt.ylabel('True Label')
+plt.show()
+
