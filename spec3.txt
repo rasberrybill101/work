@@ -395,3 +395,40 @@ cm = confusion_matrix(y_true, y_pred)
 sns.heatmap(cm, annot=True, fmt='d', cmap=cmap)
 plt.show()
 
+=========================== metrics 
+Instead of this:
+    # calculate and save metrics
+    accuracy = accuracy_score(y_test, predictions)
+    precision = precision_score(y_test, predictions, pos_label='1')
+    recall = recall_score(y_test, predictions, pos_label='1')
+    
+    accuracy_list.append(accuracy)
+    precision_list.append(precision)
+    recall_list.append(recall)
+
+# print metrics
+print(f'Average Accuracy: {np.mean(accuracy_list)}')
+print(f'Average Precision: {np.mean(precision_list
+
+I just want to see the very latest set of metrics at the end of training
+I do not want the average.
+
+can you suggest replacement code for the above
+
+# ... previous code ...
+
+# On the last fold, calculate and print metrics
+if i == n_splits - 1:
+    # make predictions
+    predictions = model.predict_classes(X_test)
+
+    # calculate metrics
+    accuracy = accuracy_score(np.argmax(y_test, axis=1), predictions)
+    precision = precision_score(np.argmax(y_test, axis=1), predictions, pos_label=1)
+    recall = recall_score(np.argmax(y_test, axis=1), predictions, pos_label=1)
+
+    # print metrics
+    print(f'Accuracy: {accuracy}')
+    print(f'Precision: {precision}')
+    print(f'Recall: {recall}')
+
