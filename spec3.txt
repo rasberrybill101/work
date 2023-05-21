@@ -431,4 +431,53 @@ if i == n_splits - 1:
     print(f'Accuracy: {accuracy}')
     print(f'Precision: {precision}')
     print(f'Recall: {recall}')
+	
+========================== saving, retrieving, and running the model
+# Assuming a Keras model named 'model'
+model.save('my_model.h5')  # creates a HDF5 file 'my_model.h5'
 
+from keras.models import load_model
+# Returns a compiled model identical to the previous one
+model = load_model('my_model.h5')
+
+# Once loaded, model can be used to make predictions
+predictions = model.predict(new_data)
+
+============================ get metrics by running a saved model against a data set
+Using Python. Given a model saved to file 'batch_chunking_model.h5', read in the model and
+use it to make predictions on some test data in a csv file called 'batch_chunking_testing.txt' that has the following structure:
+convID - string
+ground_truth - integer
+earliest_detected_transition - integer
+volume_of_complaints - integer
+zeros - integer
+ones - integer
+zerod - float
+oned - float
+spread - float
+min_spread - float
+max_spread - float
+eigen_complaint - float
+
+For each line in the input file, the model take the following columns as inputs:
+eigen_complaint
+earliest_detected_transition
+volume_of_complaints
+zerod
+zeros
+oned
+ones
+
+The order of the inputs above matches the order of inputs during training of the model
+
+The model should return a prediction of either 0 or 1 ('0' or '1'). The goal is to compare
+the output of the model with the 'ground_truth' column.
+
+Once all predictions are done, report the following metrics:
+
+Accuracy
+Precision
+Recall
+Confusion Matrix
+
+Also create a Plot of the confusion matrix using a light to dark blue tone
