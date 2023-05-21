@@ -548,10 +548,11 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 
 # Load the saved model
-model = load_model('batch_chunking_model.h5')
+dir = 'chunk_test_data/'
+model = load_model(dir + 'batch_chunking_model.h5')
 
 # Load the test data
-df = pd.read_csv('batch_chunking_testing.txt')
+df = pd.read_csv(dir + 'batch_chunking_testing.txt')
 
 # Prepare the test data for prediction
 test_data = df[['eigen_complaint', 'earliest_detected_transition', 'volume_of_complaints', 'zerod', 'zeros', 'oned', 'ones']]
