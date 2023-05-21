@@ -880,3 +880,18 @@ sns.heatmap(matrix, annot=True, fmt='d')
 plt.xlabel('Predicted Label')
 plt.ylabel('True Label')
 plt.show()
+
+-------------
+instead of using val_accuracy for monitor in ModelCheckpoint, can we use 'recall' in this code:
+    # Create a callback that saves the model's weights whenever validation accuracy improves
+    checkpoint_cb = ModelCheckpoint(best_model_path, monitor='val_accuracy', save_best_only=True, mode='max')
+
+from tensorflow.keras.metrics import Recall
+
+model.compile(
+    optimizer='adam',
+    loss='categorical_crossentropy',
+    metrics=['accuracy', Recall()],
+)
+
+checkpoint_cb = ModelCheckpoint(best_model_path, monitor='val_recall', save_best_only=True, mode='max')
