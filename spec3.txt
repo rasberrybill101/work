@@ -523,3 +523,63 @@ sns.heatmap(conf_matrix, annot=True, fmt='d', cmap='Blues')
 plt.xlabel('Model Prediction')
 plt.ylabel('Ground Truth')
 plt.show()
+
+This error happens when trying to run the code:
+ValueError at this line: 
+predictions = [1 if pred >= 0.5 else 0 for pred in predictions]  # Threshold at 0.5
+
+ValueError: The truth value of an array with more than one element is ambiguous. Use a.any() or a.all()
+
+Also, when the model was trained, a one-hot encoding was used like this ...
+# convert integer labels to strings
+train_df['ground_truth'] = train_df['ground_truth'].astype(str)
+test_df['ground_truth'] = test_df['ground_truth'].astype(str)
+
+# convert string labels to one-hot encoded format
+labels = pd.get_dummies(train_df['ground_truth']).values
+test_labels = pd.get_dummies(test_df['ground_truth']).values
+
+------
+import pandas as pd
+import numpy as np
+from tensorflow.keras.models import load_model
+from sklearn.metrics import accuracy_score, precision_score, recall_score, confusion_matrix
+import matplotlib.pyplot as plt
+import seaborn as sns
+
+# Load the saved model
+model = load_model('batch_chunking_model.h5')
+
+# Load the test data
+df = pd.read_csv('batch_chunking_testing.txt')
+
+# Prepare the test data for prediction
+test_data = df[['eigen_complaint', 'earliest_detected_transition', 'volume_of_complaints', 'zerod', 'zeros', 'oned', 'ones']]
+
+# Make predictions
+predictions = model.predict(test_data)
+predictions = np.argmax(predictions, axis=1)  # Convert from one-hot to labels
+
+# Convert ground truth from one-hot to labels
+ground_truth = np.argmax(df[['0', '1']].values, axis=1)
+
+# Calculate metrics
+accuracy = accuracy_score(ground_truth, predictions)
+precision = precision_score(ground_truth, predictions)
+recall = recall_score(ground_truth, predictions)
+conf_matrix = confusion_matrix(ground_truth, predictions)
+
+# Print metrics
+print(f"Accuracy: {accuracy}")
+print(f"Precision: {precision}")
+print(f"Recall: {recall}")
+print("Confusion Matrix:")
+print(conf_matrix)
+
+# Plot confusion matrix
+plt.figure(figsize=(10,7))
+sns.heatmap(conf_matrix, annot=True, fmt='d', cmap='Blues')
+plt.xlabel('Predicted')
+plt.ylabel('Truth')
+plt.show()
+
