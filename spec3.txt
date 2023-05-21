@@ -895,3 +895,131 @@ model.compile(
 )
 
 checkpoint_cb = ModelCheckpoint(best_model_path, monitor='val_recall', save_best_only=True, mode='max')
+
+-----
+so how will this part of the code change:
+    # Check if this model's maximum validation accuracy is better than the current best
+    max_val_accuracy = np.max(history.history['val_accuracy'])
+    if max_val_accuracy > best_accuracy:
+        best_accuracy = max_val_accuracy
+
+-----
+Several lines with these warnings:
+WARNING:tensorflow:Can save best model only with val_recall available, skipping.
+
+and this errorKeyError: 'val_recall'
+
+----- another iteration. ....
+import pandas as pd
+from tensorflow import keras
+from tensorflow.keras import layers
+from tensorflow.keras.callbacks import Callback, ModelCheckpoint
+from tensorflow.keras.utils import to_categorical
+from sklearn.model_selection import KFold
+from sklearn.metrics import precision_score, recall_score, accuracy_score, confusion_matrix
+import seaborn as sns
+import matplotlib.pyplot as plt
+import numpy as np
+
+class CustomCallback(Callback):
+    def __init__(self, validation_data, filepath):
+        super(Callback, self).__init__()
+        self.validation_data = validation_data
+        self.filepath = filepath
+        self.best_recall = 0
+
+    def on_epoch_end(self, epoch, logs=None):
+        y_pred = np.argmax(self.model.predict(self.validation_data[0]), axis=-1)
+        y_true = np.argmax(self.validation_data[1], axis=-1)
+        current_recall = recall_score(y_true, y_pred)
+        if current_recall > self.best_recall:
+            print("\nValidation recall has improved from %.4f to %.4f, saving model at %s\n" % (self.best_recall, current_recall, self.filepath))
+            self.model.save(self.filepath)
+            self.best_recall = current_recall
+
+# load data
+train_df = pd.read_csv('batch_chunking_training.txt')
+test_df = pd.read_csv('batch_chunking_testing.txt')
+
+# convert integer labels to strings
+train_df['ground_truth'] = train_df['ground_truth'].astype(str)
+test_df['ground_truth'] = test_df['ground_truth'].astype(str)
+
+# convert string labels to one-hot encoded format
+labels = pd.get_dummies(train_df['ground_truth']).values
+test_labels = pd.get_dummies(test_df['ground_truth']).values
+
+# select columns
+data = train_df[['eigen_complaint', 'earliest_detected_transition', 'volume_of_complaints', 'zerod', 'zeros', 'oned', 'ones']]
+test_data = test_df[['eigen_complaint', 'earliest_detected_transition', 'volume_of_complaints', 'zerod', 'zeros', 'oned', 'ones']]
+
+# normalize data
+data = (data - data.mean()) / data.std()
+test_data = (test_data - test_data.mean()) / test_data.std()
+
+# set up k-fold cross-validation
+k = 5
+kfold = KFold(n_splits=k, shuffle=True)
+
+best_model_path = "best_model.h5"
+
+for train_indices, val_indices in kfold.split(data):
+    # generate training data
+    train_data = data.iloc[train_indices]
+    train_labels = labels[train_indices]
+    
+    # generate validation data
+    val_data = data.iloc[val_indices]
+    val_labels = labels[val_indices]
+    
+    # build neural network
+    model = keras.Sequential([
+        layers.Dense(64, activation='relu', input_shape=[7]),
+        layers.Dense(64, activation='relu'),
+        layers.Dense(2, activation='softmax'),
+    ])
+
+    model.compile(
+        optimizer='adam',
+        loss='categorical_crossentropy',
+        metrics=['accuracy'],
+    )
+
+    # Create a custom callback that computes recall on the validation data after each epoch
+    custom_callback = CustomCallback((val_data, val_labels), best_model_path)
+
+    # train the model
+    history = model.fit(
+        train_data, train_labels,
+        validation_data=(val_data, val_labels),
+        batch_size=64,
+        epochs=10,
+        verbose=0,
+        callbacks=[custom_callback]
+    )
+
+# load the best model from disk
+final_model = keras.models.load_model(best_model_path)
+
+# make predictions on the test set using the final model
+test_predictions = np.argmax(final_model.predict(test_data), axis=-1)
+
+# generate confusion matrix for the test set
+matrix = confusion_matrix(np.argmax(test_labels, axis=-1), test_predictions)
+
+# Calculate accuracy, precision and recall
+accuracy = accuracy_score(np.argmax(test_labels, axis=-1), test_predictions)
+precision = precision_score(np.argmax(test_labels, axis=-1), test_predictions)
+recall = recall_score(np.argmax(test_labels, axis=-1), test_predictions)
+
+# print metrics
+print(f'Final Test Accuracy: {accuracy}')
+print(f'Final Test Precision: {precision}')
+print(f'Final Test Recall: {recall}')
+
+# plot confusion matrix
+plt.figure(figsize=(10,7))
+sns.heatmap(matrix, annot=True, fmt='d', cmap='Blues')
+plt.xlabel('Predicted Label')
+plt.ylabel('True Label')
+plt.show()
