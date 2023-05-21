@@ -520,6 +520,6 @@ print(conf_matrix)
 # Plot confusion matrix
 plt.figure(figsize=(10,7))
 sns.heatmap(conf_matrix, annot=True, fmt='d', cmap='Blues')
-plt.xlabel('Predicted')
+plt.xlabel('Model Prediction')
 plt.ylabel('Ground Truth')
 plt.show()
