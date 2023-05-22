@@ -1,0 +1,2 @@
+Number of words in a cell
+=IF(LEN(TRIM(A1))=0,0,LEN(TRIM(A1))-LEN(SUBSTITUTE(A1," ",""))+1)
