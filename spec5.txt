@@ -1,0 +1,33 @@
+Given a csv file without a header, where each line consists of a String ID followed by 42 String values such as:
+convID,v1,v2,v3,....,v42
+Each value can be one of the five strings:
+TP
+FP
+TN
+FN
+--
+The first column #
+
+
+
+
+
+
+public class Main {
+
+    public static void main(String[] args) {
+        System.out.println(makeHeader(5));
+    }
+
+    public static String makeHeader(int k) {
+        StringBuilder sb = new StringBuilder();
+        for(int i = 1; i <= k; i++) {
+            sb.append("step_");
+            sb.append(i);
+            if(i != k) {
+                sb.append(",");
+            }
+        }
+        return sb.toString();
+    }
+}
