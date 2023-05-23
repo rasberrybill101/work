@@ -39,3 +39,12 @@ public class Main {
                     .anyMatch(element -> !element.equals(predicted) && !element.equals("TN"));
     }
 }
+
+Java method "switchValues" to change the values of some elements in a String ArrayList
+Given two index positions
+from
+to
+newValue
+Change all the values between "from" index to "to" index to "newValue"
+the replacement should include the indices "from" and "to"
+Use streams for implementing the method 
