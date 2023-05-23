@@ -136,8 +136,9 @@ plt.show()
 
 
 ============
-
-
+On the line graph x-axis, show the values as 1,2,3,.... instead of s1,s2,s3,...
+Only show the modified line to be used to replace the existing values
+============
 
 
 
