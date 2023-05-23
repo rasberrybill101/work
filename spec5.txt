@@ -37,7 +37,56 @@ The name of the output file should be "step_metrics.txt"
 
 Draw a line graph of each metric (Accuracy, precision, recall, F1) on the y axis vs step number on the x axis
 
+-----------------
 
+import pandas as pd
+import matplotlib.pyplot as plt
+import numpy as np
+
+# Read the CSV file without header
+df = pd.read_csv('input_file.csv', header=None)
+
+# Create a DataFrame to hold the calculated metrics
+metrics_df = pd.DataFrame(columns=['step', 'Accuracy', 'Precision', 'Recall', 'F1'])
+
+# Iterate over the columns (excluding the first column)
+for i in range(1, df.shape[1]):
+    # Get the counts of each string in the column
+    counts = df[i].value_counts()
+    
+    # Calculate the metrics
+    TP = counts.get('TP', 0)
+    TN = counts.get('TN', 0)
+    FP = counts.get('FP', 0)
+    FN = counts.get('FN', 0)
+    
+    accuracy = (TP + TN) / (TP + TN + FP + FN) if (TP + TN + FP + FN) != 0 else np.nan
+    precision = TP / (TP + FP) if (TP + FP) != 0 else np.nan
+    recall = TP / (TP + FN) if (TP + FN) != 0 else np.nan
+    f1 = 2 * (precision * recall) / (precision + recall) if (precision + recall) != 0 else np.nan
+    
+    # Append the results to the metrics DataFrame
+    metrics_df = metrics_df.append({'step': 's' + str(i), 'Accuracy': accuracy, 'Precision': precision, 'Recall': recall, 'F1': f1}, ignore_index=True)
+
+# Write the metrics DataFrame to a new CSV file
+metrics_df.to_csv('step_metrics.txt', index=False)
+
+# Plot the metrics
+plt.figure(figsize=(10,6))
+plt.plot(metrics_df['step'], metrics_df['Accuracy'], label='Accuracy')
+plt.plot(metrics_df['step'], metrics_df['Precision'], label='Precision')
+plt.plot(metrics_df['step'], metrics_df['Recall'], label='Recall')
+plt.plot(metrics_df['step'], metrics_df['F1'], label='F1')
+plt.xlabel('Step')
+plt.ylabel('Metric Value')
+plt.legend()
+plt.show()
+
+
+
+
+
+------------------
 
 
 
