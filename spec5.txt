@@ -1,12 +1,48 @@
-Given a csv file without a header, where each line consists of a String ID followed by 42 String values such as:
-convID,v1,v2,v3,....,v42
-Each value can be one of the five strings:
+Using Python, Given a csv file without a header, where each line consists of a String ID followed by 42 String values such as:
+convID,s1,s2,s3,....,s42
+Each of the 42 string values (s1..s42) can be one of the five strings:
 TP
 FP
 TN
 FN
 --
-The first column #
+
+The first column is an ID and each of the other 42 columns represents a metric for a single step.
+The requirement is to find the following metrics for each time step:
+1) Accuracy = (TP + TN)/(TP + TN + FP + FN)
+2) Precision = TP/(TP + FP)
+3) Recall = TP/(TP + FN)
+4) F1 = 2*(Precision*Recall)/(Precision + Recall)
+Where TP, TN, FP, FN represent of the sum of the corresponding strings in a given column of the csv file.
+Any metrics with value "--" in the csv file are to be ignored.
+A single time step consists of all the values in a single column. For instance, given the following file:
+convID,s1,s2,s3,s4,...,s42
+000001,TP,TN,TP,FN,...,TN
+000002,TN,TP,FP,FP,...,TP
+...
+The metrics for step 1 (s1) are found by summing the corresponding TP, TN, FP, FN values in column s1. Any "--" strings are ignored for the calculations.
+
+At the end of the calculations, each time step (s1,s2,....,s41) will have 4 metrics calculated (Accuracy, Precision, Recall, F1). A new csv file with the following structure will be created from the results:
+
+step,Accuracy,Precision,Recall,F1
+
+Thus each line in the output file will consist of:
+step - the step identifier, eg. s1, s2, ...
+Accuracy - the calculated accuracy value for the step, displayed to 3 decimal places
+Precision - calculated precision for the step, displayed to 3 decimal places
+Recall - calculated recall for the step, displayed to 3 decimal places
+F1 - calculated F1 for the step, displayed to 3 decimal places
+
+The name of the output file should be "step_metrics.txt"
+
+Draw a line graph of each metric (Accuracy, precision, recall, F1) on the y axis vs step number on the x axis
+
+
+
+
+
+
+
 
 
 
