@@ -1,0 +1,36 @@
+Write java method "predictionChanged", given the following inputs:
+line - a java ArrayList of String
+position - an index on the ArrayList
+predicted - a String
+returns a boolean:
+false if the elements from the provided index to the end of the list:
+	contain only the predicted string or "TN"
+otherwise
+	true
+
+---------
+
+import java.util.ArrayList;
+
+public class Main {
+    public static void main(String[] args) {
+        ArrayList<String> line = new ArrayList<>();
+        line.add("TN");
+        line.add("predict");
+        line.add("TN");
+        line.add("TN");
+        
+        System.out.println(predictionChanged(line, 1, "predict")); // should return false
+        System.out.println(predictionChanged(line, 2, "predict")); // should return true
+    }
+
+    public static boolean predictionChanged(ArrayList<String> line, int position, String predicted) {
+        for (int i = position; i < line.size(); i++) {
+            String element = line.get(i);
+            if (!element.equals(predicted) && !element.equals("TN")) {
+                return true;
+            }
+        }
+        return false;
+    }
+}
