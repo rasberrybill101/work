@@ -33,4 +33,9 @@ public class Main {
         }
         return false;
     }
+	
+    public static boolean predictionChanged(List<String> line, int position, String predicted) {
+        return line.subList(position, line.size()).stream()
+                    .anyMatch(element -> !element.equals(predicted) && !element.equals("TN"));
+    }
 }
