@@ -169,3 +169,37 @@ takes as input a string with the structure defined as above
 find the longest coninuous stretch of comma-separated FN starting from the beginning of the string that encounters a string that is not FN
 if a non-FN string is found, then replace all FN with TN up to the point where the non-FN string begins.
 Write this in java 8
+
+public class Main {
+    private static final String FN = "FN";
+    private static final String TN = "TN";
+
+    public static void main(String[] args) {
+        String input = "convID,FN,FN,FN,TP,FN,FN,FN";
+        String output = replaceLongestFNStretch(input);
+        System.out.println(output);
+    }
+
+    public static String replaceLongestFNStretch(String input) {
+        String[] parts = input.split(",");
+        StringBuilder output = new StringBuilder();
+        boolean replace = true;
+
+        output.append(parts[0]);
+
+        for(int i = 1; i < parts.length; i++) {
+            if(replace && !parts[i].equals(FN)) {
+                replace = false;
+            }
+
+            if(replace) {
+                output.append(",").append(TN);
+            } else {
+                output.append(",").append(parts[i]);
+            }
+        }
+
+        return output.toString();
+    }
+}
+
