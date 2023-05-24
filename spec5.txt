@@ -167,4 +167,5 @@ String EC = "--"
 The task is to write a java method which 
 takes as input a string with the structure defined as above
 find the longest coninuous stretch of comma-separated FN starting from the beginning of the string that encounters a string that is not FN
-if a non-FN string is found, then replace all FN with TN up to the point where the non-FN string begins
+if a non-FN string is found, then replace all FN with TN up to the point where the non-FN string begins.
+Write this in java 8
