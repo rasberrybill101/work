@@ -82,10 +82,6 @@ plt.ylabel('Metric Value')
 plt.legend()
 plt.show()
 
-
-
-
-
 ------------------
 
 import pandas as pd
@@ -140,12 +136,7 @@ On the line graph x-axis, show the values as 1,2,3,.... instead of s1,s2,s3,...
 Only show the modified line to be used to replace the existing values
 ============
 
-
-
-
-
 public class Main {
-
     public static void main(String[] args) {
         System.out.println(makeHeader(5));
     }
@@ -162,3 +153,18 @@ public class Main {
         return sb.toString();
     }
 }
+
+=============
+Given a java string that consists of comma separated tokens that comprises an initial convID followed by a number of other strings (in this case 42):
+convID,s1,s2,s3,....,s42
+where each of the 42 string values (s1..s42) can be one of the five String constants:
+String TP = "TP"
+String FP = "FP"
+String TN = "TN"
+String FN = "FN"
+String EC = "--"
+
+The task is to write a java method which 
+takes as input a string with the structure defined as above
+find the longest coninuous stretch of comma-separated FN starting from the beginning of the string that encounters a string that is not FN
+if a non-FN string is found, then replace all FN with TN up to the point where the non-FN string begins
