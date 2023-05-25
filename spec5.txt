@@ -203,3 +203,38 @@ public class Main {
     }
 }
 
+========= implementation as List<String>
+
+import java.util.*;
+
+public class Main {
+    private static final String FN = "FN";
+    private static final String TN = "TN";
+
+    public static void main(String[] args) {
+        List<String> input = Arrays.asList("convID", "FN", "FN", "FN", "TP", "FN", "FN", "FN");
+        List<String> output = replaceLongestFNStretch(input);
+        System.out.println(String.join(",", output));
+    }
+
+    public static List<String> replaceLongestFNStretch(List<String> input) {
+        List<String> output = new ArrayList<>();
+        boolean replace = true;
+
+        output.add(input.get(0));
+
+        for(int i = 1; i < input.size(); i++) {
+            if(replace && !input.get(i).equals(FN)) {
+                replace = false;
+            }
+
+            if(replace) {
+                output.add(TN);
+            } else {
+                output.add(input.get(i));
+            }
+        }
+
+        return output;
+    }
+}
