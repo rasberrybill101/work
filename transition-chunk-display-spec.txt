@@ -169,6 +169,62 @@ private void setupFonts() {
     }
 }
 
+----------------------------------- hiliting .....
+public class HighlightInfo {
+    private final int start;
+    private final int end;
+    private final String color;
+    private final String backgroundColor;
+
+    public HighlightInfo(int start, int end, String color, String backgroundColor) {
+        this.start = start;
+        this.end = end;
+        this.color = color;
+        this.backgroundColor = backgroundColor;
+    }
+
+    public int getStart() {
+        return start;
+    }
+
+    public int getEnd() {
+        return end;
+    }
+
+    public String getColor() {
+        return color;
+    }
+
+    public String getBackgroundColor() {
+        return backgroundColor;
+    }
+}
+
+private void highlightWords(String content, List<HighlightInfo> highlights) {
+    TextFlow textFlow = new TextFlow();
+    int lastEnd = 0;
+
+    // Sort highlights by start index
+    highlights.sort(Comparator.comparingInt(HighlightInfo::getStart));
+
+    for (HighlightInfo highlight : highlights) {
+        Text textBefore = new Text(content.substring(lastEnd, highlight.getStart()));
+        Text highlightedText = new Text(content.substring(highlight.getStart(), highlight.getEnd()));
+        highlightedText.setFill(Color.web(highlight.getColor()));
+        highlightedText.setBackground(new Background(new BackgroundFill(Color.web(highlight.getBackgroundColor()), CornerRadii.EMPTY, Insets.EMPTY)));
+        textFlow.getChildren().addAll(textBefore, highlightedText);
+
+        lastEnd = highlight.getEnd();
+    }
+
+    // Add remaining text
+    Text textAfter = new Text(content.substring(lastEnd));
+    textFlow.getChildren().add(textAfter);
+
+    rightVBox.getChildren().clear();  // clear previous content
+    rightVBox.getChildren().add(textFlow);
+}
+
 
 
 =======================================================================================================
