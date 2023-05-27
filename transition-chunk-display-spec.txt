@@ -137,6 +137,60 @@ Slouches towards Bethlehem to be born?";
     }
 }
 
+====================================================== java fx 
+
+import javafx.application.Application;
+import javafx.geometry.Insets;
+import javafx.scene.Scene;
+import javafx.scene.control.Button;
+import javafx.scene.control.Label;
+import javafx.scene.control.ScrollPane;
+import javafx.scene.control.TextArea;
+import javafx.scene.layout.BorderPane;
+import javafx.scene.layout.VBox;
+import javafx.scene.text.TextAlignment;
+import javafx.stage.Stage;
+
+public class Main extends Application {
+    public static void main(String[] args) {
+        launch(args);
+    }
+
+    @Override
+    public void start(Stage primaryStage) {
+        primaryStage.setTitle("Main Window");
+
+        BorderPane borderPane = new BorderPane();
+
+        // Top Panel
+        Label topLabel = new Label("conversation1_id TN TN TN FN FN FN TP TP TP FN FN FN TP TP  FN TP TP TP FN FN FN TP TP  FN TP TP TP FN FN FN TP TP");
+        topLabel.setWrapText(true);
+        topLabel.setTextAlignment(TextAlignment.CENTER);
+        borderPane.setTop(topLabel);
+
+        // Left Panel
+        VBox leftVBox = new VBox();
+        for (int i = 1; i <= 698; i++) {
+            Button button = new Button("conversation_" + i + "_id");
+            button.setOnAction(e -> System.out.println(button.getText() + " clicked"));
+            button.setStyle("-fx-border-color: transparent;");
+            leftVBox.getChildren().add(button);
+        }
+        ScrollPane leftScrollPane = new ScrollPane(leftVBox);
+        borderPane.setLeft(leftScrollPane);
+
+        // Right Panel
+        TextArea rightTextArea = new TextArea(rightText);
+        rightTextArea.setEditable(false);
+        rightTextArea.setWrapText(true);
+        borderPane.setCenter(rightTextArea);
+
+        // Set border pane as root of scene and show on stage
+        Scene scene = new Scene(borderPane, 800, 600);
+        primaryStage.setScene(scene);
+        primaryStage.show();
+    }
+}
 
 
 =======================================================================================================
