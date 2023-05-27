@@ -151,23 +151,18 @@ public class Main extends Application {
 }
 
 ------ update setupFonts
-private void setupFonts() throws Exception {
-    URI uri = getClass().getResource("/fonts").toURI();
-    Path fontsDirectoryPath = Paths.get(uri);
-    try (Stream<Path> paths = Files.walk(fontsDirectoryPath)) {
-        paths
-            .filter(Files::isRegularFile)
-            .filter(path -> path.toString().endsWith(".ttf"))
-            .forEach(path -> {
-                try (InputStream fontStream = Files.newInputStream(path)) {
-                    Font font = Font.loadFont(fontStream, 12);
-                    System.out.println("Loaded font: " + font.getName());
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-            });
+private void setupFonts() {
+    try {
+        PathMatchingResourcePatternResolver resolver = new PathMatchingResourcePatternResolver();
+        Resource[] resources = resolver.getResources("classpath:/fonts/*.ttf");
+        for (Resource resource : resources) {
+            Font.loadFont(resource.getInputStream(), 12);
+        }
+    } catch (IOException e) {
+        e.printStackTrace();
     }
 }
+
 
 
 =======================================================================================================
