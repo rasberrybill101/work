@@ -139,6 +139,8 @@ import javafx.scene.text.TextAlignment;
 import javafx.stage.Stage;
 
 public class Main extends Application {
+    private static final double LEFT_PANEL_WIDTH = 200.0;  // set your desired width here
+
     public static void main(String[] args) {
         launch(args);
     }
@@ -157,7 +159,6 @@ public class Main extends Application {
 
         // Left Panel
         VBox leftVBox = new VBox();
-        double maxWidth = 0;
         for (int i = 1; i <= 698; i++) {
             Button button = new Button("conversation_" + i + "_id");
             button.setStyle("-fx-background-color: white; -fx-text-fill: black;");
@@ -165,10 +166,9 @@ public class Main extends Application {
                 button.setStyle("-fx-background-color: black; -fx-text-fill: white;");
                 System.out.println(button.getText() + " clicked");
             });
-            maxWidth = Math.max(maxWidth, button.prefWidth(-1));
             leftVBox.getChildren().add(button);
         }
-        leftVBox.setPrefWidth(maxWidth);
+        leftVBox.setPrefWidth(LEFT_PANEL_WIDTH);
         ScrollPane leftScrollPane = new ScrollPane(leftVBox);
         borderPane.setLeft(leftScrollPane);
 
@@ -186,6 +186,7 @@ public class Main extends Application {
         primaryStage.show();
     }
 }
+
 
 
 =======================================================================================================
