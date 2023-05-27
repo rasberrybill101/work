@@ -189,6 +189,9 @@ public class Main extends Application {
         TextArea rightTextArea = new TextArea(rightText);
         rightTextArea.setEditable(false);
         rightTextArea.setWrapText(true);
+		
+		// Set the font face and weight
+        rightTextArea.setFont(Font.font("Arial", FontWeight.BOLD, 12)); // change the font family to "Arial", the weight to "Bold", and the size to "12"
 
         // Adding the left and right panels to the SplitPane
         SplitPane splitPane = new SplitPane();
