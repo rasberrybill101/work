@@ -41,6 +41,7 @@ Slouches towards Bethlehem to be born?"
 
 Adjust the width of the left panel to be as wide as each button. When a button is clicked, make its color black and its text white. when a button is not clicked, make its background white and its text black so it looks like a label rather than a button.
 remove the scrollbar from the left panel and make its background white. Only the most recently clicked button should have white text on black background.
+Add a split pane between the left and right panels.
 
 ========================================================================
 
