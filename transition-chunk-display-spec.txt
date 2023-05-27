@@ -152,14 +152,20 @@ public class Main extends Application {
 
 ------ update setupFonts
 private void setupFonts() {
-    try {
-        PathMatchingResourcePatternResolver resolver = new PathMatchingResourcePatternResolver();
-        Resource[] resources = resolver.getResources("classpath:/fonts/*.ttf");
-        for (Resource resource : resources) {
-            Font.loadFont(resource.getInputStream(), 12);
+    String[] fontFiles = { "font1.ttf", "font2.ttf", "font3.ttf" };  // replace with your actual font files
+
+    for (String fontFile : fontFiles) {
+        try {
+            InputStream fontStream = getClass().getResourceAsStream("/fonts/" + fontFile);
+            if (fontStream != null) {
+                Font font = Font.loadFont(fontStream, 12);
+                System.out.println("Loaded font: " + font.getName());
+            } else {
+                System.out.println("Could not load font: " + fontFile);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
         }
-    } catch (IOException e) {
-        e.printStackTrace();
     }
 }
 
