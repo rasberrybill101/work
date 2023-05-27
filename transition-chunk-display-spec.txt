@@ -177,12 +177,13 @@ public class Main extends Application {
             leftVBox.getChildren().add(button);
         }
 
-        ScrollPane leftScrollPane = new ScrollPane(leftVBox);
-        leftScrollPane.setHbarPolicy(ScrollBarPolicy.NEVER); // remove horizontal scrollbar
-        leftScrollPane.setVbarPolicy(ScrollBarPolicy.AS_NEEDED); // show vertical scrollbar if needed
-        leftScrollPane.setStyle("-fx-background-color: white;");
-        leftScrollPane.setPrefWidth(LEFT_PANEL_WIDTH);
-        borderPane.setLeft(leftScrollPane);
+		ScrollPane leftScrollPane = new ScrollPane(leftVBox);
+		leftScrollPane.setHbarPolicy(ScrollBarPolicy.NEVER); // remove horizontal scrollbar
+		leftScrollPane.setVbarPolicy(ScrollBarPolicy.AS_NEEDED); // show vertical scrollbar if needed
+		leftScrollPane.setStyle("-fx-background-color: white; -fx-background: white;");
+		leftScrollPane.setPrefWidth(LEFT_PANEL_WIDTH);
+		borderPane.setLeft(leftScrollPane);
+
 
         // Right Panel
         TextArea rightTextArea = new TextArea(rightText);
