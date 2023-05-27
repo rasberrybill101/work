@@ -132,6 +132,7 @@ import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.ScrollPane;
+import javafx.scene.control.SplitPane;
 import javafx.scene.control.TextArea;
 import javafx.scene.control.ScrollPane.ScrollBarPolicy;
 import javafx.scene.layout.BorderPane;
@@ -177,19 +178,22 @@ public class Main extends Application {
             leftVBox.getChildren().add(button);
         }
 
-		ScrollPane leftScrollPane = new ScrollPane(leftVBox);
-		leftScrollPane.setHbarPolicy(ScrollBarPolicy.NEVER); // remove horizontal scrollbar
-		leftScrollPane.setVbarPolicy(ScrollBarPolicy.AS_NEEDED); // show vertical scrollbar if needed
-		leftScrollPane.setStyle("-fx-background-color: white; -fx-background: white;");
-		leftScrollPane.setPrefWidth(LEFT_PANEL_WIDTH);
-		borderPane.setLeft(leftScrollPane);
-
+        ScrollPane leftScrollPane = new ScrollPane(leftVBox);
+        leftScrollPane.setHbarPolicy(ScrollBarPolicy.NEVER); // remove horizontal scrollbar
+        leftScrollPane.setVbarPolicy(ScrollBarPolicy.AS_NEEDED); // show vertical scrollbar if needed
+        leftScrollPane.setStyle("-fx-background-color: white; -fx-background: white;");
+        leftScrollPane.setPrefWidth(LEFT_PANEL_WIDTH);
 
         // Right Panel
         TextArea rightTextArea = new TextArea(rightText);
         rightTextArea.setEditable(false);
         rightTextArea.setWrapText(true);
-        borderPane.setCenter(rightTextArea);
+
+        // Adding the left and right panels to the SplitPane
+        SplitPane splitPane = new SplitPane();
+        splitPane.getItems().addAll(leftScrollPane, rightTextArea);
+
+        borderPane.setCenter(splitPane);
 
         // Set border pane as root of scene and show on stage
         Scene scene = new Scene(borderPane, 800, 600);
