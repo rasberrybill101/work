@@ -1,0 +1,573 @@
+Using java 8, create a GUI main window (800x600) which contains 3 panels:
+Top panel is positioned at the top of the main window and has the same width. It is 20% of the height of the main window.
+Left panel is positioned on the left of the window. It is 80% of the height of the main window and 20% of the width of the main window. It's left edge is coincident with the left edge of the main window.
+Right panel fills the remainder of the space (right of the left panel and below the top panel).
+
+Display the following in each panel:
+Top panel: "conversation1_id TN TN TN FN FN FN TP TP TP FN FN FN TP TP  FN TP TP TP FN FN FN TP TP  FN TP TP TP FN FN FN TP TP"
+
+Left Panel: List of strings, one per line
+"conversation_1_id"
+"conversation_3_id"
+"conversation_4_id"
+"conversation_5_id"
+...
+"conversation_698_id"
+
+Right panel:
+"Turning and turning in the widening gyre   
+The falcon cannot hear the falconer;
+Things fall apart; the centre cannot hold;
+Mere anarchy is loosed upon the world,
+The blood-dimmed tide is loosed, and everywhere   
+The ceremony of innocence is drowned;
+The best lack all conviction, while the worst   
+Are full of passionate intensity.
+
+Surely some revelation is at hand;
+Surely the Second Coming is at hand.   
+The Second Coming! Hardly are those words out   
+When a vast image out of Spiritus Mundi
+Troubles my sight: somewhere in sands of the desert   
+A shape with lion body and the head of a man,   
+A gaze blank and pitiless as the sun,   
+Is moving its slow thighs, while all about it   
+Reel shadows of the indignant desert birds.   
+The darkness drops again; but now I know   
+That twenty centuries of stony sleep
+Were vexed to nightmare by a rocking cradle,   
+And what rough beast, its hour come round at last,   
+Slouches towards Bethlehem to be born?"
+
+========================================================================
+
+import javax.swing.*;
+import java.awt.*;
+import java.awt.event.ActionEvent;
+
+public class Main {
+	public static String rightText = "Turning and turning in the widening gyre   
+The falcon cannot hear the falconer;
+Things fall apart; the centre cannot hold;
+Mere anarchy is loosed upon the world,
+The blood-dimmed tide is loosed, and everywhere   
+The ceremony of innocence is drowned;
+The best lack all conviction, while the worst   
+Are full of passionate intensity.
+
+Surely some revelation is at hand;
+Surely the Second Coming is at hand.   
+The Second Coming! Hardly are those words out   
+When a vast image out of Spiritus Mundi
+Troubles my sight: somewhere in sands of the desert   
+A shape with lion body and the head of a man,   
+A gaze blank and pitiless as the sun,   
+Is moving its slow thighs, while all about it   
+Reel shadows of the indignant desert birds.   
+The darkness drops again; but now I know   
+That twenty centuries of stony sleep
+Were vexed to nightmare by a rocking cradle,   
+And what rough beast, its hour come round at last,   
+Slouches towards Bethlehem to be born?";
+
+    public static void main(String[] args) {
+        SwingUtilities.invokeLater(Main::createAndShowGUI);
+    }
+
+    private static void createAndShowGUI() {
+        JFrame frame = new JFrame("Main Window");
+        frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        frame.setSize(800, 600);
+
+        JPanel topPanel = new JPanel();
+        topPanel.setPreferredSize(new Dimension(frame.getWidth(), (int) (frame.getHeight() * 0.2)));
+        topPanel.setBorder(BorderFactory.createLineBorder(Color.BLACK));
+        topPanel.add(new JLabel("conversation1_id TN TN TN FN FN FN TP TP TP FN FN FN TP TP  FN TP TP TP FN FN FN TP TP  FN TP TP TP FN FN FN TP TP"));
+
+        JPanel leftPanel = new JPanel();
+        leftPanel.setLayout(new BoxLayout(leftPanel, BoxLayout.PAGE_AXIS));
+        leftPanel.setBorder(BorderFactory.createLineBorder(Color.BLACK));
+        for (int i = 1; i <= 698; i++) {
+            JButton button = new JButton("conversation_" + i + "_id");
+            button.setBorderPainted(false);
+            button.setContentAreaFilled(false);
+            button.setFocusPainted(true);
+            button.setHorizontalAlignment(SwingConstants.LEFT);
+            button.addActionListener((ActionEvent e) -> {
+                System.out.println(button.getText() + " clicked");
+            });
+            leftPanel.add(button);
+        }
+        JScrollPane leftScrollPane = new JScrollPane(leftPanel);
+        leftScrollPane.setPreferredSize(new Dimension((int) (frame.getWidth() * 0.2), (int) (frame.getHeight() * 0.8)));
+
+        JPanel rightPanel = new JPanel();
+        rightPanel.setLayout(new BorderLayout());
+        rightPanel.setBorder(BorderFactory.createLineBorder(Color.BLACK));
+        JTextArea textArea = new JTextArea(rightText);
+        textArea.setLineWrap(true);
+        textArea.setWrapStyleWord(true);
+        textArea.setEditable(false);
+        JScrollPane scrollPane = new JScrollPane(textArea);
+        rightPanel.add(scrollPane);
+
+        frame.setLayout(new GridBagLayout());
+        GridBagConstraints constraints = new GridBagConstraints();
+        constraints.fill = GridBagConstraints.BOTH;
+
+        constraints.gridx = 0;
+        constraints.gridy = 0;
+        constraints.weightx = 1.0;
+        constraints.weighty = 0.2;
+        frame.add(topPanel, constraints);
+
+        constraints.gridx = 0;
+        constraints.gridy = 1;
+        constraints.weightx = 0.2;
+        constraints.weighty = 0.8;
+        frame.add(leftScrollPane, constraints);
+
+        constraints.gridx = 1;
+        constraints.gridy = 1;
+        constraints.weightx = 0.8;
+        constraints.weighty = 0.8;
+        frame.add(rightPanel, constraints);
+
+        frame.setVisible(true);
+    }
+}
+
+
+
+=======================================================================================================
+Given two csv input file, where:
+The first file is named "metrics_data.txt" comprising of a header line:
+convID,s1,s2,s3,....,s42
+where:
+convID is a string
+s1...s42 are strings with possible values "TN","FN","TP","FP","--"
+together with lines of data laid out according to the header.
+
+The second csv file is named "performance_data.txt". It has no header line and has the following structure of csv data:
+conversation,ground_truth,predicted,chunkStart,chunkEnd,diff,elapsedMillis,convID
+conversation is a quoted string
+ground_truth is 0 or 1
+prediction is 0 or 1
+chunkStart is an integer
+chunkEnd is an integer
+convID a string representing the ID of the conversation
+The only lines to be used in the second csv file are the very last line of each convID. For example if the following lines are in "performance_data.txt" :
+conversation_piece1,ground_truth,predicted,chunkStart,chunkEnd,diff,elapsedMillis,convID1
+conversation_piece2,ground_truth,predicted,chunkStart,chunkEnd,diff,elapsedMillis,convID1
+conversation_piece3,ground_truth,predicted,chunkStart,chunkEnd,diff,elapsedMillis,convID1
+conversation_piece1,ground_truth,predicted,chunkStart,chunkEnd,diff,elapsedMillis,convID2
+conversation_piece2,ground_truth,predicted,chunkStart,chunkEnd,diff,elapsedMillis,convID2
+conversation_piece3,ground_truth,predicted,chunkStart,chunkEnd,diff,elapsedMillis,convID2
+conversation_piece2,ground_truth,predicted,chunkStart,chunkEnd,diff,elapsedMillis,convID2
+conversation_piece3,ground_truth,predicted,chunkStart,chunkEnd,diff,elapsedMillis,convID3
+conversation_piece1,ground_truth,predicted,chunkStart,chunkEnd,diff,elapsedMillis,convID3
+conversation_piece2,ground_truth,predicted,chunkStart,chunkEnd,diff,elapsedMillis,convID3
+conversation_piece4,ground_truth,predicted,chunkStart,chunkEnd,diff,elapsedMillis,convID3
+
+Then the only lines to be used are the very last lines for each convID:
+conversation_piece3,ground_truth,predicted,chunkStart,chunkEnd,diff,elapsedMillis,convID1
+conversation_piece3,ground_truth,predicted,chunkStart,chunkEnd,diff,elapsedMillis,convID2
+conversation_piece4,ground_truth,predicted,chunkStart,chunkEnd,diff,elapsedMillis,convID3
+
+Using python tkinter, create a main window which contains 3 frames:
+Top frame is positioned at the top of the main window and has the same width. It is 20% of the height of the main window.
+Left frame is positioned on the left of the window. It is 80% of the height of the main window and 20% of the widthe of the main window. It's left edge is coincident with the left edge of the main window.
+Right frame fills the remainder of the space (right of the left frame and below the top frame).
+
+The data to be displayed in each frame is as follows:
+On the top frame display the contents of the first csv file. Provide a scroll bar so that we can scroll from first line to last line. Set the background and text colors of the strings after the first column (ie s1,s2,...s42) as follows:
+for convID label, background is light gray and text is black
+for the remaining items s1,s2,..s42:
+if btn label == "TN", background is light gray, text is dark gray
+if btn label == "TP", background is black, text is red
+if btn label == "FP", background is black, text is yellow
+if btn label == "FN", background is cyan, text is red
+if btn label == "--", background is light white, text is dark gray
+
+The left frame contains a list of the convID values from the first csv file, one per line. Also provide a scroll bar on the left frame. Make each entry on the left frame a clickable button.
+
+The right frame will contain the "conversation" column of the last line in the second csv file that has convID equal to the convID of the button clicked in either the top frame or the left frame. The start and end quotes will be stripped from the text for the convID before it is displayed.
+Consider the text in the right frame to be a sequence of space separated tokens. The starting index is 1. This means that the very first token is numbered 1, the second token is numbered 2, etc.
+Use the index position of the s1,s2,...s42 labels in the top frame to color the background and text color of tokens in the right frame as follows
+start_position = index of the label
+end_position = index of the label + 1
+From start_position to end_position, set the background and text color to match the colors used for the corresponding button label
+
+Whenever a button is clicked on the left frame, then display the corresponding conversation on the right frame using the color scheme as described above.
+
+==============================================================================================================
+
+import tkinter as tk
+from tkinter import ttk
+
+def color_scheme(label):
+    if label == "TN":
+        return "light gray", "dark gray"
+    elif label == "TP":
+        return "black", "red"
+    elif label == "FP":
+        return "black", "yellow"
+    elif label == "FN":
+        return "cyan", "red"
+    elif label == "--":
+        return "white", "dark gray"
+
+def load_metrics_data(filename, text_widget):
+    with open(filename, 'r') as file:
+        lines = file.readlines()
+        header = lines[0].strip().split(',')
+        data = [line.strip().split(',') for line in lines[1:]]
+
+        # Display header
+        text_widget.insert(tk.END, ','.join(header) + '\n')
+        text_widget.tag_add("header", "1.0", "1.end")
+        text_widget.tag_configure("header", background="light gray", foreground="black")
+
+        # Display data
+        for row in data:
+            conv_id = row[0]
+            text_widget.insert(tk.END, ','.join(row) + '\n')
+            start = f'{text_widget.index(tk.END)} - {len(','.join(row[:2]))}c'
+            end = f'{text_widget.index(tk.END)} - 1c'
+            bg_color, text_color = color_scheme(row[1])
+            text_widget.tag_add(conv_id, start, end)
+            text_widget.tag_configure(conv_id, background=bg_color, foreground=text_color)
+
+def load_performance_data(filename):
+    with open(filename, 'r') as file:
+        lines = file.readlines()
+        data = [line.strip().split(',') for line in lines]
+
+        last_lines = {}
+        for row in data:
+            conv_id = row[-1]
+            last_lines[conv_id] = row
+
+        return last_lines
+
+def button_clicked(conv_id):
+    conversation = performance_data.get(conv_id, None)
+    if conversation:
+        conversation_text = conversation[0].strip('"')
+        conversation_tokens = conversation_text.split(' ')
+
+        start_position = header_labels.index("s1")
+        end_position = header_labels.index("s42") + 1
+
+        for i, token in enumerate(conversation_tokens, start=1):
+            bg_color, text_color = color_scheme(header_labels[i]) if start_position <= i < end_position else ("white", "black")
+            text_widget.insert(tk.END, token + ' ', ("token", bg_color, text_color))
+
+        text_widget.insert(tk.END, '\n\n')
+
+def load_conv_ids(filename, button_frame):
+    with open(filename, 'r') as file:
+        lines = file.readlines()
+        conv_ids = [line.strip().split(',')[0] for line in lines[1:]]
+
+        for conv_id in conv_ids:
+            button = ttk.Button(button_frame, text=conv_id, command=lambda c=conv_id: button_clicked(c))
+            button.pack(fill='x')
+
+# Main window
+root = tk.Tk()
+root.title("CSV Data Viewer")
+root.geometry("800x600")
+
+# Frames
+top_frame = tk.Frame(root)
+top_frame.pack(side="top", fill="both", expand=True)
+
+left_frame = tk.Frame(root, width=root.winfo_width() // 5 * 4)
+left_frame.pack(side="left", fill="y")
+
+right_frame = tk.Frame(root)
+right_frame.pack(side="right", fill="both", expand=True)
+
+# Scrollbars
+top_scrollbar = ttk.Scrollbar(top_frame, orient="horizontal")
+top_scrollbar.pack(side="bottom", fill="x")
+
+left_scrollbar = ttk.Scrollbar(left_frame, orient="vertical")
+left_scrollbar.pack(side="right", fill="y")
+
+# Text widget for displaying metrics data
+text_widget = tk.Text(top_frame, wrap="none")
+text_widget.pack(fill="both", expand=True)
+text_widget.configure(xscrollcommand=top_scrollbar.set)
+text_widget.configure(yscrollcommand=left_scrollbar.set)
+top_scrollbar.configure(command=text_widget.xview)
+left_scrollbar.configure(command=text_widget.yview)
+
+# Load and display metrics data
+metrics_filename = "metrics_data.txt"
+load_metrics_data(metrics_filename, text_widget)
+
+# Load performance data
+performance_filename = "performance_data.txt"
+performance_data = load_performance_data(performance_filename)
+
+# Get header labels from metrics data
+header_labels = text_widget.get("1.0", "1.end").strip().split(',')
+
+# Load convIDs in the left frame
+load_conv_ids(metrics_filename, left_frame)
+
+# Text widget for displaying conversation details
+conversation_widget = tk.Text(right_frame, wrap="word")
+conversation_widget.pack(fill="both", expand=True)
+
+# Function to update conversation details
+def update_conversation(conv_id):
+    conversation_widget.delete("1.0", tk.END)
+    button_clicked(conv_id)
+
+# Bind button click event
+def button_click_event(event):
+    button = event.widget
+    conv_id = button.cget("text")
+    update_conversation(conv_id)
+
+for child in left_frame.winfo_children():
+    child.bind("<Button-1>", button_click_event)
+
+# Run the GUI main loop
+root.mainloop()
+
+============================================================= java ===========================================
+
+import javax.swing.*;
+import java.awt.*;
+import java.io.BufferedReader;
+import java.io.FileReader;
+import java.io.IOException;
+import java.util.HashMap;
+import java.util.Map;
+
+public class CSVViewer extends JFrame {
+    private JTextArea metricsTextArea;
+    private JTextArea conversationTextArea;
+    private JList<String> convIdList;
+    private Map<String, String[]> performanceData;
+
+    public CSVViewer() {
+        setTitle("CSV Data Viewer");
+        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        setSize(800, 600);
+        setLayout(new BorderLayout());
+
+        // Top panel
+        JPanel topPanel = new JPanel();
+        topPanel.setLayout(new BorderLayout());
+        add(topPanel, BorderLayout.NORTH);
+
+        metricsTextArea = new JTextArea();
+        metricsTextArea.setEditable(false);
+        JScrollPane metricsScrollPane = new JScrollPane(metricsTextArea);
+        topPanel.add(metricsScrollPane, BorderLayout.CENTER);
+
+        // Left panel
+        JPanel leftPanel = new JPanel();
+        leftPanel.setLayout(new BorderLayout());
+        leftPanel.setPreferredSize(new Dimension(getWidth() / 5, getHeight() * 4 / 5));
+        add(leftPanel, BorderLayout.WEST);
+
+        convIdList = new JList<>();
+        convIdList.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+        JScrollPane convIdScrollPane = new JScrollPane(convIdList);
+        leftPanel.add(convIdScrollPane, BorderLayout.CENTER);
+
+        // Right panel
+        JPanel rightPanel = new JPanel();
+        rightPanel.setLayout(new BorderLayout());
+        add(rightPanel, BorderLayout.CENTER);
+
+        conversationTextArea = new JTextArea();
+        conversationTextArea.setEditable(false);
+        JScrollPane conversationScrollPane = new JScrollPane(conversationTextArea);
+        rightPanel.add(conversationScrollPane, BorderLayout.CENTER);
+
+        // Load data and initialize UI
+        String metricsFilename = "metrics_data.txt";
+        String performanceFilename = "performance_data.txt";
+        loadMetricsData(metricsFilename);
+        loadPerformanceData(performanceFilename);
+        updateConvIdList();
+
+        convIdList.addListSelectionListener(e -> {
+            String selectedConvId = convIdList.getSelectedValue();
+            if (selectedConvId != null) {
+                updateConversation(selectedConvId);
+            }
+        });
+    }
+
+    private void loadMetricsData(String filename) {
+        try (BufferedReader reader = new BufferedReader(new FileReader(filename))) {
+            String header = reader.readLine();
+            metricsTextArea.append(header + "\n");
+
+            String line;
+            while ((line = reader.readLine()) != null) {
+                String[] row = line.split(",");
+                metricsTextArea.append(line + "\n");
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private void loadPerformanceData(String filename) {
+        performanceData = new HashMap<>();
+
+        try (BufferedReader reader = new BufferedReader(new FileReader(filename))) {
+            String line;
+            while ((line = reader.readLine()) != null) {
+                String[] row = line.split(",");
+                performanceData.put(row[row.length - 1], row);
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private void updateConvIdList() {
+        DefaultListModel<String> model = new DefaultListModel<>();
+        for (String convId : performanceData.keySet()) {
+            model.addElement(convId);
+        }
+        convIdList.setModel(model);
+    }
+
+    private void updateConversation(String convId) {
+        String[] conversation = performanceData.get(convId);
+        if (conversation != null) {
+            String conversationText = conversation[0].replaceAll("\"", "");
+            conversationTextArea.setText(conversationText);
+
+            String[] headerLabels = metricsTextArea.getText().split("\n")[0].split(",");
+            String[] conversationTokens = conversationText.split(" ");
+
+            int start = getLabelIndex(headerLabels, "s1");
+            int end = getLabelIndex(headerLabels, "s42");
+
+            StringBuilder formattedConversation = new StringBuilder();
+            for (String token : conversationTokens) {
+                formattedConversation.append(token).append(" ");
+            }
+
+            conversationTextArea.setText(formatConversationTokens(formattedConversation.toString(), start, end));
+        }
+    }
+
+    private int getLabelIndex(String[] labels, String label) {
+        for (int i = 0; i < labels.length; i++) {
+            if (labels[i].equals(label)) {
+                return i;
+            }
+        }
+        return -1;
+    }
+
+    private String formatConversationTokens(String conversation, int start, int end) {
+        StringBuilder formattedText = new StringBuilder();
+
+        String[] tokens = conversation.split(" ");
+        for (int i = 0; i < tokens.length; i++) {
+            String token = tokens[i];
+            boolean shouldFormat = i >= start && i < end;
+
+            formattedText.append(formatToken(token, shouldFormat)).append(" ");
+        }
+
+        return formattedText.toString();
+    }
+
+    private String formatToken(String token, boolean shouldFormat) {
+        if (shouldFormat) {
+            return "<html><span style='background-color: yellow; color: red;'>" + token + "</span></html>";
+        } else {
+            return token;
+        }
+    }
+
+    public static void main(String[] args) {
+        SwingUtilities.invokeLater(() -> {
+            CSVViewer viewer = new CSVViewer();
+            viewer.setVisible(true);
+        });
+    }
+}
+
+
+
+
+
+
+
+
+==============================================================================================================
+Given two csv input file, where:
+The first file is named "metrics_data.txt" comprising of a header line:
+convID,s1,s2,s3,....,s42
+where:
+convID is a string
+s1...s42 are strings with possible values "TN","FN","TP","FP","--"
+together with lines of data laid out according to the header.
+
+The second csv file is named "performance_data.txt". It has no header line and has the following structure of csv data:
+conversation,ground_truth,predicted,chunkStart,chunkEnd,diff,elapsedMillis,convID
+conversation is a quoted string
+ground_truth is 0 or 1
+prediction is 0 or 1
+chunkStart is an integer
+chunkEnd is an integer
+convID a string representing the ID of the conversation
+The only lines to be used in the second csv file are the very last line of each convID. For example if the following lines are in "performance_data.txt" :
+conversation_piece1,ground_truth,predicted,chunkStart,chunkEnd,diff,elapsedMillis,convID1
+conversation_piece2,ground_truth,predicted,chunkStart,chunkEnd,diff,elapsedMillis,convID1
+conversation_piece3,ground_truth,predicted,chunkStart,chunkEnd,diff,elapsedMillis,convID1
+conversation_piece1,ground_truth,predicted,chunkStart,chunkEnd,diff,elapsedMillis,convID2
+conversation_piece2,ground_truth,predicted,chunkStart,chunkEnd,diff,elapsedMillis,convID2
+conversation_piece3,ground_truth,predicted,chunkStart,chunkEnd,diff,elapsedMillis,convID2
+conversation_piece2,ground_truth,predicted,chunkStart,chunkEnd,diff,elapsedMillis,convID2
+conversation_piece3,ground_truth,predicted,chunkStart,chunkEnd,diff,elapsedMillis,convID3
+conversation_piece1,ground_truth,predicted,chunkStart,chunkEnd,diff,elapsedMillis,convID3
+conversation_piece2,ground_truth,predicted,chunkStart,chunkEnd,diff,elapsedMillis,convID3
+conversation_piece4,ground_truth,predicted,chunkStart,chunkEnd,diff,elapsedMillis,convID3
+
+Then the only lines to be used are the very last lines for each convID:
+conversation_piece3,ground_truth,predicted,chunkStart,chunkEnd,diff,elapsedMillis,convID1
+conversation_piece3,ground_truth,predicted,chunkStart,chunkEnd,diff,elapsedMillis,convID2
+conversation_piece4,ground_truth,predicted,chunkStart,chunkEnd,diff,elapsedMillis,convID3
+
+Using python tkinter, create a main window which contains 3 frames:
+Top frame is positioned at the top of the main window and has the same width. It is 20% of the height of the main window.
+Left frame is positioned on the left of the window. It is 80% of the height of the main window and 20% of the widthe of the main window. It's left edge is coincident with the left edge of the main window.
+Right frame fills the remainder of the space (right of the left frame and below the top frame).
+
+The data to be displayed in each frame is as follows:
+On the top frame display the contents of the first csv file. Provide a scroll bar so that we can scroll from first line to last line. Make each of the strings after the first column (ie s1,s2,...s42) clickable buttons whose labels match the value of each item on the line: convID,s1,s2...s42. Do not create clickable labeled buttons for any value "--". Use flat style. The background color and text color for the different button labels (btn labels) are as follows:
+for convID label, background is light gray and text is black
+for the remaining items s1,s2,..s42:
+if btn label == "TN", background is light gray, text is dark gray
+if btn label == "TP", background is black, text is red
+if btn label == "FP", background is black, text is yellow
+if btn label == "FN", background is cyan, text is red
+if btn label == "--", background is light white, text is dark gray
+
+The left frame contains a list of the convID values from the first csv file, one per line. Also provide a scroll bar on the left frame. Make each entry on the left frame also clickable.
+
+The right frame will contain the "conversation" column of the last line in the second csv file that has convID equal to the convID of the button clicked in either the top frame or the left frame. The start and end quotes will be stripped from the text for the convID before it is displayed.
+Consider the text in the right frame to be a sequence of space separated tokens. The starting index is 1. This means that the very first token is numbered 1, the second token is numbered 2, etc.
+Use the index position of the s1,s2,...s42 labels in the top frame to color the background and text color of tokens in the right frame as follows
+start_position = index of the label
+end_position = index of the label + 1
+From start_position to end_position, set the background and text color to match the colors used for the corresponding button label
+
+Whenever a button is clicked on the left frame, then display the corresponding conversation on the right frame using the color scheme as described above.
