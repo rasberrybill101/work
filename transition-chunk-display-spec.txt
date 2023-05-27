@@ -209,9 +209,9 @@ private void highlightWords(String content, List<HighlightInfo> highlights) {
 
     for (HighlightInfo highlight : highlights) {
         Text textBefore = new Text(content.substring(lastEnd, highlight.getStart()));
-        Text highlightedText = new Text(content.substring(highlight.getStart(), highlight.getEnd()));
-        highlightedText.setFill(Color.web(highlight.getColor()));
-        highlightedText.setBackground(new Background(new BackgroundFill(Color.web(highlight.getBackgroundColor()), CornerRadii.EMPTY, Insets.EMPTY)));
+        Label highlightedText = new Label(content.substring(highlight.getStart(), highlight.getEnd()));
+        highlightedText.setTextFill(Color.web(highlight.getColor()));
+        highlightedText.setStyle("-fx-background-color: " + highlight.getBackgroundColor() + ";");
         textFlow.getChildren().addAll(textBefore, highlightedText);
 
         lastEnd = highlight.getEnd();
