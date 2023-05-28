@@ -225,6 +225,47 @@ private void highlightWords(String content, List<HighlightInfo> highlights) {
     rightVBox.getChildren().add(textFlow);
 }
 
+---------------------  Using a listview instead of a leftVBox
+
+private ListView<String> setupLeftPanel(Set<String> keys) {
+    ObservableList<String> items = FXCollections.observableArrayList(keys);
+    ListView<String> listView = new ListView<>(items);
+
+    listView.setCellFactory(param -> new ListCell<>() {
+        private final Label label;
+
+        {
+            contentDisplayProperty().bind(Bindings.when(emptyProperty()).then(ContentDisplay.TEXT_ONLY).otherwise(ContentDisplay.GRAPHIC_ONLY));
+            label = new Label();
+            label.textFillProperty().bind(Bindings.when(selectedProperty()).then(Color.WHITE).otherwise(Color.BLACK));
+        }
+
+        @Override
+        protected void updateItem(String item, boolean empty) {
+            super.updateItem(item, empty);
+
+            if (empty || item == null) {
+                setText(null);
+                setGraphic(null);
+            } else {
+                label.setText(item);
+                setPanelFont(label, "yourFontName", "normal", 12);  // replace "yourFontName" with your actual font name
+                setGraphic(label);
+            }
+        }
+    });
+
+    listView.setPrefWidth(200);  // Or your desired width
+    listView.setStyle("-fx-control-inner-background: white; -fx-accent: black;");
+
+    listView.getSelectionModel().selectedItemProperty().addListener(
+        (ObservableValue<? extends String> observable, String oldValue, String newValue) -> {
+            // Here you can handle the event when a new item is selected in the list
+            // For example, you can call a method that updates the right panel based on the selected item
+        }
+    );
+    return listView;
+}
 
 
 =======================================================================================================
