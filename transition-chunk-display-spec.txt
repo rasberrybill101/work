@@ -231,7 +231,7 @@ private ListView<String> setupLeftPanel(Set<String> keys) {
     ObservableList<String> items = FXCollections.observableArrayList(keys);
     ListView<String> listView = new ListView<>(items);
 
-    listView.setCellFactory(param -> new ListCell<>() {
+    listView.setCellFactory(param -> new ListCell<String>() {
         private final Label label;
 
         {
@@ -240,19 +240,19 @@ private ListView<String> setupLeftPanel(Set<String> keys) {
             label.textFillProperty().bind(Bindings.when(selectedProperty()).then(Color.WHITE).otherwise(Color.BLACK));
         }
 
-        @Override
-        protected void updateItem(String item, boolean empty) {
-            super.updateItem(item, empty);
+		@Override
+		protected void updateItem(String item, boolean empty) {
+			super.updateItem(item, empty);
 
-            if (empty || item == null) {
-                setText(null);
-                setGraphic(null);
-            } else {
-                label.setText(item);
-                setPanelFont(label, "yourFontName", "normal", 12);  // replace "yourFontName" with your actual font name
-                setGraphic(label);
-            }
-        }
+			if (empty || item == null) {
+				setText(null);
+				setGraphic(null);
+			} else {
+				label.setText(item);
+				label.setFont(Font.font("yourFontName", FontWeight.NORMAL, 12)); // replace "yourFontName" with your actual font name
+				setGraphic(label);
+			}
+		}
     });
 
     listView.setPrefWidth(200);  // Or your desired width
