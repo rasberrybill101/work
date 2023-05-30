@@ -389,3 +389,54 @@ end_position = index of the label + 1
 From start_position to end_position, set the background and text color to match the colors used for the corresponding button label
 
 Whenever a button is clicked on the left frame, then display the corresponding conversation on the right frame using the color scheme as described above.
+
+===============================
+
+import java.util.AbstractMap;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+import java.util.stream.IntStream;
+
+public class FindContiguousSequenceExample {
+    public static void main(String[] args) {
+        List<String> list = new ArrayList<>();
+        list.add("TP");
+        list.add("A");
+        list.add("B");
+        list.add("TP");
+        list.add("TP");
+        list.add("C");
+        list.add("D");
+        list.add("TP");
+
+        Map.Entry<Integer, Integer> result = findContiguousSequence(list, "TP");
+        if (result != null) {
+            int firstIndex = result.getKey();
+            int lastIndex = result.getValue();
+            System.out.println("First index: " + firstIndex);
+            System.out.println("Last index: " + lastIndex);
+        } else {
+            System.out.println("No contiguous sequence found.");
+        }
+    }
+
+    public static Map.Entry<Integer, Integer> findContiguousSequence(List<String> list, String target) {
+        int firstIndex = IntStream.range(0, list.size())
+                .filter(i -> list.get(i).equals(target))
+                .findFirst()
+                .orElse(-1);
+
+        if (firstIndex == -1) {
+            return null; // Target not found in the list
+        }
+
+        int lastIndex = IntStream.rangeClosed(firstIndex, list.size() - 1)
+                .filter(i -> !list.get(i).equals(target))
+                .findFirst()
+                .orElse(list.size() - 1);
+
+        return new AbstractMap.SimpleEntry<>(firstIndex, lastIndex);
+    }
+}
+
