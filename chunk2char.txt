@@ -80,9 +80,6 @@ public class Main {
         return new AbstractMap.SimpleEntry<>(startCharIndex, endCharIndex);
     }
 
-        return new AbstractMap.SimpleEntry<>(startCharIndex, endCharIndex);
-    }
-
     public static ArrayList<String> generateTestList(int numTokens) {
         ArrayList<String> list = new ArrayList<>();
         for(int i = 1; i <= numTokens; i++) {
