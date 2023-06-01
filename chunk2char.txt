@@ -89,4 +89,62 @@ public class Main {
     }
 }
 
+========================================
 
+Given a text string comprising space separated tokens, create a list of strings using the method
+List<String> createNonOverlappingChunks(String input, int chunkSize, int limit)
+where:
+input is the input string
+chunkSize determines the size of each item in the output string list
+limit is how many tokens should be processed from the input string
+
+For example, given:
+input = "tok1 tok2 tok3, tok4 tok'5 tok6- tok7 tok8 tok9 tok10 tok11 tok12 tok13"
+chunkSize = 2 is the number of tokens in each string that is in the returned list
+limit = 11  is the maximum number of tokens that can be present in the returned list of strings
+
+then the function should return a single List<String> that contains the strings
+"tok1 tok2"
+"tok3, tok4"
+"tok'5 tok6"
+"- tok7 tok8"
+"tok9 tok10"
+since creating another list item will cause the 'limit' to be exceeded.
+Adding new strings to the output should stop if the addition of a new item will cause 'limit' to be exceeded.
+
+If there are fewer tokens than "limit", then return all the tokens in the input using chunkSize to create the individual strings of the output list of strings. Of course, the last string in the list can contain fewer than chunkSize tokens.
+
+===================
+
+import java.util.ArrayList;
+import java.util.List;
+
+public class Main {
+    public static void main(String[] args) {
+        String input = "tok1 tok2 tok3, tok4 tok'5 tok6- tok7 tok8 tok9 tok10 tok11 tok12 tok13";
+        List<String> chunks = createNonOverlappingChunks(input, 2, 11);
+        for(String chunk : chunks) {
+            System.out.println(chunk);
+        }
+    }
+
+    public static List<String> createNonOverlappingChunks(String input, int chunkSize, int limit) {
+        String[] tokens = input.split("\\s+");
+        List<String> chunks = new ArrayList<>();
+        StringBuilder sb = new StringBuilder();
+        int tokenCount = 0;
+        for(int i = 0; i < tokens.length && tokenCount < limit; i++) {
+            sb.append(tokens[i]);
+            tokenCount++;
+            if(i + 1 < tokens.length && (i + 1) % chunkSize == 0 && tokenCount < limit) {
+                chunks.add(sb.toString());
+                sb.setLength(0); // clear the StringBuilder for the next chunk
+            } else if(i + 1 == tokens.length || tokenCount == limit) {
+                chunks.add(sb.toString());
+            } else {
+                sb.append(" "); // add space for next token in the same chunk
+            }
+        }
+        return chunks;
+    }
+}
