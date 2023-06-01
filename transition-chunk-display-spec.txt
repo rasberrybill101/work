@@ -67,54 +67,69 @@ import java.util.List;
 public class Main extends Application {
 
     private Button lastClickedButton = null;
+	private Label topLabel;
+	private VBox rightVBox;
+	private ListView leftListView;
+	private VBox leftVBox;
+	
+	private static String rightText = "sample right panel text";
 
     public static void main(String[] args) {
         launch(args);
     }
 
-    @Override
-    public void start(Stage primaryStage) throws Exception {
-        setupFonts();
+// correct implementation - ensure that left panel height, width are correct
+	@Override
+	public void start(Stage primaryStage) throws Exception {
+		setupFonts();
 
-        BorderPane borderPane = new BorderPane();
+		BorderPane borderPane = new BorderPane();
 
-        Label topLabel = new Label();
-        borderPane.setTop(topLabel);
-        setTopText(topLabel, "conversation1_id TN TN TN FN FN FN TP TP TP FN FN FN TP TP  FN TP TP TP FN FN FN TP TP  FN TP TP TP FN FN FN TP TP");
+		Label topLabel = new Label();
+		setTopText(topLabel, "conversation1_id TN TN TN FN FN FN TP TP TP FN FN FN TP TP  FN TP TP TP FN FN FN TP TP  FN TP TP TP FN FN FN TP TP");
+		setTopFont(topLabel, "Consolas", "normal", 12);
+		borderPane.setTop(topLabel);
+		
+		VBox leftVBox = new VBox();
+		Set<String> leftPanelStrings = getSampleSetOfStrings(); // existing method
+		setupLeftPanel(leftVBox, leftPanelStrings);
 
-        VBox leftVBox = new VBox();
-        ScrollPane scrollPane = new ScrollPane(leftVBox);
-        scrollPane.setHbarPolicy(ScrollPane.ScrollBarPolicy.NEVER);
-        scrollPane.setStyle("-fx-background-color: white;");
-        borderPane.setLeft(scrollPane);
+		ScrollPane leftScrollPane = new ScrollPane(leftVBox);
+		leftScrollPane.setHbarPolicy(ScrollPane.ScrollBarPolicy.NEVER);
+		leftScrollPane.setFitToHeight(true); // ensure ScrollPane takes up all available vertical space
+		leftScrollPane.setFitToWidth(true); // ensure ScrollPane takes up all available horizontal space
+		leftScrollPane.setStyle("-fx-background-color: white; -fx-background: white;");
 
-        Set<String> leftPanelStrings = new HashSet<>();  // Initialize with your set of strings
-        setupLeftPanel(leftVBox, leftPanelStrings);
+		rightVBox = new VBox();
 
-        TextArea rightTextArea = new TextArea();
-        borderPane.setCenter(rightTextArea);
+		SplitPane splitPane = new SplitPane();
+		splitPane.getItems().addAll(leftScrollPane, rightVBox);
+		splitPane.setDividerPositions(0.25);
 
-        String rightPanelText = "Turning and turning in the widening gyre...";  // Initialize with your text
-        setRightText(rightTextArea, rightPanelText);
+		borderPane.setCenter(splitPane);
 
-        Scene scene = new Scene(borderPane, 800, 600);
-        primaryStage.setScene(scene);
-        primaryStage.show();
-    }
+		Scene scene = new Scene(borderPane, 800, 600);
+		primaryStage.setScene(scene);
+		primaryStage.show();
+	}
 
-    private void setupFonts() throws Exception {
-        File fontsDirectory = new File("resources/fonts");
-        File[] fontFiles = fontsDirectory.listFiles((dir, name) -> name.toLowerCase().endsWith(".ttf"));
+	private void setupFonts() {
+		String[] fontFiles = { "font1.ttf", "font2.ttf", "font3.ttf" };  // replace with your actual font files
 
-        if (fontFiles != null) {
-            for (File fontFile : fontFiles) {
-                try (InputStream fontStream = new FileInputStream(fontFile)) {
-                    Font font = Font.loadFont(fontStream, 12);
-                    System.out.println("Loaded font: " + font.getName());
-                }
-            }
-        }
-    }
+		for (String fontFile : fontFiles) {
+			try {
+				InputStream fontStream = getClass().getResourceAsStream("/fonts/" + fontFile);
+				if (fontStream != null) {
+					Font font = Font.loadFont(fontStream, 12);
+					System.out.println("Loaded font: " + font.getName());
+				} else {
+					System.out.println("Could not load font: " + fontFile);
+				}
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
+		}
+	}
 
     private void setPanelFont(Text text, String fontName, String fontWeight, int fontSize) {
         text.setFont(Font.font(fontName, fontWeight.equals("bold") ? FontWeight.BOLD : FontWeight.NORMAL, fontSize));
@@ -122,21 +137,21 @@ public class Main extends Application {
 
     private void setTopText(Label topLabel, String text) {
         topLabel.setText(text);
-        setPanelFont(topLabel, "yourFontName", "normal", 12);  // replace "yourFontName" with your actual font name
+        setPanelFont(topLabel, "yourFontName", "normal", 12);  
     }
 
     private void setRightText(TextArea rightTextArea, String text) {
         rightTextArea.setText(text);
         rightTextArea.setEditable(false);
         rightTextArea.setWrapText(true);
-        setPanelFont(rightTextArea, "yourFontName", "normal", 12);  // replace "yourFontName" with your actual font name
+        setPanelFont(rightTextArea, "yourFontName", "normal", 12);  
     }
 
     private void setupLeftPanel(VBox leftVBox, Set<String> keys) {
         for (String key : keys) {
             Button button = new Button(key);
             button.setMaxWidth(Double.MAX_VALUE);
-            setPanelFont(button, "yourFontName", "normal", 12);  // replace "yourFontName" with your actual font name
+            setPanelFont(button, "yourFontName", "normal", 12);  
             button.setStyle("-fx-background-color: white; -fx-text-fill: black;");
             button.setOnAction(e -> {
                 if (lastClickedButton != null) {
@@ -246,7 +261,7 @@ private void setupLeftPanel(VBox leftVBox, Set<String> keys) {
                 setGraphic(null);
             } else {
                 label.setText(item);
-                label.setFont(Font.font("yourFontName", FontWeight.NORMAL, 12)); // replace "yourFontName" with your actual font name
+                label.setFont(Font.font("yourFontName", FontWeight.NORMAL, 12)); 
                 setGraphic(label);
             }
         }

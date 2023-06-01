@@ -1,0 +1,95 @@
+V/FA: Connecting to remote service
+V/Capacitor/Plugin: To native (Cordova plugin): callbackId: WifiWizard21410639908, service: WifiWizard2, action: add, actionArgs: ["\"NOKIA-B6C1\"","WPA","\"ssid_pwd\"",false]
+D/WifiWizard2: WifiWizard2: verifyWifiEnabled entered.
+D/WifiWizard2: WifiWizard2: add entered.
+V/FA: Connection attempt already in progress
+D/FA: Connected to remote service
+V/FA: Processing queued up service tasks: 2
+E/Capacitor/Console: File: http://localhost/#/mainOptions - Line 0 - Msg: Uncaught (in promise) ERROR_ADDING_NETWORK
+
+=============================================
+Write a java method 
+Map.Entry<Integer, Integer> getExtents(ArrayList<String> line, int start, int end, int step)
+where:
+start is the start step in the line
+end is the stop step in the line
+step is the number of tokens in each 'step'
+
+getExtents will return 2 integes using Map.Entry
+getKey() will return the character index of the token at start*step index of line
+getValue() will return the character index of the token at end*step index of line
+
+The character index is the location of the character in a string composed from concatenating all the tokens in the line using space separators.
+
+For instance, given:
+line = array list of "tok1", "tok2", ... "tok19"
+start = 2
+end = 5
+step = 3
+
+then
+getExtents will return:
+key == 28
+value == 79
+
+because, the string created from list of tokens is as follows (one space between each token):
+"tok1 tok2 tok3 tok4 tok5 tok6 tok7 tok8 tok9 tok10 tok11 tok12 tok13 tok14 tok15 tok16 tok17 tok18 tok19"
+since 'start' = 2 and step = 3 then start*step = 6, therefore the character position of 'start' in the string is just after tok6, which is 28
+also 'end' = 5 and so end*step = 15, therefore the character position of 'end' in the string is 79
+
+===========================
+
+import java.util.ArrayList;
+import java.util.AbstractMap;
+import java.util.Map;
+
+public class Main {
+    public static void main(String[] args) {
+        ArrayList<String> line = generateTestList(19);
+
+        Map.Entry<Integer, Integer> extents = getExtents(line, 2, 5, 3);
+        System.out.println("Start index: " + extents.getKey());
+        System.out.println("End index: " + extents.getValue());
+		
+		String line2 = "tok1 tok2 tok3 tok4 tok5 tok6 tok7 tok8 tok9 tok10 tok11 tok12 tok13 tok14 tok15 tok16 tok17 tok18 tok19";
+        System.out.println("substring>>" + line2.substring(extents.getKey(), extents.getValue()) + "<<");
+    }
+
+    public static Map.Entry<Integer, Integer> getExtents(ArrayList<String> line, int start, int end, int step) {
+        StringBuilder sb = new StringBuilder();
+        int currentLength = 0;
+        int startCharIndex = -1, endCharIndex = -1;
+
+        for(int i = 0; i < line.size(); i++) {
+            if(i == start*step) {
+                startCharIndex = currentLength;
+            }
+            if(i == end*step) {
+                endCharIndex = currentLength;
+            }
+            
+            sb.append(line.get(i)).append(" ");
+            currentLength += line.get(i).length() + 1; // 1 for the space
+        }
+        
+        if(startCharIndex == -1 || endCharIndex == -1) {
+            throw new IllegalArgumentException("Start or end index out of range");
+        }
+		
+        endCharIndex = endCharIndex > 0 ? endCharIndex - 1 : endCharIndex;
+        return new AbstractMap.SimpleEntry<>(startCharIndex, endCharIndex);
+    }
+
+        return new AbstractMap.SimpleEntry<>(startCharIndex, endCharIndex);
+    }
+
+    public static ArrayList<String> generateTestList(int numTokens) {
+        ArrayList<String> list = new ArrayList<>();
+        for(int i = 1; i <= numTokens; i++) {
+            list.add("tok" + i);
+        }
+        return list;
+    }
+}
+
+
