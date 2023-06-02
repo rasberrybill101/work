@@ -1,0 +1,61 @@
+Given a number of csv files, all with the following structure:
+step, accuracy, precision, recall, f1
+
+where the first line is the header above, and subsequent lines are values for each column.
+
+Given n filenames, create 4 separate line graphs that compares the values of each of the columns:
+accuracy
+precision
+recall
+f1
+
+So for example, if there are 3 csv files, then there will be 4 separate graphs that each show 3 lines, one for the values of the relevant column in each file.
+
+Also, write the python function in such a way that it is easy to associate each filename with a label that will be used in the legend for its line.
+
+========================================
+
+import pandas as pd
+import matplotlib.pyplot as plt
+
+def plot_csv_data(filenames, labels):
+    # Initialize an empty dictionary to store the data for each column
+    data = {'accuracy': [], 'precision': [], 'recall': [], 'f1': []}
+
+    # Read and process each CSV file
+    for filename in filenames:
+        # Read the CSV file into a DataFrame
+        df = pd.read_csv(filename)
+
+        # Append the values of each column to the corresponding list in the data dictionary
+        data['accuracy'].append(df['accuracy'])
+        data['precision'].append(df['precision'])
+        data['recall'].append(df['recall'])
+        data['f1'].append(df['f1'])
+
+    # Create separate line graphs for each column
+    for column in data:
+        # Create a new figure
+        plt.figure()
+
+        # Plot each line with the corresponding label
+        for i, values in enumerate(data[column]):
+            plt.plot(values, label=labels[i])
+
+        # Set the title and labels for the graph
+        plt.title(column)
+        plt.xlabel('Step')
+        plt.ylabel(column)
+
+        # Add a legend to the graph
+        plt.legend()
+
+        # Display the graph
+        plt.show()
+
+----------------
+
+filenames = ['file1.csv', 'file2.csv', 'file3.csv']
+labels = ['File 1', 'File 2', 'File 3']
+
+plot_csv_data(filenames, labels)
