@@ -59,3 +59,19 @@ filenames = ['file1.csv', 'file2.csv', 'file3.csv']
 labels = ['File 1', 'File 2', 'File 3']
 
 plot_csv_data(filenames, labels)
+
+=================================================
+Given a tab separated file "raw_data.tsv" tha has the following columns (specified in the header):
+conv_id
+complaint_disat
+segment_id
+call_duration
+reason_level_1
+reason_level_2
+plain_whisper
+language_code
+
+Each row represents a conversation that identified using "conv_id" column value.
+All columns are strings, except for call_duration which is an integer.
+
+The task is to find the top 10 tf-idf phrases (specified as configurable length ngram in the input of the function) in the column "plain_whisper" for each conv_i
