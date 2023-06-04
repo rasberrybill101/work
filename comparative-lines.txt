@@ -194,4 +194,77 @@ visualize(phrase_vectors)
 # Visualize the centroids
 visualize(phrase_vectors, centroids=True)
 
---------------------
+-------------------- using torchtext instead of Word2Vec
+
+import pandas as pd
+from sklearn.feature_extraction.text import TfidfVectorizer
+from sklearn.decomposition import TruncatedSVD
+from torchtext.vocab import GloVe
+import numpy as np
+import matplotlib.pyplot as plt
+from mpl_toolkits.mplot3d import Axes3D
+
+# Load GloVe model
+glove = GloVe(name='6B', dim=300)
+
+def reject_spanish(data):
+    #Remove rows containing 'gracias' in the 'plain_whisper' column.
+    data = data[~data['plain_whisper'].str.contains('gracias', na=False)]
+    return data
+
+def get_phrase_vector(phrase):
+    #Return the mean GloVe vector for the given phrase.
+    words = phrase.split()
+    vector = np.mean([glove[word] for word in words], axis=0)
+    return vector
+
+def level_1_tf_idf(data, phrase_length, top_k, global_idf=False):
+    #Find the top scoring tf-idf phrases for each 'reason_level_1' group.
+    phrase_vectors = {}
+    tfidf = TfidfVectorizer(ngram_range=(phrase_length, phrase_length))
+
+    for level, group in data.groupby('reason_level_1'):
+        tfidf_matrix = tfidf.fit_transform(group['plain_whisper'] if global_idf else data['plain_whisper'])
+        scores = np.array(tfidf_matrix.sum(axis=0)).ravel()
+        top_indices = scores.argsort()[-top_k:]
+        top_phrases = np.array(tfidf.get_feature_names())[top_indices]
+
+        # Compute the mean GloVe vector for each top phrase
+        vectors = np.array([get_phrase_vector(phrase) for phrase in top_phrases])
+        phrase_vectors[level] = vectors
+
+    return phrase_vectors
+
+def visualize(phrase_vectors, centroids=False, filename='visualization.png'):
+    #Visualize the phrase vectors in 3D.
+    fig = plt.figure(figsize=(10, 7))
+    ax = fig.add_subplot(111, projection='3d')
+    colors = ['b', 'g', 'r', 'c', 'm', 'y', 'k']
+
+    for i, (level, vectors) in enumerate(phrase_vectors.items()):
+        if vectors.any():
+            xs, ys, zs = vectors.T
+            if centroids:
+                centroid = np.mean(vectors, axis=0)
+                ax.scatter(*centroid, c=colors[i%7], label=level)
+            else:
+                ax.scatter(xs, ys, zs, c=colors[i%7], label=level)
+
+    ax.legend()
+    plt.show()
+    fig.savefig(filename)
+
+# Load the data
+data = pd.read_csv('raw_data.tsv', sep='\t')
+
+# Preprocess the data
+data = reject_spanish(data)
+
+# Compute tf-idf scores
+phrase_vectors = level_1_tf_idf(data, phrase_length=2, top_k=10, global_idf=True)
+
+# Visualize the phrases
+visualize(phrase_vectors, filename='phrase_visualization.png')
+
+# Visualize the centroids
+visualize(phrase_vectors, centroids=True, filename='centroid_visualization.png')
