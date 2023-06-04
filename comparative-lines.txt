@@ -218,7 +218,7 @@ def reject_spanish(data):
 def get_phrase_vector(phrase):
     #Return the mean GloVe vector for the given phrase.
     words = phrase.split()
-    vector = np.mean([glove[word] for word in words], axis=0)
+    vector = np.mean([vectors[word] for word in words], axis=0)
     return vector
 
 def level_1_tf_idf(data, phrase_length, top_k, global_idf=False):
