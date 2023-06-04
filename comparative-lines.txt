@@ -148,7 +148,7 @@ def get_mean_vector_score(data, top_phrases):
 
     return phrase_vectors
 
-def visualize(phrase_vectors, centroids=False):
+def visualize(phrase_vectors, centroids=False, filename='visualization.png'):
     fig = plt.figure(figsize=(10, 7))
     ax = fig.add_subplot(111, projection='3d')
     colors = ['b', 'g', 'r', 'c', 'm', 'y', 'k']
@@ -165,6 +165,9 @@ def visualize(phrase_vectors, centroids=False):
     ax.legend()
     plt.show()
 
+    # Save the figure as a PNG image
+    fig.savefig(filename)
+
 # Read and preprocess data
 filepath = "raw_data.tsv"
 data = reject_spanish(filepath)
@@ -174,6 +177,13 @@ phrase_length = 2
 top_k = 10
 global_idf = False  # change this to True to calculate IDF globally
 top_phrases = level_1_tf_idf(data, phrase_length, top_k, global_idf)
+
+# Print top phrases and write to a file
+with open('top_tf_idf_phrases.txt', 'w') as f:
+    for reason, phrases in top_phrases.items():
+        for phrase in phrases:
+            print(f"{reason}: {phrase}")
+            f.write(f"{reason}: {phrase}\n")
 
 # Get most significant 3 dimensions for each phrase
 phrase_vectors = get_mean_vector_score(data, top_phrases)
