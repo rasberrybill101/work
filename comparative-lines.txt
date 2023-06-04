@@ -191,30 +191,24 @@ visualize(phrase_vectors, centroids=True)
 
 -------------------- using torchtext instead of Word2Vec
 
+import numpy as np
 import pandas as pd
 from sklearn.feature_extraction.text import TfidfVectorizer
-from sklearn.decomposition import TruncatedSVD
-from torchtext.vocab import Vectors
-import numpy as np
 import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
-
-# Path to GloVe model file
-glove_file = "/chunk-complaint/category/glove/glove.6B.300d"
-
-# Load the GloVe vectors
-vectors = Vectors(name=glove_file)
+from torchtext.vocab import Vectors
 
 def reject_spanish(data):
-    # Remove rows containing 'gracias' in the 'plain_whisper' column.
-    data = data[~data['plain_whisper'].str.contains('gracias', na=False)]
+    # Remove rows containing the word 'gracias' in the 'plain_whisper' column.
+    data = data[~data['plain_whisper'].str.contains('gracias')]
     return data
 
 def get_phrase_vector(phrase):
     # Return the mean GloVe vector for the given phrase.
     words = phrase.split()
-    vector = np.mean([vectors[word] for word in words], axis=0)
-    return vector
+    vectors = np.stack([glove.vectors[glove.stoi[word]] for word in words if word in glove.stoi])
+    vector_mean = np.mean(vectors, axis=0)
+    return vector_mean
 
 def level_1_tf_idf(data, phrase_length, top_k, global_idf=False):
     # Find the top scoring tf-idf phrases for each 'reason_level_1' group.
@@ -234,27 +228,48 @@ def level_1_tf_idf(data, phrase_length, top_k, global_idf=False):
 
     return phrase_vectors
 
-def visualize(phrase_vectors, centroids=False, filename='visualization.png'):
-    # Visualize the phrase vectors in 3D.
-    fig = plt.figure(figsize=(10, 7))
+def visualize(phrase_vectors, centroids=False, filename=None):
+    # Visualize the phrases or centroids in a 3D plot, color-coded by 'reason_level_1'.
+    fig = plt.figure()
     ax = fig.add_subplot(111, projection='3d')
-    colors = ['b', 'g', 'r', 'c', 'm', 'y', 'k']
 
-    for i, (level, vectors) in enumerate(phrase_vectors.items()):
-        if vectors.any():
-            xs, ys, zs = vectors.T
-            if centroids:
-                centroid = np.mean(vectors, axis=0)
-                ax.scatter(*centroid, c=colors[i%7], label=level)
-            else:
-                ax.scatter(xs, ys, zs, c=colors[i%7], label=level)
+    colors = ['r', 'g', 'b', 'c', 'm', 'y']
+    label_to_color = {}  # Mapping of phrase labels to colors
+
+    unique_labels = list(phrase_vectors.keys())  # Get the unique labels
+
+    for idx, level in enumerate(unique_labels):
+        vectors = phrase_vectors[level]
+        label_to_color[level] = colors[idx]  # Assign unique color for each phrase label
+        ax.scatter(vectors[:, 0], vectors[:, 1], vectors[:, 2], c=colors[idx], label=level, marker='x', s=200)
+
+    ax.set_xlabel('Dimension 1')
+    ax.set_ylabel('Dimension 2')
+    ax.set_zlabel('Dimension 3')
+
+    if centroids:
+        centroid_vectors = {level: np.mean(vectors, axis=0) for level, vectors in phrase_vectors.items()}
+        for level, vector in centroid_vectors.items():
+            if level in phrase_vectors:
+                vectors = phrase_vectors[level]
+                color = label_to_color[level]
+                ax.scatter(vector[0], vector[1], vector[2], c=color, label=level, marker='x', s=200)
 
     ax.legend()
+
+    if filename:
+        plt.savefig(filename)
+
     plt.show()
-    fig.savefig(filename)
+
+# Path to your GloVe model file
+glove_file = "/chunk-complaint/category/glove/glove.6B.300d.txt"
+
+# Load GloVe vectors with torchtext
+glove = Vectors(name=glove_file)
 
 # Load the data
-data = pd.read_csv('raw_data.tsv', sep='\t')
+data = pd.read_csv('raw_data.tsv', sep='\t
 
 # Preprocess the data
 data = reject_spanish(data)
