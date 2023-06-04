@@ -292,7 +292,7 @@ def get_phrase_vector(phrase):
     words = phrase.split()
     vectors = np.stack([glove.vectors[glove.stoi[word]] for word in words if word in glove.stoi])
     vector_mean = np.mean(vectors, axis=0)
-    return vector_mean.numpy()
+    return vector_mean
 
 def level_1_tf_idf(data, phrase_length, top_k, global_idf=False):
     # Find the top scoring tf-idf phrases for each 'reason_level_1' group.
@@ -303,7 +303,7 @@ def level_1_tf_idf(data, phrase_length, top_k, global_idf=False):
         tfidf_matrix = vectorizer.fit_transform(group['plain_whisper'] if global_idf else data['plain_whisper'])
         scores = tfidf_matrix.sum(axis=0).A1
         top_indices = scores.argsort()[-top_k:]
-        feature_names = vectorizer.get_feature_names()
+        feature_names = vectorizer.get_feature_names_out()
         top_phrases = [feature_names[idx] for idx in top_indices]
 
         # Compute the mean GloVe vector for each top phrase
@@ -319,7 +319,7 @@ def visualize(phrase_vectors, centroids=False, filename=None):
 
     colors = ['r', 'g', 'b', 'c', 'm', 'y']
     for level, vectors in phrase_vectors.items():
-        ax.scatter(vectors[:, 0], vectors[:, 1], vectors[:, 2], c=colors[int(level)], label=level)
+        ax.scatter(vectors[:, 0], vectors[:, 1], vectors[:, 2], c=colors[level], label=level)
 
     ax.set_xlabel('Dimension 1')
     ax.set_ylabel('Dimension 2')
@@ -329,7 +329,7 @@ def visualize(phrase_vectors, centroids=False, filename=None):
     if centroids:
         centroid_vectors = {level: np.mean(vectors, axis=0) for level, vectors in phrase_vectors.items()}
         for level, vector in centroid_vectors.items():
-            ax.scatter(vector[0], vector[1], vector[2], c=colors[int(level)], label=level, marker='x', s=200)
+            ax.scatter(vector[0], vector[1], vector[2], c=colors[level], label=level, marker='x', s=200)
 
     if filename:
         plt.savefig(filename)
@@ -356,3 +356,10 @@ visualize(phrase_vectors, filename='phrase_visualization.png')
 
 # Visualize the centroids
 visualize(phrase_vectors, centroids=True, filename='centroid_visualization.png')
+
+-------------- debug
+AttributeError: 'numpy.ndarray' object has not attribute 'numpy'
+at line:    return vector_mean.numpy()
+
+ValueError: Invalid literal for int() with base 10: '*Case ID No Longer in the CTR SQL Database'
+at line:   ax.scatter(vectors[:, 0], vectors[:, 1], vectors[:, 2], c=colors[int(level)], label=level)
