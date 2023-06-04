@@ -61,7 +61,7 @@ labels = ['File 1', 'File 2', 'File 3']
 plot_csv_data(filenames, labels)
 
 =================================================
-Given a tab separated file "raw_data.tsv" tha has the following columns (specified in the header):
+Given a tab separated file "raw_data.tsv" that has the following columns (specified in the header):
 conv_id
 complaint_disat
 segment_id
@@ -74,4 +74,114 @@ language_code
 Each row represents a conversation that identified using "conv_id" column value.
 All columns are strings, except for call_duration which is an integer.
 
-The task is to find the top 10 tf-idf phrases (specified as configurable length ngram in the input of the function) in the column "plain_whisper" for each conv_i
+1) Step 1 - preprocessin step - remove all spanish language rows - reject_spanish()
+There is an initial pre-processing step. Any row that contains the word 'gracias' in the column 'plain_whisper' will be completely ignored and is not part of the data set. Encapsulate the functionality to reject 'gracias' as a pre-processing function called 'reject_spanish'. No rejected rows will be used during subsequent processing. Any other robust method to identify and reject spanish language rows can also be used.
+
+2) Step 2 - find top k tf-idf scores: level_1_tf_idf(phrase_length, top_k), where:
+phrase_length is number of tokens in ngram
+top_k is the top n number of phrases (eg. top 10 phrases by tf-idf score)
+'level_1_tf_idf' will find the top 10 scoring tf-idf phrases in each group of 'plain_whisper' columns that belong to the same 'reason_level_1' where the value of the 'complaint_disat' column is 'complaint'. The length of a phrase is an input argument to the tf-idf function. The phrase will come from the column "plain_whisper". The tf-idf calculation will be done across the set of 'plain_whisper' columns identified in pre-processing step 1.  The output will be a key-value array where the key is the value of 'reason_level_1' column and the value is the top 10 phrases, each with a tf-idf score. Basically we want to find out the most frequently occurring phrases in 'plain_whisper' column for rows with the same 'reason_level_1'.
+
+3) Step 3 - get most significant 3 dimensions for each phrase based on mean Word2Vec representation of the phrase: get_mean_vector_score()
+Using the Word2Vec score for each top 10 phrase, find the most significant 3 dimensions for each phrase. This should be the 3 dimensions for all phrases that is most significant in the sense of PCA or SVD
+
+4) Step 4 - Do a 3D visualization of the phrases, using dots color-coded by 'reason_level_1' for each phrase. Basically all phrases that belong to the same 'reason_level_1' will have the same color. Display this plot.
+
+5) Step 5 - Do a 3D visualization as in step 4, but only display the centroid position of each group of dots using a single dot of the same color. Label the dot with the 'reason_level_1'. Display this plot.
+
+===========================
+
+import pandas as pd
+from sklearn.feature_extraction.text import TfidfVectorizer
+from sklearn.decomposition import TruncatedSVD
+from gensim.models import Word2Vec
+import matplotlib.pyplot as plt
+from mpl_toolkits.mplot3d import Axes3D
+from nltk import word_tokenize
+import numpy as np
+
+def reject_spanish(filepath):
+    data = pd.read_csv(filepath, sep='\t')
+    data = data[~data['plain_whisper'].str.contains('gracias', na=False)]
+    return data
+
+def level_1_tf_idf(data, phrase_length, top_k, global_idf):
+    data = data[data['complaint_disat'] == 'complaint']
+    tfidf = TfidfVectorizer(ngram_range=(phrase_length, phrase_length))
+    
+    if global_idf:
+        # calculate IDF globally across all 'plain_whisper' columns
+        tfidf_matrix = tfidf.fit_transform(data['plain_whisper'].values.astype('U'))
+        top_phrases = {}
+        feature_array = np.array(tfidf.get_feature_names())
+        for name, group in data.groupby('reason_level_1'):
+            tfidf_sorting = np.argsort(tfidf_matrix[group.index].toarray()).flatten()[::-1]
+            top_phrases[name] = feature_array[tfidf_sorting][:top_k]
+    else:
+        # calculate IDF separately for each 'reason_level_1' group
+        top_phrases = {}
+        for name, group in data.groupby('reason_level_1'):
+            tfidf_matrix = tfidf.fit_transform(group['plain_whisper'].values.astype('U'))
+            feature_array = np.array(tfidf.get_feature_names())
+            tfidf_sorting = np.argsort(tfidf_matrix.toarray()).flatten()[::-1]
+            top_phrases[name] = feature_array[tfidf_sorting][:top_k]
+
+    return top_phrases
+
+def get_mean_vector_score(data, top_phrases):
+    tokenized_sentences = data['plain_whisper'].apply(word_tokenize).tolist()
+    model = Word2Vec(tokenized_sentences, min_count=1)
+    phrase_vectors = {}
+
+    for level, phrases in top_phrases.items():
+        level_vectors = []
+        for phrase in phrases:
+            word_vectors = [model.wv[word] for word in word_tokenize(phrase) if word in model.wv]
+            if word_vectors:
+                level_vectors.append(np.mean(word_vectors, axis=0))
+        phrase_vectors[level] = level_vectors
+
+    svd = TruncatedSVD(n_components=3)
+    for level, vectors in phrase_vectors.items():
+        if vectors:
+            phrase_vectors[level] = svd.fit_transform(vectors)
+
+    return phrase_vectors
+
+def visualize(phrase_vectors, centroids=False):
+    fig = plt.figure(figsize=(10, 7))
+    ax = fig.add_subplot(111, projection='3d')
+    colors = ['b', 'g', 'r', 'c', 'm', 'y', 'k']
+
+    for i, (level, vectors) in enumerate(phrase_vectors.items()):
+        if vectors.any():
+            xs, ys, zs = vectors.T
+            if centroids:
+                centroid = np.mean(vectors, axis=0)
+                ax.scatter(*centroid, c=colors[i%7], label=level)
+            else:
+                ax.scatter(xs, ys, zs, c=colors[i%7], label=level)
+
+    ax.legend()
+    plt.show()
+
+# Read and preprocess data
+filepath = "raw_data.tsv"
+data = reject_spanish(filepath)
+
+# Find top 10 phrases by tf-idf score
+phrase_length = 2
+top_k = 10
+global_idf = False  # change this to True to calculate IDF globally
+top_phrases = level_1_tf_idf(data, phrase_length, top_k, global_idf)
+
+# Get most significant 3 dimensions for each phrase
+phrase_vectors = get_mean_vector_score(data, top_phrases)
+
+# Visualize the phrases
+visualize(phrase_vectors)
+
+# Visualize the centroids
+visualize(phrase_vectors, centroids=True)
+
+--------------------
