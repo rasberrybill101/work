@@ -377,6 +377,14 @@ data = reject_spanish(data)
 # Compute tf-idf scores
 phrase_vectors = level_1_tf_idf(data, phrase_length=2, top_k=10, global_idf=True)
 
+# Write the results to file
+with open('tf-idf-results.txt', 'w') as f:
+    for level, vectors in phrase_vectors.items():
+        for vector in vectors:
+            phrase = vector[0]
+            tfidf_score = vector[1]
+            f.write(f'"{level}", "{phrase}", {tfidf_score}\n')
+
 # Visualize the phrases
 visualize(phrase_vectors, filename='phrase_visualization.png')
 
@@ -398,3 +406,15 @@ at line:   ax.scatter(vector[0], vector[1], vector[2], c=colors[int(level)], lab
 
 IndexError: list index out of range
 at line: label_to_color[level] = colors[idx]  # Assign unique color for each phrase label
+
+
+after Computing the tf-idf scores:
+phrase_vectors = level_1_tf_idf(data, phrase_length=2, top_k=10, global_idf=True)
+also write the results to file 'tf-idf-results.txt'
+
+use the tab separated format:
+level <tab> phrase <tab> tf-idf-score
+when writing the results to file
+Just show the line(s) of code to do this
+
+instead of tabs, use commas. But enclose the level in quotes
