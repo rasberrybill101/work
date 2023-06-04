@@ -318,28 +318,34 @@ def visualize(phrase_vectors, centroids=False, filename=None):
     ax = fig.add_subplot(111, projection='3d')
 
     colors = ['r', 'g', 'b', 'c', 'm', 'y']
-    for level, vectors in phrase_vectors.items():
-        if level in phrase_vectors:
-            vector = phrase_vectors[level]
-            ax.scatter(vector[0], vector[1], vector[2], c=colors[int(level)], label=level, marker='x', s=200)
+    label_to_color = {}  # Mapping of phrase labels to colors
+
+    unique_labels = list(phrase_vectors.keys())  # Get the unique labels
+
+    for idx, level in enumerate(unique_labels):
+        vectors = phrase_vectors[level]
+        label_to_color[level] = colors[idx]  # Assign unique color for each phrase label
+        ax.scatter(vectors[:, 0], vectors[:, 1], vectors[:, 2], c=colors[idx], label=level, marker='x', s=200)
 
     ax.set_xlabel('Dimension 1')
     ax.set_ylabel('Dimension 2')
     ax.set_zlabel('Dimension 3')
-    ax.legend()
 
     if centroids:
         centroid_vectors = {level: np.mean(vectors, axis=0) for level, vectors in phrase_vectors.items()}
         for level, vector in centroid_vectors.items():
             if level in phrase_vectors:
-                vector = phrase_vectors[level]
-                ax.scatter(vector[0], vector[1], vector[2], c=colors[int(level)], label=level, marker='x', s=200)
+                vectors = phrase_vectors[level]
+                color = label_to_color[level]
+                ax.scatter(vector[0], vector[1], vector[2], c=color, label=level, marker='x', s=200)
 
+    ax.legend()
 
     if filename:
         plt.savefig(filename)
 
     plt.show()
+
 
 # Path to your GloVe model file
 glove_file = "/chunk-complaint/category/glove/glove.6B.300d"
