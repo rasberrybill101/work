@@ -105,28 +105,23 @@ def reject_spanish(filepath):
     data = data[~data['plain_whisper'].str.contains('gracias', na=False)]
     return data
 
-def level_1_tf_idf(data, phrase_length, top_k, global_idf):
-    data = data[data['complaint_disat'] == 'complaint']
-    tfidf = TfidfVectorizer(ngram_range=(phrase_length, phrase_length))
-    
-    if global_idf:
-        # calculate IDF globally across all 'plain_whisper' columns
-        tfidf_matrix = tfidf.fit_transform(data['plain_whisper'].values.astype('U'))
-        top_phrases = {}
-        feature_array = np.array(tfidf.get_feature_names())
-        for name, group in data.groupby('reason_level_1'):
-            tfidf_sorting = np.argsort(tfidf_matrix[group.index].toarray()).flatten()[::-1]
-            top_phrases[name] = feature_array[tfidf_sorting][:top_k]
-    else:
-        # calculate IDF separately for each 'reason_level_1' group
-        top_phrases = {}
-        for name, group in data.groupby('reason_level_1'):
-            tfidf_matrix = tfidf.fit_transform(group['plain_whisper'].values.astype('U'))
-            feature_array = np.array(tfidf.get_feature_names())
-            tfidf_sorting = np.argsort(tfidf_matrix.toarray()).flatten()[::-1]
-            top_phrases[name] = feature_array[tfidf_sorting][:top_k]
+def level_1_tf_idf(data, phrase_length, top_k, global_idf=False):
+    # Find the top scoring tf-idf phrases for each 'reason_level_1' group.
+    phrase_vectors = {}
+    vectorizer = TfidfVectorizer(ngram_range=(phrase_length, phrase_length))
 
-    return top_phrases
+    for level, group in data.groupby('reason_level_1'):
+        tfidf_matrix = vectorizer.fit_transform(group['plain_whisper'] if global_idf else data['plain_whisper'])
+        scores = tfidf_matrix.sum(axis=0).A1
+        top_indices = scores.argsort()[-top_k:]
+        feature_names = vectorizer.get_feature_names_out()
+        top_phrases = [feature_names[idx] for idx in top_indices]
+
+        # Compute the mean GloVe vector for each top phrase
+        vectors = np.array([get_phrase_vector(phrase) for phrase in top_phrases])
+        phrase_vectors[level] = vectors
+
+    return phrase_vectors
 
 def get_mean_vector_score(data, top_phrases):
     tokenized_sentences = data['plain_whisper'].apply(word_tokenize).tolist()
@@ -230,7 +225,7 @@ def level_1_tf_idf(data, phrase_length, top_k, global_idf=False):
         tfidf_matrix = vectorizer.fit_transform(group['plain_whisper'] if global_idf else data['plain_whisper'])
         scores = tfidf_matrix.sum(axis=0).A1
         top_indices = scores.argsort()[-top_k:]
-        feature_names = vectorizer.get_feature_names()
+        feature_names = vectorizer.get_feature_names_out()
         top_phrases = [feature_names[idx] for idx in top_indices]
 
         # Compute the mean GloVe vector for each top phrase
