@@ -352,4 +352,7 @@ data = reject_spanish(data)
 phrase_vectors = level_1_tf_idf(data, phrase_length=2, top_k=10, global_idf=True)
 
 # Visualize the phrases
-visualize(phrase_vectors, filename='phrase_visualization.png
+visualize(phrase_vectors, filename='phrase_visualization.png')
+
+# Visualize the centroids
+visualize(phrase_vectors, centroids=True, filename='centroid_visualization.png')
