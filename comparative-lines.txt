@@ -285,9 +285,9 @@ visualize(phrase_vectors, centroids=True, filename='centroid_visualization.png')
 
 ---------------------
 
-ValueError: setting an array element with a sequence. The requested array has an inhomogenous shape after 1 dimensions. The detected shape was (2,) + inhomogenous part.
-at the line:
-np.mean([vectors[word] for word in words], axis=0)
+ValueError: setting an array element with a sequence. The requested array has an inhomogenous shape after 2 dimensions. The detected shape was (2,) + inhomogenous part.
+around the line:
+centroid_vectors = {level: np.mean(vectors, axis=0) for level, vectors  in phrase_vectors.items()}
 
 
 import numpy as np
@@ -352,10 +352,9 @@ def visualize(phrase_vectors, centroids=False, filename=None):
     ax.set_zlabel('Dimension 3')
 
     if centroids:
-        centroid_vectors = {level: np.mean(vectors, axis=0) for level, vectors in phrase_vectors.items()}
+        centroid_vectors = {level: np.mean(vectors, axis=0) for level, (phrases, vectors) in phrase_vectors.items()}
         for level, vector in centroid_vectors.items():
             if level in phrase_vectors:
-                vectors = phrase_vectors[level][1]
                 color = label_to_color[level]
                 ax.scatter(vector[0], vector[1], vector[2], c=color, label=level, marker='x', s=200)
 
