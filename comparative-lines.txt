@@ -332,15 +332,16 @@ def visualize(phrase_vectors, centroids=False, filename=None):
     fig = plt.figure()
     ax = fig.add_subplot(111, projection='3d')
 
-    colors = ['r', 'g', 'b', 'c', 'm', 'y']
+    colors = ['r', 'g', 'b', 'c', 'm', 'y', 'orange', 'purple', 'lime', 'cyan', 'pink', 'gold', 'navy', 'teal']
     label_to_color = {}  # Mapping of phrase labels to colors
 
     unique_labels = list(phrase_vectors.keys())  # Get the unique labels
 
     for idx, level in enumerate(unique_labels):
         vectors = phrase_vectors[level]
-        label_to_color[level] = colors[idx]  # Assign unique color for each phrase label
-        ax.scatter(vectors[:, 0], vectors[:, 1], vectors[:, 2], c=colors[idx], label=level, marker='x', s=200)
+        color = colors[idx % len(colors)]  # Cycle through colors
+        label_to_color[level] = color  # Assign unique color for each phrase label
+        ax.scatter(vectors[:, 0], vectors[:, 1], vectors[:, 2], c=color, label=level, marker='x', s=200)
 
     ax.set_xlabel('Dimension 1')
     ax.set_ylabel('Dimension 2')
@@ -360,7 +361,6 @@ def visualize(phrase_vectors, centroids=False, filename=None):
         plt.savefig(filename)
 
     plt.show()
-
 
 # Path to your GloVe model file
 glove_file = "/chunk-complaint/category/glove/glove.6B.300d"
@@ -395,3 +395,6 @@ at line:    ax.scatter(vector[0], vector[1], vector[2], c=colors[level], label=l
 
 UnboundLocalError: local variable 'vector' referenced before assignment
 at line:   ax.scatter(vector[0], vector[1], vector[2], c=colors[int(level)], label=level, marker='x', s=200)
+
+IndexError: list index out of range
+at line: label_to_color[level] = colors[idx]  # Assign unique color for each phrase label
