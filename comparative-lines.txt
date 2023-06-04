@@ -379,11 +379,11 @@ phrase_vectors = level_1_tf_idf(data, phrase_length=2, top_k=10, global_idf=True
 
 # Write the results to file
 with open('tf-idf-results.txt', 'w') as f:
-    for level, vectors in phrase_vectors.items():
-        for vector in vectors:
-            phrase = vector[0]
-            tfidf_score = vector[1]
-            f.write(f'"{level}", "{phrase}", {tfidf_score}\n')
+    for level, phrases in phrase_vectors.items():
+        f.write(f"Level: {level}\n")
+        for phrase in phrases:
+            f.write(f"{phrase}\n")
+        f.write("\n")
 
 # Visualize the phrases
 visualize(phrase_vectors, filename='phrase_visualization.png')
