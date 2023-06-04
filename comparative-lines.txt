@@ -199,13 +199,16 @@ visualize(phrase_vectors, centroids=True)
 import pandas as pd
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.decomposition import TruncatedSVD
-from torchtext.vocab import GloVe
+from torchtext.vocab import Vectors
 import numpy as np
 import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
 
-# Load GloVe model
-glove = GloVe(name='6B', dim=300)
+# Path to GloVe model file
+glove_file = "path/to/your/glove_model.txt"
+
+# Load the GloVe vectors
+vectors = Vectors(name=glove_file)
 
 def reject_spanish(data):
     #Remove rows containing 'gracias' in the 'plain_whisper' column.
