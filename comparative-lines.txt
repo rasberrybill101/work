@@ -267,3 +267,89 @@ visualize(phrase_vectors, filename='phrase_visualization.png')
 
 # Visualize the centroids
 visualize(phrase_vectors, centroids=True, filename='centroid_visualization.png')
+
+---------------------
+
+ValueError: setting an array element with a sequence. The requested array has an inhomogenous shape after 1 dimensions. The detected shape was (2,) + inhomogenous part.
+at the line:
+np.mean([vectors[word] for word in words], axis=0)
+
+
+import numpy as np
+import pandas as pd
+from sklearn.feature_extraction.text import TfidfVectorizer
+import matplotlib.pyplot as plt
+from mpl_toolkits.mplot3d import Axes3D
+from torchtext.vocab import Vectors
+
+def reject_spanish(data):
+    # Remove rows containing the word 'gracias' in the 'plain_whisper' column.
+    data = data[~data['plain_whisper'].str.contains('gracias')]
+    return data
+
+def get_phrase_vector(phrase):
+    # Return the mean GloVe vector for the given phrase.
+    words = phrase.split()
+    vectors = np.stack([glove.vectors[glove.stoi[word]] for word in words if word in glove.stoi])
+    vector_mean = np.mean(vectors, axis=0)
+    return vector_mean.numpy()
+
+def level_1_tf_idf(data, phrase_length, top_k, global_idf=False):
+    # Find the top scoring tf-idf phrases for each 'reason_level_1' group.
+    phrase_vectors = {}
+    vectorizer = TfidfVectorizer(ngram_range=(phrase_length, phrase_length))
+
+    for level, group in data.groupby('reason_level_1'):
+        tfidf_matrix = vectorizer.fit_transform(group['plain_whisper'] if global_idf else data['plain_whisper'])
+        scores = tfidf_matrix.sum(axis=0).A1
+        top_indices = scores.argsort()[-top_k:]
+        feature_names = vectorizer.get_feature_names()
+        top_phrases = [feature_names[idx] for idx in top_indices]
+
+        # Compute the mean GloVe vector for each top phrase
+        vectors = np.array([get_phrase_vector(phrase) for phrase in top_phrases])
+        phrase_vectors[level] = vectors
+
+    return phrase_vectors
+
+def visualize(phrase_vectors, centroids=False, filename=None):
+    # Visualize the phrases or centroids in a 3D plot, color-coded by 'reason_level_1'.
+    fig = plt.figure()
+    ax = fig.add_subplot(111, projection='3d')
+
+    colors = ['r', 'g', 'b', 'c', 'm', 'y']
+    for level, vectors in phrase_vectors.items():
+        ax.scatter(vectors[:, 0], vectors[:, 1], vectors[:, 2], c=colors[int(level)], label=level)
+
+    ax.set_xlabel('Dimension 1')
+    ax.set_ylabel('Dimension 2')
+    ax.set_zlabel('Dimension 3')
+    ax.legend()
+
+    if centroids:
+        centroid_vectors = {level: np.mean(vectors, axis=0) for level, vectors in phrase_vectors.items()}
+        for level, vector in centroid_vectors.items():
+            ax.scatter(vector[0], vector[1], vector[2], c=colors[int(level)], label=level, marker='x', s=200)
+
+    if filename:
+        plt.savefig(filename)
+
+    plt.show()
+
+# Path to your GloVe model file
+glove_file = "/chunk-complaint/category/glove/glove.6B.300d.txt"
+
+# Load GloVe vectors with torchtext
+glove = Vectors(name=glove_file)
+
+# Load the data
+data = pd.read_csv('raw_data.tsv', sep='\t')
+
+# Preprocess the data
+data = reject_spanish(data)
+
+# Compute tf-idf scores
+phrase_vectors = level_1_tf_idf(data, phrase_length=2, top_k=10, global_idf=True)
+
+# Visualize the phrases
+visualize(phrase_vectors, filename='phrase_visualization.png
