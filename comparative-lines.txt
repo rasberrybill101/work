@@ -211,26 +211,27 @@ glove_file = "/chunk-complaint/category/glove/glove.6B.300d"
 vectors = Vectors(name=glove_file)
 
 def reject_spanish(data):
-    #Remove rows containing 'gracias' in the 'plain_whisper' column.
+    # Remove rows containing 'gracias' in the 'plain_whisper' column.
     data = data[~data['plain_whisper'].str.contains('gracias', na=False)]
     return data
 
 def get_phrase_vector(phrase):
-    #Return the mean GloVe vector for the given phrase.
+    # Return the mean GloVe vector for the given phrase.
     words = phrase.split()
     vector = np.mean([vectors[word] for word in words], axis=0)
     return vector
 
 def level_1_tf_idf(data, phrase_length, top_k, global_idf=False):
-    #Find the top scoring tf-idf phrases for each 'reason_level_1' group.
+    # Find the top scoring tf-idf phrases for each 'reason_level_1' group.
     phrase_vectors = {}
-    tfidf = TfidfVectorizer(ngram_range=(phrase_length, phrase_length))
+    vectorizer = TfidfVectorizer(ngram_range=(phrase_length, phrase_length))
 
     for level, group in data.groupby('reason_level_1'):
-        tfidf_matrix = tfidf.fit_transform(group['plain_whisper'] if global_idf else data['plain_whisper'])
-        scores = np.array(tfidf_matrix.sum(axis=0)).ravel()
+        tfidf_matrix = vectorizer.fit_transform(group['plain_whisper'] if global_idf else data['plain_whisper'])
+        scores = tfidf_matrix.sum(axis=0).A1
         top_indices = scores.argsort()[-top_k:]
-        top_phrases = np.array(tfidf.get_feature_names())[top_indices]
+        feature_names = vectorizer.get_feature_names()
+        top_phrases = [feature_names[idx] for idx in top_indices]
 
         # Compute the mean GloVe vector for each top phrase
         vectors = np.array([get_phrase_vector(phrase) for phrase in top_phrases])
@@ -239,7 +240,7 @@ def level_1_tf_idf(data, phrase_length, top_k, global_idf=False):
     return phrase_vectors
 
 def visualize(phrase_vectors, centroids=False, filename='visualization.png'):
-    #Visualize the phrase vectors in 3D.
+    # Visualize the phrase vectors in 3D.
     fig = plt.figure(figsize=(10, 7))
     ax = fig.add_subplot(111, projection='3d')
     colors = ['b', 'g', 'r', 'c', 'm', 'y', 'k']
