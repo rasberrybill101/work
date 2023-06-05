@@ -230,11 +230,11 @@ def level_1_tf_idf(data, phrase_length, top_k, global_idf=False):
         vectors = np.array([get_phrase_vector(phrase) for phrase in top_phrases])
         phrase_vectors[level] = (top_phrases, vectors)
 
-	svd = TruncatedSVD(n_components=3)
-	for level, vectors in phrase_vectors.items():
-		if vectors:
-			phrase_vectors[level] = svd.fit_transform(vectors)
-			
+    svd = TruncatedSVD(n_components=3)
+    for level, vectors in phrase_vectors.items():
+        if vectors:
+            phrase_vectors[level] = svd.fit_transform(vectors)
+
     return phrase_vectors
 
 
