@@ -194,6 +194,7 @@ visualize(phrase_vectors, centroids=True)
 import numpy as np
 import pandas as pd
 from sklearn.feature_extraction.text import TfidfVectorizer
+from sklearn.decomposition import TruncatedSVD
 import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
 from torchtext.vocab import Vectors
@@ -226,6 +227,11 @@ def level_1_tf_idf(data, phrase_length, top_k, global_idf=False):
         # Compute the mean GloVe vector for each top phrase
         vectors = np.array([get_phrase_vector(phrase) for phrase in top_phrases])
         phrase_vectors[level] = vectors
+
+	svd = TruncatedSVD(n_components=3)
+	for level, vectors in phrase_vectors.items():
+		if vectors:
+			phrase_vectors[level] = svd.fit_transform(vectors)
 
     return phrase_vectors
 
