@@ -257,7 +257,7 @@ def visualize(phrase_vectors, centroids=False, filename=None):
         phrases, vectors = phrase_vectors[level]
         color = colors[idx % len(colors)]  # Cycle through colors
         label_to_color[level] = color  # Assign unique color for each phrase label
-        ax.scatter(vectors[:, 0], vectors[:, 1], vectors[:, 2], c=color, label=level, marker='x', s=200)
+        ax.scatter(vectors[:, 0], vectors[:, 1], vectors[:, 2], c=color, label=level, marker='.', s=200)
 
     ax.set_xlabel('Dimension 1')
     ax.set_ylabel('Dimension 2')
@@ -307,33 +307,7 @@ visualize(phrase_vectors, filename='phrase_visualization.png')
 # Visualize the centroids
 visualize(phrase_vectors, centroids=True, filename='centroid_visualization.png')
 
--------------- debug
-AttributeError: 'numpy.ndarray' object has not attribute 'numpy'
-at line:    return vector_mean.numpy()
-
-ValueError: Invalid literal for int() with base 10: '*Case ID No Longer in the CTR SQL Database'
-at line:   ax.scatter(vectors[:, 0], vectors[:, 1], vectors[:, 2], c=colors[int(level)], label=level)
-
-TypeError: list indices must be integers or slices, not str
-at line:    ax.scatter(vector[0], vector[1], vector[2], c=colors[level], label=level, marker='x', s=200)
-
-UnboundLocalError: local variable 'vector' referenced before assignment
-at line:   ax.scatter(vector[0], vector[1], vector[2], c=colors[int(level)], label=level, marker='x', s=200)
-
-IndexError: list index out of range
-at line: label_to_color[level] = colors[idx]  # Assign unique color for each phrase label
+-------------- additional
 
 
-after Computing the tf-idf scores:
-phrase_vectors = level_1_tf_idf(data, phrase_length=2, top_k=10, global_idf=True)
-also write the results to file 'tf-idf-results.txt'
 
-use the tab separated format:
-level <tab> phrase <tab> tf-idf-score
-when writing the results to file
-Just show the line(s) of code to do this
-
-instead of tabs, use commas. But enclose the level in quotes
-
-ValueError: need at least one array to stack
-around line: vectors = np.stack([glove.vectors[glove.stoi[word]] for word in words if word in glove.stoi])
