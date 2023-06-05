@@ -190,6 +190,9 @@ visualize(phrase_vectors)
 visualize(phrase_vectors, centroids=True)
 
 -------------------- using torchtext instead of Word2Vec
+within this code is a section commented out with the error being seen
+Can you comment on the ValueError reported there?
+Suggest a fix for the bug
 
 import numpy as np
 import pandas as pd
@@ -230,16 +233,14 @@ def level_1_tf_idf(data, phrase_length, top_k, global_idf=False):
         vectors = np.array([get_phrase_vector(phrase) for phrase in top_phrases])
         phrase_vectors[level] = (top_phrases, vectors)
 
-    """ this block has an issue
-    ValueError: setting an array element with a sequence. The requested array has an inhomogeneous shape after 2 dimensions. The detected shape was (2, 10) + inhomogeneous part.
-    on the line:  phrase_vectors[level] = svd.fit_transform(vectors)
     svd = TruncatedSVD(n_components=3)
-    for level, vectors in phrase_vectors.items():
-        if vectors:
-            phrase_vectors[level] = svd.fit_transform(vectors)
-    """
-
-    return phrase_vectors
+    phrase_vectors_svd = {}
+    for level, (phrases, vectors) in phrase_vectors.items():
+        if vectors.size > 0:  # add condition to avoid empty vectors
+            vectors_svd = svd.fit_transform(vectors)
+            phrase_vectors_svd[level] = (phrases, vectors_svd)
+    
+    return phrase_vectors_svd
 
 
 def visualize(phrase_vectors, centroids=False, filename=None):
