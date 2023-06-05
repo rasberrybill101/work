@@ -280,8 +280,8 @@ def visualize_split(phrase_vectors, numLevels=8, centroids=False, filename=None)
     colors = ['r', 'g', 'c', 'm', 'y', 'orange', 'purple', 'lime', 'cyan', 'pink', 'gold', 'navy', 'teal']
 
     unique_labels = list(phrase_vectors.keys())  # Get the unique labels
-    if 'No Complaint' in unique_labels:
-        unique_labels.remove('No Complaint')  # Remove 'No Complaint' from the list
+    if 'Not a Complaint' in unique_labels:
+        unique_labels.remove('Not a Complaint')  # Remove 'Not a Complaint' from the list
 
     # Create group of levels
     level_groups = [unique_labels[n:n+(numLevels-1)] for n in range(0, len(unique_labels), numLevels-1)]
@@ -290,10 +290,10 @@ def visualize_split(phrase_vectors, numLevels=8, centroids=False, filename=None)
         fig = plt.figure()
         ax = fig.add_subplot(111, projection='3d')
 
-        # Always include 'No Complaint' and assign it the color blue
-        label_to_color = {'No Complaint': 'b'}
-        ax.scatter(phrase_vectors['No Complaint'][1][:, 0], phrase_vectors['No Complaint'][1][:, 1], 
-                   phrase_vectors['No Complaint'][1][:, 2], c='b', label='No Complaint', marker='x', s=200)
+        # Always include 'Not a Complaint' and assign it the color blue
+        label_to_color = {'Not a Complaint': 'b'}
+        ax.scatter(phrase_vectors['Not a Complaint'][1][:, 0], phrase_vectors['Not a Complaint'][1][:, 1], 
+                   phrase_vectors['Not a Complaint'][1][:, 2], c='b', label='Not a Complaint', marker='x', s=200)
 
         for idx, level in enumerate(levels):
             color = colors[idx % len(colors)]
@@ -306,7 +306,7 @@ def visualize_split(phrase_vectors, numLevels=8, centroids=False, filename=None)
         ax.set_zlabel('Dimension 3')
 
         if centroids:
-            centroid_vectors = {level: np.mean(vectors, axis=0) for level, (phrases, vectors) in phrase_vectors.items() if level in levels+['No Complaint']}
+            centroid_vectors = {level: np.mean(vectors, axis=0) for level, (phrases, vectors) in phrase_vectors.items() if level in levels+['Not a Complaint']}
             for level, vector in centroid_vectors.items():
                 if level in phrase_vectors:
                     color = label_to_color[level]
@@ -359,7 +359,7 @@ visualize_split(phrase_vectors, centroids=True, numLevels=8, filename='centroid_
 
 
 -------------- additional
-The 3D plot is very crowded. Let's keep the current plots, but add another set of 3D plots that will be easier to read. Create the new 3D plots as follows", each of which should contain the 'level' with the label 'No Complaint' since we want to see the relationship of other levels to 'No Complaint'. Limit the number of levels to be displayed in each plot to numLevels (this should be configurable, but you can use a default of 8 -- inclusive of the required 'No Complaint'). Generate as many plots required to cover all levels with no more than numLevels per plot. Move the plot to the left as there is a lot of whitespace there and keep the legend outsid the plot as usual.
+The 3D plot is very crowded. Let's keep the current plots, but add another set of 3D plots that will be easier to read. Create the new 3D plots as follows", each of which should contain the 'level' with the label 'Not a Complaint' since we want to see the relationship of other levels to 'Not a Complaint'. Limit the number of levels to be displayed in each plot to numLevels (this should be configurable, but you can use a default of 8 -- inclusive of the required 'Not a Complaint'). Generate as many plots required to cover all levels with no more than numLevels per plot. Move the plot to the left as there is a lot of whitespace there and keep the legend outsid the plot as usual.
 
 ------------ additional 2
 Always show 'Not a Complaint' in blue. Then use any other unique colors for the other labels. Move the graph even more to the left.
