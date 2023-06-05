@@ -244,16 +244,16 @@ def visualize(phrase_vectors, centroids=False, filename=None):
     fig = plt.figure()
     ax = fig.add_subplot(111, projection='3d')
     colors = ['r', 'g', 'c', 'm', 'y', 'orange', 'purple', 'lime', 'cyan', 'pink', 'gold', 'navy', 'teal']
-    label_to_color = {'No Complaint': 'b'}  # Make sure 'No Complaint' is always blue
+    label_to_color = {'Not a Complaint': 'b'}  # Make sure 'Not a Complaint' is always blue
 
     unique_labels = list(phrase_vectors.keys())
     for idx, level in enumerate(unique_labels):
-        if level == 'No Complaint':  # 'No Complaint' has its color already assigned
+        if level == 'Not a Complaint':  # 'Not a Complaint' has its color already assigned
             continue
         color = colors[idx % len(colors)]  # Cycle through colors
         label_to_color[level] = color  # Assign unique color for each phrase label
         vectors = phrase_vectors[level][1]
-        ax.scatter(vectors[:, 0], vectors[:, 1], vectors[:, 2], c=color, label=level, marker='x', s=200)
+        ax.scatter(vectors[:, 0], vectors[:, 1], vectors[:, 2], c=color, label=level, marker='.', s=200)
 
     ax.set_xlabel('Dimension 1')
     ax.set_ylabel('Dimension 2')
@@ -267,7 +267,7 @@ def visualize(phrase_vectors, centroids=False, filename=None):
         for level, vector in centroid_vectors.items():
             if level in phrase_vectors:
                 color = label_to_color[level]
-                ax.scatter(vector[0], vector[1], vector[2], c=color, label=level, marker='x', s=200)
+                ax.scatter(vector[0], vector[1], vector[2], c=color, label=level, marker='.', s=200)
 
     # Move plot to the left
     plt.subplots_adjust(left=-0.25) 
@@ -285,8 +285,8 @@ def visualize(phrase_vectors, centroids=False, filename=None):
 def visualize_split(phrase_vectors, numLevels=8, centroids=False, filename=None):
     colors = ['r', 'g', 'c', 'm', 'y', 'orange', 'purple', 'lime', 'cyan', 'pink', 'gold', 'navy', 'teal']
     unique_labels = list(phrase_vectors.keys())
-    if 'No Complaint' in unique_labels:
-        unique_labels.remove('No Complaint')
+    if 'Not a Complaint' in unique_labels:
+        unique_labels.remove('Not a Complaint')
 
     level_groups = [unique_labels[n:n+(numLevels-1)] for n in range(0, len(unique_labels), numLevels-1)]
 
@@ -294,15 +294,15 @@ def visualize_split(phrase_vectors, numLevels=8, centroids=False, filename=None)
         fig = plt.figure()
         ax = fig.add_subplot(111, projection='3d')
 
-        label_to_color = {'No Complaint': 'b'}  # Make sure 'No Complaint' is always blue
-        ax.scatter(phrase_vectors['No Complaint'][1][:, 0], phrase_vectors['No Complaint'][1][:, 1], 
-                   phrase_vectors['No Complaint'][1][:, 2], c='b', label='No Complaint', marker='x', s=200)
+        label_to_color = {'Not a Complaint': 'b'}  # Make sure 'Not a Complaint' is always blue
+        ax.scatter(phrase_vectors['Not a Complaint'][1][:, 0], phrase_vectors['Not a Complaint'][1][:, 1], 
+                   phrase_vectors['Not a Complaint'][1][:, 2], c='b', label='Not a Complaint', marker='.', s=200)
 
         for idx, level in enumerate(levels):
             color = colors[idx % len(colors)]
             label_to_color[level] = color  # Assign unique color for each phrase label
             vectors = phrase_vectors[level][1]
-            ax.scatter(vectors[:, 0], vectors[:, 1], vectors[:, 2], c=color, label=level, marker='x', s=200)
+            ax.scatter(vectors[:, 0], vectors[:, 1], vectors[:, 2], c=color, label=level, marker='.', s=200)
 
         ax.set_xlabel('Dimension 1')
         ax.set_ylabel('Dimension 2')
@@ -312,11 +312,11 @@ def visualize_split(phrase_vectors, numLevels=8, centroids=False, filename=None)
         ax.set_title(title)
 
         if centroids:
-            centroid_vectors = {level: np.mean(vectors, axis=0) for level, (phrases, vectors) in phrase_vectors.items() if level in levels+['No Complaint']}
+            centroid_vectors = {level: np.mean(vectors, axis=0) for level, (phrases, vectors) in phrase_vectors.items() if level in levels+['Not a Complaint']}
             for level, vector in centroid_vectors.items():
                 if level in phrase_vectors:
                     color = label_to_color[level]
-                    ax.scatter(vector[0], vector[1], vector[2], c=color, label=level, marker='x', s=200)
+                    ax.scatter(vector[0], vector[1], vector[2], c=color, label=level, marker='.', s=200)
 
         # Move plot to the left
         plt.subplots_adjust(left=-0.25)
