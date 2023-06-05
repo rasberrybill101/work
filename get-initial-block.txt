@@ -1,0 +1,50 @@
+Given a csv input string with comma separated columns:
+conversation, label, filename
+Write function "getInitialBlock(String input, int k)" that takes the input string of space separated tokens and returns a new csv string constructed as follows:
+column 1 : the first k tokens in the input string (non-space tokens) separated using single spaces
+If the input string is less than k tokens long, then return all the tokens separated only with single spaces. The first column should be enclosed with quotes.
+column 2 : label from input csv
+column 3 : the integer 1
+column 4 : the number of tokens present in the output column 1
+column 5 : filename from input csv
+
+Use java 8, streams, and CSVParser for implementation
+
+--------------------------------
+import org.apache.commons.csv.*;
+
+import java.io.IOException;
+import java.io.StringReader;
+import java.io.StringWriter;
+import java.util.Arrays;
+import java.util.List;
+import java.util.stream.Collectors;
+
+    public static String getInitialBlock(String input, int k) {
+        CSVFormat format = CSVFormat.DEFAULT.withHeader();
+
+        try (CSVParser parser = new CSVParser(new StringReader(input), format);
+             StringWriter writer = new StringWriter();
+             CSVPrinter printer = new CSVPrinter(writer, CSVFormat.DEFAULT)) {
+
+            for (CSVRecord record : parser) {
+                // Trim leading and trailing spaces and split conversation column into tokens and limit to first k tokens
+                List<String> tokens = Arrays.asList(record.get("conversation").trim().split("\\s+"));
+                String limitedTokens = tokens.stream().limit(k).collect(Collectors.joining(" "));
+                int tokenCount = limitedTokens.split("\\s+").length;
+                
+                // Append the modified conversation along with the label and filename columns
+                printer.printRecord(
+                        limitedTokens,
+                        record.get("label"),
+                        1,
+                        tokenCount,
+                        record.get("filename")
+                );
+            }
+
+            return writer.toString();
+        } catch (IOException ioe) {
+			ioe.printStackTrace();
+		}
+    }
