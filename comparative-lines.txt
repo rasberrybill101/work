@@ -243,17 +243,24 @@ def level_1_tf_idf(data, phrase_length, top_k, global_idf=False):
 def visualize(phrase_vectors, centroids=False, filename=None):
     fig = plt.figure()
     ax = fig.add_subplot(111, projection='3d')
-    colors = ['r', 'g', 'c', 'm', 'y', 'orange', 'purple', 'lime', 'cyan', 'pink', 'gold', 'navy', 'teal']
-    label_to_color = {'Not a Complaint': 'b'}  # Make sure 'Not a Complaint' is always blue
 
-    unique_labels = list(phrase_vectors.keys())
+    colors = ['r', 'g', 'b', 'c', 'm', 'y', 'orange', 'purple', 'lime', 'cyan', 'pink', 'gold', 'navy', 'teal']
+    label_to_color = {'Not a Complaint': 'b'}  # Mapping of phrase labels to colors
+
+    unique_labels = list(phrase_vectors.keys())  # Get the unique labels
+
+    if not centroids:
+        vectors = phrase_vectors['Not a Complaint'][1]
+        ax.scatter(vectors[:, 0], vectors[:, 1], vectors[:, 2], c='b', label='Not a Complaint', marker='.', s=200)
+
     for idx, level in enumerate(unique_labels):
-        if level == 'Not a Complaint':  # 'Not a Complaint' has its color already assigned
+        if level == 'Not a Complaint':
             continue
         color = colors[idx % len(colors)]  # Cycle through colors
         label_to_color[level] = color  # Assign unique color for each phrase label
-        vectors = phrase_vectors[level][1]
-        ax.scatter(vectors[:, 0], vectors[:, 1], vectors[:, 2], c=color, label=level, marker='.', s=200)
+        if not centroids:
+            vectors = phrase_vectors[level][1]
+            ax.scatter(vectors[:, 0], vectors[:, 1], vectors[:, 2], c=color, label=level, marker='.', s=200)
 
     ax.set_xlabel('Dimension 1')
     ax.set_ylabel('Dimension 2')
@@ -269,18 +276,19 @@ def visualize(phrase_vectors, centroids=False, filename=None):
                 color = label_to_color[level]
                 ax.scatter(vector[0], vector[1], vector[2], c=color, label=level, marker='.', s=200)
 
-    # Move plot to the left
-    plt.subplots_adjust(left=-0.25) 
-
     # Place legend outside the plot area
     handles, labels = ax.get_legend_handles_labels()
     by_label = dict(zip(labels, handles))  # removes duplicates
     ax.legend(by_label.values(), by_label.keys(), loc='upper left', bbox_to_anchor=(1.05, 1))
 
+    # Move plot to the left
+    plt.subplots_adjust(left=-0.25)
+
     if filename:
-        plt.savefig(f"{filename}", bbox_inches='tight')
+        plt.savefig(filename, bbox_inches='tight')
 
     plt.show()
+
 
 def visualize_split(phrase_vectors, numLevels=8, centroids=False, filename=None):
     colors = ['r', 'g', 'c', 'm', 'y', 'orange', 'purple', 'lime', 'cyan', 'pink', 'gold', 'navy', 'teal']
@@ -295,14 +303,18 @@ def visualize_split(phrase_vectors, numLevels=8, centroids=False, filename=None)
         ax = fig.add_subplot(111, projection='3d')
 
         label_to_color = {'Not a Complaint': 'b'}  # Make sure 'Not a Complaint' is always blue
-        ax.scatter(phrase_vectors['Not a Complaint'][1][:, 0], phrase_vectors['Not a Complaint'][1][:, 1], 
-                   phrase_vectors['Not a Complaint'][1][:, 2], c='b', label='Not a Complaint', marker='.', s=200)
+
+        if not centroids:
+            vectors = phrase_vectors['Not a Complaint'][1]
+            ax.scatter(vectors[:, 0], vectors[:, 1], vectors[:, 2], c='b', label='Not a Complaint', marker='.', s=200)
 
         for idx, level in enumerate(levels):
             color = colors[idx % len(colors)]
             label_to_color[level] = color  # Assign unique color for each phrase label
-            vectors = phrase_vectors[level][1]
-            ax.scatter(vectors[:, 0], vectors[:, 1], vectors[:, 2], c=color, label=level, marker='.', s=200)
+
+            if not centroids:
+                vectors = phrase_vectors[level][1]
+                ax.scatter(vectors[:, 0], vectors[:, 1], vectors[:, 2], c=color, label=level, marker='.', s=200)
 
         ax.set_xlabel('Dimension 1')
         ax.set_ylabel('Dimension 2')
@@ -312,11 +324,10 @@ def visualize_split(phrase_vectors, numLevels=8, centroids=False, filename=None)
         ax.set_title(title)
 
         if centroids:
-            centroid_vectors = {level: np.mean(vectors, axis=0) for level, (phrases, vectors) in phrase_vectors.items() if level in levels+['Not a Complaint']}
+            centroid_vectors = {level: np.mean(phrase_vectors[level][1], axis=0) for level in levels+['Not a Complaint']}
             for level, vector in centroid_vectors.items():
-                if level in phrase_vectors:
-                    color = label_to_color[level]
-                    ax.scatter(vector[0], vector[1], vector[2], c=color, label=level, marker='.', s=200)
+                color = label_to_color[level]
+                ax.scatter(vector[0], vector[1], vector[2], c=color, label=level, marker='.', s=200)  # use '.' marker for centroids
 
         # Move plot to the left
         plt.subplots_adjust(left=-0.25)
@@ -331,7 +342,6 @@ def visualize_split(phrase_vectors, numLevels=8, centroids=False, filename=None)
             plt.savefig(f"{filename_ext[0]}_{i}{filename_ext[1]}", bbox_inches='tight')
 
         plt.show()
-
 
 
 # GloVe model file
@@ -379,3 +389,6 @@ There seems to be a slight misunderstanding. 'Not a Complaint' has to be present
 Also use the blue color for 'Not a Complaint' in the visualize function
 Also put a label above the 3D graph to either show "All Points" or "Centroid" depending on the type of graph
 Only show a label once in the legend, since there are instances of labels being repeated in the legend.
+
+----------- additional 5
+I still see multiple centroid points per label. There should be only one centroid for each label in the centroid plot (when centroids is True)
