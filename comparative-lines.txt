@@ -201,7 +201,7 @@ from sklearn.decomposition import TruncatedSVD
 import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
 from torchtext.vocab import Vectors
-
+import os
 
 def reject_spanish(data):
     # Remove rows containing the word 'gracias' in the 'plain_whisper' column.
@@ -319,8 +319,8 @@ def visualize_split(phrase_vectors, numLevels=8, centroids=False, filename=None)
         ax.legend(loc='upper left', bbox_to_anchor=(1.05, 1))
 
         if filename:
-        filename_base, filename_ext = os.path.splitext(filename)
-        plt.savefig(f"{filename_base}_{i}{filename_ext}", bbox_inches='tight')  # Ensure the entire legend is included in the saved figure
+            filename_base, filename_ext = os.path.splitext(filename)
+            plt.savefig(f"{filename_base}_{i}{filename_ext}", bbox_inches='tight')  # Ensure the entire legend is included in the saved figure
 
         plt.show()
 
