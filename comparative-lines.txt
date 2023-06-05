@@ -271,7 +271,7 @@ glove_file = "/chunk-complaint/category/glove/glove.6B.300d.txt"
 glove = Vectors(name=glove_file)
 
 # Load the data
-data = pd.read_csv('raw_data.tsv', sep='\t
+data = pd.read_csv('raw_data.tsv', sep='\t')
 
 # Preprocess the data
 data = reject_spanish(data)
