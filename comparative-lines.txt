@@ -190,9 +190,6 @@ visualize(phrase_vectors)
 visualize(phrase_vectors, centroids=True)
 
 -------------------- using torchtext instead of Word2Vec
-within this code is a section commented out with the error being seen
-Can you comment on the ValueError reported there?
-Suggest a fix for the bug
 
 import numpy as np
 import pandas as pd
@@ -283,21 +280,25 @@ def visualize_split(phrase_vectors, numLevels=8, centroids=False, filename=None)
     colors = ['r', 'g', 'c', 'm', 'y', 'orange', 'purple', 'lime', 'cyan', 'pink', 'gold', 'navy', 'teal']
 
     unique_labels = list(phrase_vectors.keys())  # Get the unique labels
-    unique_labels.remove('No Complaint')  # Remove 'No Complaint' from the list
-    unique_labels = ['No Complaint'] + unique_labels  # Add 'No Complaint' to the beginning
+    if 'No Complaint' in unique_labels:
+        unique_labels.remove('No Complaint')  # Remove 'No Complaint' from the list
 
     # Create group of levels
-    level_groups = [unique_labels[n:n+numLevels] for n in range(0, len(unique_labels), numLevels)]
+    level_groups = [unique_labels[n:n+(numLevels-1)] for n in range(0, len(unique_labels), numLevels-1)]
 
     for i, levels in enumerate(level_groups):
         fig = plt.figure()
         ax = fig.add_subplot(111, projection='3d')
 
-        label_to_color = {}  # Mapping of phrase labels to colors
+        # Always include 'No Complaint' and assign it the color blue
+        label_to_color = {'No Complaint': 'b'}
+        ax.scatter(phrase_vectors['No Complaint'][1][:, 0], phrase_vectors['No Complaint'][1][:, 1], 
+                   phrase_vectors['No Complaint'][1][:, 2], c='b', label='No Complaint', marker='x', s=200)
 
         for idx, level in enumerate(levels):
-            color = 'b' if level == 'No Complaint' else colors[idx % len(colors)]  # 'No Complaint' always in blue
+            color = colors[idx % len(colors)]
             label_to_color[level] = color  # Assign unique color for each phrase label
+            vectors = phrase_vectors[level][1]
             ax.scatter(vectors[:, 0], vectors[:, 1], vectors[:, 2], c=color, label=level, marker='x', s=200)
 
         ax.set_xlabel('Dimension 1')
@@ -305,7 +306,7 @@ def visualize_split(phrase_vectors, numLevels=8, centroids=False, filename=None)
         ax.set_zlabel('Dimension 3')
 
         if centroids:
-            centroid_vectors = {level: np.mean(vectors, axis=0) for level, (phrases, vectors) in phrase_vectors.items() if level in levels}
+            centroid_vectors = {level: np.mean(vectors, axis=0) for level, (phrases, vectors) in phrase_vectors.items() if level in levels+['No Complaint']}
             for level, vector in centroid_vectors.items():
                 if level in phrase_vectors:
                     color = label_to_color[level]
@@ -322,7 +323,6 @@ def visualize_split(phrase_vectors, numLevels=8, centroids=False, filename=None)
             plt.savefig(f"{filename_base}_{i}{filename_ext}", bbox_inches='tight')  # Ensure the entire legend is included in the saved figure
 
         plt.show()
-
 
 
 
@@ -364,5 +364,6 @@ The 3D plot is very crowded. Let's keep the current plots, but add another set o
 ------------ additional 2
 Always show 'Not a Complaint' in blue. Then use any other unique colors for the other labels. Move the graph even more to the left.
 
-
+------------ additional 3
+There seems to be a slight misunderstanding. 'Not a Complaint' has to be present on each 3D plot because we want to compare the position of its points with the positions of the points of other labels. Also, the points used to label 'Not a Complaint' have to be blue. Other labels can then use other available colors.
 
