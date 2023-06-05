@@ -211,12 +211,13 @@ def get_phrase_vector(phrase):
     return vector_mean
 
 def level_1_tf_idf(data, phrase_length, top_k, global_idf=False):
-    # Find the top scoring tf-idf phrases for each 'reason_level_1' group.
+    # Find the top scoring tf-idf phrases for each 'reason_level_1' group where 'complaint_disat' is 'complaint'
     phrase_vectors = {}
     vectorizer = TfidfVectorizer(ngram_range=(phrase_length, phrase_length))
 
     for level, group in data.groupby('reason_level_1'):
-        tfidf_matrix = vectorizer.fit_transform(group['plain_whisper'] if global_idf else data['plain_whisper'])
+        complaint_group = group[group['complaint_disat'] == 'complaint']
+        tfidf_matrix = vectorizer.fit_transform(complaint_group['plain_whisper'] if global_idf else data['plain_whisper'])
         scores = tfidf_matrix.sum(axis=0).A1
         top_indices = scores.argsort()[-top_k:]
         feature_names = vectorizer.get_feature_names_out()
@@ -227,6 +228,7 @@ def level_1_tf_idf(data, phrase_length, top_k, global_idf=False):
         phrase_vectors[level] = vectors
 
     return phrase_vectors
+
 
 def visualize(phrase_vectors, centroids=False, filename=None):
     # Visualize the phrases or centroids in a 3D plot, color-coded by 'reason_level_1'.
@@ -420,3 +422,6 @@ when writing the results to file
 Just show the line(s) of code to do this
 
 instead of tabs, use commas. But enclose the level in quotes
+
+ValueError: need at least one array to stack
+around line: vectors = np.stack([glove.vectors[glove.stoi[word]] for word in words if word in glove.stoi])
