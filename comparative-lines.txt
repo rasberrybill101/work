@@ -283,8 +283,8 @@ def visualize_split(phrase_vectors, numLevels=8, centroids=False, filename=None)
     colors = ['r', 'g', 'b', 'c', 'm', 'y', 'orange', 'purple', 'lime', 'cyan', 'pink', 'gold', 'navy', 'teal']
 
     unique_labels = list(phrase_vectors.keys())  # Get the unique labels
-    unique_labels.remove('No Complaint')  # Remove 'No Complaint' from the list
-    unique_labels = ['No Complaint'] + unique_labels  # Add 'No Complaint' to the beginning
+    unique_labels.remove('Not a Complaint')  # Remove 'Not a Complaint' from the list
+    unique_labels = ['Not a Complaint'] + unique_labels  # Add 'Not a Complaint' to the beginning
 
     # Create group of levels
     level_groups = [unique_labels[n:n+numLevels] for n in range(0, len(unique_labels), numLevels)]
