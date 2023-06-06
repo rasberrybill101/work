@@ -29,3 +29,8 @@ app = FastAPI()
 @app.post("/chunks/")
 async def create_chunk(chunk: Chunk):
     return chunk
+
+
+=================================================================
+using python create a function "getLastK(k) to return the last k tokens of a space separated string
+
