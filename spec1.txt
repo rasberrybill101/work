@@ -36,6 +36,9 @@ using python create a function "getLastK(k) to return the last k tokens of a spa
 
 def getLastK(k, input_string):
     tokens = input_string.split()
+    if len(tokens) < k:
+        return input_string
     last_k_tokens = tokens[-k:]
     return " ".join(last_k_tokens)
+
 
