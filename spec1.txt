@@ -41,4 +41,27 @@ def getLastK(k, input_string):
     last_k_tokens = tokens[-k:]
     return " ".join(last_k_tokens)
 
+======================== search for level-1 within the conv. ==========
+Do the following in a case-insensitive way:
+Given tokens in level-1 column, strip out non-alpha characters such as '(', ')', '/', '-' and replace each of these chars with spaces.
+
+Ignore the conversations in the following level-1 columns:
+'*Case ID no Longer in CTR SQL Database'
+'*Number did not match case'
+
+Select a sequence of contiguous words or phrases from the plain_whisper column according to the following rules:
+Locate the earliest longest sequence of words in the plain_whisper column that can be found in the corresponding level-1 column (after all the non-alpha characters in the level-1 column have been replaced with space characters as described previously). For example:
+Given level-1 : "Call Transfers/Disconnects"
+possible sequences are "call transfers disconnects", "call transfers", "call", "transfers", "transfers disconnects", "call disconnects", "disconnects"
+In this example, the longest sequence in level-1 is "call transfers disconnects". If this substring is found in the "plain_whisper" column, then it will be selected as the "basis" string. Otherwise, search for any other possible identified sequence. If none can be found, then return "No Direct Sequence Found"
+If a sequence is found in "plain_whisper" column, then pick up 5 tokens before the sequence and 5 tokens after the sequence. Return this string. 
+For example, in the string:
+"it seems that the quick brown fox jumps over the lazy dog quite quickly indeed today"
+if the sequence is: "jumps over"
+then the string with 5 tokens before and 5 tokens after is:
+"that the quick brown fox jumps over the lazy dog quite quickly"
+Make the number of tokens to the left and right of the sequence configurable by using "left" and "right" as arguments to the function
+Write the results to a csv file named "level-1-phrases.txt" which has the following columns
+1) 
+
 
