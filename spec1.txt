@@ -55,7 +55,7 @@ Locate the longest sequence of words in the plain_whisper column that can be fou
 Given level-1 : "Call Transfers/Disconnects"
 possible sequences are "call transfers disconnects", "call transfers", "call", "transfers", "transfers disconnects", "call disconnects", "disconnects"
 In this example, the longest sequence in level-1 is "call transfers disconnects". If this substring is found in the "plain_whisper" column, then it will be selected as the "basis" string. Otherwise, search for any other possible identified sequence. If none can be found, then return "No Direct Sequence Found"
-Basically, the sequence
+Basically, the sequence of tokens is initially identified from level-1 tokens and then we search for them in plain_whisper column.
 If a sequence is found in "plain_whisper" column, then pick up 5 tokens before the sequence and 5 tokens after the sequence. Return this string. 
 For example, in the string:
 "it seems that the quick brown fox jumps over the lazy dog quite quickly indeed today"
