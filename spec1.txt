@@ -105,4 +105,86 @@ columns (6) and (7) mark the starting and ending position of the sentence within
 
 Make the code modular by breaking it out into multiple smaller functions. It should be easy to port this code over to a jupyter notebook.
 
+========================== sentences from sequencesimport pandas as pd
+import csv
+import re
+from typing import List, Dict, Tuple
+
+# Synonyms Dictionary
+synonyms_dict = {
+    'FC': 'Financial Center',
+    'IVR': 'Automated System',
+    'payoff': 'pay off',
+    'payoffs': 'pay offs',
+    'mobile digital': 'app'
+}
+
+ignored_reasons = ['*Case ID no Longer in CTR SQL Database', '*Number did not match case']
+
+def getSynonym(word: str) -> str:
+    return synonyms_dict.get(word, word)
+
+def process_row(row: pd.Series) -> Dict[str, str]:
+    complaint = 1 if row['complaint_disat'].lower() == 'complaint' else 0
+    reason_level_1 = row['reason_level_1']
+    plain_whisper = row['plain_whisper']
+
+    # Replace non-alpha characters
+    reason_level_1_clean = re.sub(r'[^a-zA-Z0-9 ]', ' ', reason_level_1).strip()
+
+    # Create sequences
+    sequences = generate_sequences(reason_level_1_clean, 2)
+
+    # Find sequence and sentence
+    sequence, sentence, left_char_pos, right_char_pos = find_sentence(plain_whisper, sequences)
+
+    return {
+        'conv_id': row['conv_id'],
+        'complaint': complaint,
+        'reason_level_1': reason_level_1,
+        'plain_whisper': plain_whisper,
+        'sequence': sequence,
+        'sentence': sentence,
+        'left_char_pos': left_char_pos,
+        'right_char_pos': right_char_pos,
+    }
+
+def generate_sequences(reason_level_1_clean: str, min_length: int) -> List[str]:
+    words = reason_level_1_clean.split(' ')
+    words = [getSynonym(word) for word in words]
+    sequences = [' '.join(words[i: j]) for i in range(len(words)) for j in range(i + 1, len(words) + 1) if len(words[i: j]) >= min_length]
+    sequences.sort(key=len, reverse=True)
+    return sequences
+
+def find_sentence(plain_whisper: str, sequences: List[str]) -> Tuple[str, str, int, int]:
+    sentences = plain_whisper.split('.')
+    for sequence in sequences:
+        for sentence in sentences:
+            if sequence in sentence:
+                start = plain_whisper.index(sentence)
+                end = start + len(sentence)
+                return sequence, sentence, start, end
+    return 'No Direct Sequence Found', '', -1, -1
+
+def process_csv(input_file: str, output_file: str):
+    # Read CSV
+    df = pd.read_csv(input_file)
+
+    # Ignore rows
+    df = df[df['complaint_disat'].str.lower() != 'complaint']
+    df = df[~df['reason_level_1'].isin(ignored_reasons)]
+
+    results = []
+
+    # Process each row
+    for index, row in df.iterrows():
+        results.append(process_row(row))
+
+    # Write to CSV
+    result_df = pd.DataFrame(results)
+    result_df.to_csv(output_file, index=False, quoting=csv.QUOTE_NONNUMERIC)
+
+# Test the code
+process_csv('your_input_file.csv', 'reason_level_1-phrases.txt')
+
 
