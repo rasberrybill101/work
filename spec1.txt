@@ -103,4 +103,6 @@ complete the processing of all relevant rows before writing the following result
 
 columns (6) and (7) mark the starting and ending position of the sentence within the 'plain_whisper' text. This is done in order to easily highlight the sentence within the text of 'plain_whisper'.
 
+Make the code modular by breaking it out into multiple smaller functions. It should be easy to port this code over to a jupyter notebook.
+
 
