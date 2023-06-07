@@ -41,44 +41,66 @@ def getLastK(k, input_string):
     last_k_tokens = tokens[-k:]
     return " ".join(last_k_tokens)
 
-======================== search for level-1 within the conv. ==========
+======================== search for reason_level_1 within the conv. ==========
 lmplement the following python function in a case-insensitive way:
 Given a csv file with columns 
+conv_id
+complaint_disat
+segment_id
+call_duration
+reason_level_1
+reason_level_2
+plain_whisper
+language_code
 
-Only process rows where column "complaint-disat" has the value:
-"complaint"
+Ignore rows where:
+column "complaint_disat" has the value "complaint"
 
-Ignore rows where level-1 has the following values:
+column "reason_level_1" has any of the following values:
 '*Case ID no Longer in CTR SQL Database'
 '*Number did not match case'
 
+create a dictionary of synonyms containing the following words and synonyms
+FC, Financial Center
+IVR, Automated System
+payoff, pay off
+payoffs, pay offs
+mobile digital, app
+write function getSynonym(word) that returns the synonym of a word. For example:
+getSynonym('FC') will return 'Financial System'
+
 for each row to be processed:
-take the string in level-1 column, replace non-alpha characters such as '(', ')', '/', '-' with a space
+take the string in reason_level_1 column, replace non-alpha characters such as '(', ')', '/', '-' with a space
 ensure that only single spaces are between words
 trim the string
 
-search for the first occurrence of either this string or the longest sub-sequence of this string within the column "plain-whisper". 
+Find the first sentence in the plain_whisper column that contains the longest candidate word sequence that can be found in the reason_level_1 column (after all the non-alpha characters in the reason_level_1 column have been replaced with space characters as described previously). In addition, candidate word sequences can be created using synonyms from the dictionary given by "getSynonym()" defined above. For example:
+Given reason_level_1 : "Call FC Transfers/Disconnects"
+possible sequences are "call FC transfers disconnects", "call financial center transfers disconnects", "call transfers", ...
+In this example, the longest sequence in reason_level_1 is "call financial center transfers disconnects". If this substring is found in the "plain_whisper" column, then the sentence that contains the candidate sequence will be selected as the "longest_candidate_sequence" string. Otherwise, search for any other possible identified sequence. If none can be found, then return "No Direct Sequence Found"
+Notice that in the example above, 'FC' has a synonym and so it is included in the creation of word sequences.
+To be clear, a sentence is defined as a sequence of words terminated by a period (the usual definition of a sentence).
 
-Find the longest sequence of words in the plain_whisper column that can be found in the level-1 column (after all the non-alpha characters in the level-1 column have been replaced with space characters as described previously). For example:
-Given level-1 : "Call Transfers/Disconnects"
-possible sequences are "call transfers disconnects", "call transfers", "call", "transfers", "transfers disconnects", "call disconnects", "disconnects"
-In this example, the longest sequence in level-1 is "call transfers disconnects". If this substring is found in the "plain_whisper" column, then it will be selected as the "longest_candidate" string. Otherwise, search for any other possible identified sequence. If none can be found, then return "No Direct Sequence Found"
-
-To summarize, the sequence of tokens is initially identified from level-1 tokens and then we search for them in plain_whisper column.
-If a sequence is found in "plain_whisper" column, then add the tokens before  the longest_candidate starting from the first period to the left of the longest_candidate. Also add the tokens to the right of the longest_candidate tokens until the period to the right. Return this string from the function.
+To summarize, the sequence of tokens is initially identified from reason_level_1 tokens and then we search for them in plain_whisper column.
+If a sequence is found in "plain_whisper" column, then the sentence that contains the sequence should be returned from the function that has been defined.
 For example, in the string:
 "it would seem simple. But we know that the quick brown fox jumps over the lazy dog quite quickly indeed. Today is when we find out."
-if the sequence is: "jumps over"
+if the sequence to search for is: "jumps over a", then the possible candidate sequences are:
+"jumps over a", "jumps over", "over a", "jumps", "over", "a"
 then the returned string will be:
 "But we know that the quick brown fox jumps over the lazy dog quite quickly indeed"
-This is basically the first sentence that contains the longest sub-sequence
+This is basically the first sentence that contains the longest sub-sequence "jumps over"
 
-complete processing all relevant rows before writing the following results to a csv file named "level-1-phrases.txt" which has the following columns:
+complete the processing of all relevant rows before writing the following results to a csv file named "reason_level_1-phrases.txt" which has the following columns:
 1) conv-id
-2) level-1
+2) complaint - if complaint_disat is 'complaint' then write 1 else write 0 in this column
+2) reason_level_1
 3) plain_whisper
-4) sequence
-5) left character position of the returned sentence 
-6) right character position of the returned sentence
+4) sequence - longest candidate sequence from reason_level_1 that was found in the earliest sentence of plain_whisper
+5) sentence - this is the sentence that contains the sequence
+6) left character position of the returned sentence 
+7) right character position of the returned sentence
+
+columns (6) and (7) mark the starting and ending position of the sentence within the 'plain_whisper' text. This is done in order to easily highlight the sentence within the text of 'plain_whisper'.
 
 
