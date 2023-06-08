@@ -253,18 +253,29 @@ from typing import List, Tuple
 nltk.data.path.append('/chunk-complaint/category/punkt')
 
 introductory_candidates = [
-    "how may I help you today",
-    "how can I help you today",
+    "how may I help ...",
+    "how can I help ...",
+    "how can I help you",
     "what can I do for you",
     "what can I do for you today",
     "what may I do for you today",
-    "how can I assist you today",
+    "how can I assist you",
+    "how may I assist you"
     "how can I be of assistance ... today",
     "I will be able to assist ... today",
     "how can I provide you ... today",
     "how may I help you in today's call",
     "how may I ... you today",
-    "how can I ... you today"
+    "how can I ... you today",
+    "... calling in today",
+    "how can I assist you ... today",
+    "how may I assist you ... today",
+    "to assist you today",
+    "reason for ... call",
+    "I can assist you ...",
+    "I can do for you today",
+    "are you calling about ...",
+    "how may I ... assist"
 ]
 
 def generate_candidates(candidates: List[str]) -> List[str]:
@@ -311,8 +322,11 @@ for _, row in tqdm(df.iterrows(), total=df.shape[0]):
         'plain_whisper': row['plain_whisper']
     }, ignore_index=True)
 
-matched_rows = df_to_output[df_to_output['possible_reason'] != 'No match found']
-print(f'"No match found": {matched_rows.shape[0]} / df_to_output.shape[0]')
+total_count = df_to_output.shape[0]
+reason_found_count = (df_to_output[df_to_output['possible_reason'] != 'No match found']).shape[0]
+no_reason_found = total_count - reason_found_count
+print(f'Reason found: {reason_found} / {total_count}')
+print(f'No reason found: {no_reason_found} / {total_count}')
 df_to_output.to_csv('possible_call_reason.tsv', sep='\t', index=False, quoting=csv.QUOTE_NONE)
 
 
