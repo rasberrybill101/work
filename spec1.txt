@@ -445,12 +445,15 @@ def display_token_histogram(filename: str):
     plt.figure(figsize=(10, 6))  # Optional: adjust the figure size
     plt.hist(df['num_tokens'], bins=100, color='skyblue', edgecolor='black')
     
-    # Display the histogram without any labels
+    # Set labels for x-axis and y-axis
+    plt.xlabel("Number of Tokens")
+    plt.ylabel("Token Count Frequency")
+    
+    # Display the histogram
     plt.show()
 
 # Call the function with the correct file path
 display_token_histogram('/chunk-complaint/category/possible_call_reason.tsv')
-
 
 
 
