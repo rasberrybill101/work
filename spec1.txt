@@ -339,3 +339,94 @@ In addition to the character start and stop position, can we have the number of 
 Include this as another column (after start, stop) in the output file
 
 Only show where in the code the change should be made
+
+-----------------
+import pandas as pd
+import re
+import nltk.data
+import csv
+from tqdm import tqdm
+from typing import List, Tuple
+
+nltk.data.path.append('/chunk-complaint/category/punkt')
+
+introductory_candidates = [
+    "how may I help ...",
+    "how can I help ...",
+    "how can I help you",
+    "what can I do for you",
+    "what can I do for you today",
+    "what may I do for you today",
+    "how can I assist you",
+    "how may I assist you"
+    "how can I be of assistance ... today",
+    "I will be able to assist ... today",
+    "how can I provide you ... today",
+    "how may I help you in today's call",
+    "how may I ... you today",
+    "how can I ... you today",
+    "... calling in today",
+    "how can I assist you ... today",
+    "how may I assist you ... today",
+    "to assist you today",
+    "reason for ... call",
+    "I can assist you ...",
+    "I can do for you today",
+    "are you calling about ...",
+    "how may I ... assist"
+]
+
+def generate_candidates(candidates: List[str]) -> List[str]:
+    generated_candidates = []
+    for candidate in candidates:
+        regex_pattern = candidate.replace('...', '(\w+\s){0,4}')  # create regex pattern allowing up to 4 words
+        generated_candidates.append(regex_pattern)
+    return sorted(generated_candidates, key=len, reverse=True)
+
+def get_next_k_sentences(text: str, next_k: int, conv_id: str) -> Tuple[str, int, int, int]:
+    tokenizer = nltk.data.load('tokenizers/punkt/PY3/english.pickle')
+    sentences = tokenizer.tokenize(text)
+
+    count = 0
+    for introductory_sentence in generated_candidates:
+        introductory_sentence = re.compile(introductory_sentence.lower())
+        for i in range(len(sentences)):
+            if introductory_sentence.search(sentences[i].lower()):
+                count = count + 1
+                next_k_text = ' '.join(sentences[i+1:i+next_k+1]).strip(' ')
+                start_pos = text.find(next_k_text)
+                end_pos = start_pos + len(next_k_text)
+                num_tokens = len(nltk.word_tokenize(text[:start_pos]))
+                print('[' + str(count) + ']: ' + conv_id + next_k_text)
+                return next_k_text, start_pos, end_pos, num_tokens
+                
+    return "No match found", -1, -1, -1
+
+df = pd.read_csv('metadata-labeled-conversations.txt', sep='\t')
+df = df[df['complaint_disat'] == 'Complaint']
+
+generated_candidates = generate_candidates(introductory_candidates)
+
+df_to_output = pd.DataFrame(columns=['conv_id', 'complaint_disat', 'reason_level_1', 'possible_reason', 'start_pos', 'end_pos', 'num_tokens', 'plain_whisper'])
+
+for _, row in tqdm(df.iterrows(), total=df.shape[0]):
+    next_k_text, start_pos, end_pos, num_tokens = get_next_k_sentences(row['plain_whisper'], 5, row['conv_id'])
+    df_to_output = df_to_output.append({
+        'conv_id': row['conv_id'], 
+        'complaint_disat': row['complaint_disat'], 
+        'reason_level_1': row['reason_level_1'], 
+        'possible_reason': next_k_text, 
+        'start_pos': start_pos, 
+        'end_pos': end_pos,
+        'num_tokens': num_tokens,
+        'plain_whisper': row['plain_whisper']
+    }, ignore_index=True)
+
+total_count = df_to_output.shape[0]
+reason_found_count = (df_to_output[df_to_output['possible_reason'] != 'No match found']).shape[0]
+no_reason_found = total_count - reason_found_count
+print(f'Reason found: {reason_found_count} / {total_count}')
+print(f'No reason found: {no_reason_found} / {total_count}')
+df_to_output.to_csv('possible_call_reason.tsv', sep='\t', index=False, quoting=csv.QUOTE_NONE)
+
+
