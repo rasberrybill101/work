@@ -325,7 +325,7 @@ for _, row in tqdm(df.iterrows(), total=df.shape[0]):
 total_count = df_to_output.shape[0]
 reason_found_count = (df_to_output[df_to_output['possible_reason'] != 'No match found']).shape[0]
 no_reason_found = total_count - reason_found_count
-print(f'Reason found: {reason_found} / {total_count}')
+print(f'Reason found: {reason_found_count} / {total_count}')
 print(f'No reason found: {no_reason_found} / {total_count}')
 df_to_output.to_csv('possible_call_reason.tsv', sep='\t', index=False, quoting=csv.QUOTE_NONE)
 
