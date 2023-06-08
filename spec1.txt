@@ -260,7 +260,7 @@ introductory_candidates = [
     "what can I do for you today",
     "what may I do for you today",
     "how can I assist you",
-    "how may I assist you"
+    "how may I assist you",
     "how can I be of assistance ... today",
     "I will be able to assist ... today",
     "how can I provide you ... today",
@@ -275,7 +275,8 @@ introductory_candidates = [
     "I can assist you ...",
     "I can do for you today",
     "are you calling about ...",
-    "how may I ... assist"
+    "how may I ... assist",
+    "reason for your call"
 ]
 
 def generate_candidates(candidates: List[str]) -> List[str]:
@@ -428,5 +429,36 @@ no_reason_found = total_count - reason_found_count
 print(f'Reason found: {reason_found_count} / {total_count}')
 print(f'No reason found: {no_reason_found} / {total_count}')
 df_to_output.to_csv('possible_call_reason.tsv', sep='\t', index=False, quoting=csv.QUOTE_NONE)
+
+..................... visualization 1 ...................
+import matplotlib.pyplot as plt
+import pandas as pd
+
+def display_token_bar_chart(filename: str):
+    # Load the data from csv
+    df = pd.read_csv(filename, sep='\t')
+
+    # Sort the data by num_tokens
+    df_sorted = df.sort_values('num_tokens')
+
+    # Extract the top 5 and bottom 5
+    df_top_bottom_5 = pd.concat([df_sorted[:5], df_sorted[-5:]])
+
+    # Plot the bars for all conv_ids
+    plt.figure(figsize=(10, 6))
+    plt.bar(df_sorted['conv_id'], df_sorted['num_tokens'], color='skyblue', edgecolor='black')
+
+    # Add labels for top and bottom 5
+    for i, row in df_top_bottom_5.iterrows():
+        plt.text(row['conv_id'], row['num_tokens'], row['conv_id'], rotation=90)
+    
+    plt.xlabel('conv_id')
+    plt.ylabel('Number of Tokens')
+    plt.title('Number of Tokens per conv_id')
+
+    plt.show()
+
+display_token_bar_chart('possible_call_reason.tsv')
+
 
 
