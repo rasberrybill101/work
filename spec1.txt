@@ -333,3 +333,9 @@ df_to_output.to_csv('possible_call_reason.tsv', sep='\t', index=False, quoting=c
 
 --------------- local copy of punkt
 https://raw.githubusercontent.com/nltk/nltk_data/gh-pages/packages/tokenizers/punkt.zip
+
+--------------- additional
+In addition to the character start and stop position, can we have the number of tokens up to the start of next_k sentences.
+Include this as another column (after start, stop) in the output file
+
+Only show where in the code the change should be made
