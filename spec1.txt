@@ -434,28 +434,22 @@ df_to_output.to_csv('possible_call_reason.tsv', sep='\t', index=False, quoting=c
 import pandas as pd
 import matplotlib.pyplot as plt
 
-def display_token_bar_chart(filename: str):
+def display_token_histogram(filename: str):
     # Load the data from tsv
     df = pd.read_csv(filename, sep='\t')
 
     # Filter the data where num_tokens > 0
     df = df[df['num_tokens'] > 0]
 
-    # Sort the data by num_tokens
-    df_sorted = df.sort_values('num_tokens')
-
-    # Plot the bars for all conv_ids
-    plt.figure(figsize=(10, 6))
-    plt.barh(df_sorted['conv_id'], df_sorted['num_tokens'], color='skyblue', edgecolor='black')
+    # Create histogram
+    plt.figure(figsize=(10, 6))  # Optional: adjust the figure size
+    plt.hist(df['num_tokens'], bins=100, color='skyblue', edgecolor='black')
     
-    plt.xlabel('Number of Tokens')
-    plt.ylabel('conv_id')
-    plt.title('Number of Tokens per conv_id')
-
+    # Display the histogram without any labels
     plt.show()
 
 # Call the function with the correct file path
-display_token_bar_chart('/chunk-complaint/category/possible_call_reason.tsv')
+display_token_histogram('/chunk-complaint/category/possible_call_reason.tsv')
 
 
 
