@@ -273,15 +273,21 @@ def get_next_k_sentences(introductory_sentence, text, next_k):
 
 def find_introductory_sentence(text, introductory_candidates):
     sorted_candidates = sorted(introductory_candidates, key=len, reverse=True)  # sort from longest to shortest
+    last_match = ''
+    last_position = -1
     for candidate in sorted_candidates:
         if '...' in candidate:
             regex_pattern = candidate.replace('...', '(\w+\b\s*){0,4}')  # create regex pattern allowing up to 4 words
-            match = re.search(regex_pattern, text)
-            if match:
-                return match.group()
+            for match in re.finditer(regex_pattern, text):  # find all matches
+                if match.start() > last_position:  # if this match is later in the text
+                    last_match = match.group()
+                    last_position = match.start()
         elif candidate in text:
-            return candidate
-    return ''
+            position = text.rfind(candidate)  # find last occurrence of candidate
+            if position > last_position:  # if this occurrence is later in the text
+                last_match = candidate
+                last_position = position
+    return last_match
 
 def process_data(file_name, next_k):
     df = pd.read_csv(file_name, sep='\t')
@@ -296,3 +302,77 @@ def process_data(file_name, next_k):
 process_data('file.tsv', 3)  # replace 'file.tsv' with your filename
 
 ---------
+
+update the output to include these 2 additional columns to be written to the output file:
+start_pos
+end_pos
+
+where start_pos is the character position of the beginning of next_k, and end_pos is the character position of the end of next_k.
+Need this in order to highlight the next_k sentences in the text.
+
+----------
+import pandas as pd
+import re
+import nltk
+from typing import List, Tuple
+
+nltk.download('punkt')
+
+introductory_candidates = [
+    "how may I help you today",
+    "how can I help you today",
+    "what can I do for you",
+    "what can I do for you today",
+    "what may I do for you today",
+    "how can I assist you today",
+    "how can I be of assistance ... today",
+    "I will be able to assist ... today",
+    "how can I provide you ... today",
+    "how may I help you in today's call",
+    "how may I ... you today",
+    "how can I ... you today",
+]
+
+def get_next_k_sentences(introductory_sentence: str, text: str, next_k: int) -> Tuple[str, int, int]:
+    sentences = nltk.tokenize.sent_tokenize(text)
+    for i in range(len(sentences)):
+        if introductory_sentence in sentences[i]:
+            next_k_text = ' '.join(sentences[i+1:i+next_k+1])
+            start_pos = text.find(next_k_text)
+            end_pos = start_pos + len(next_k_text)
+            return next_k_text, start_pos, end_pos
+    return '', -1, -1
+
+def find_introductory_sentence(text: str, introductory_candidates: List[str]) -> str:
+    sorted_candidates = sorted(introductory_candidates, key=len, reverse=True)  # sort from longest to shortest
+    last_match = ''
+    last_position = -1
+    for candidate in sorted_candidates:
+        if '...' in candidate:
+            regex_pattern = candidate.replace('...', '(\w+\b\s*){0,4}')  # create regex pattern allowing up to 4 words
+            for match in re.finditer(regex_pattern, text):  # find all matches
+                if match.start() > last_position:  # if this match is later in the text
+                    last_match = match.group()
+                    last_position = match.start()
+        elif candidate in text:
+            position = text.rfind(candidate)  # find last occurrence of candidate
+            if position > last_position:  # if this occurrence is later in the text
+                last_match = candidate
+                last_position = position
+    return last_match
+
+def process_data(file_name: str, next_k: int) -> None:
+    df = pd.read_csv(file_name, sep='\t')
+    df_complaint = df[df['complaint_disat'] == 'Complaint']
+    for idx, row in df_complaint.iterrows():
+        intro_sentence = find_introductory_sentence(row['plain_whisper'], introductory_candidates)
+        if intro_sentence:
+            possible_reason, start_pos, end_pos = get_next_k_sentences(intro_sentence, row['plain_whisper'], next_k)
+            df_complaint.loc[idx, 'possible_reason'] = possible_reason
+            df_complaint.loc[idx, 'start_pos'] = start_pos
+            df_complaint.loc[idx, 'end_pos'] = end_pos
+    df_complaint.to_csv('possible_call_reason.csv', index=False, 
+                        columns=['conv_id', 'complaint_disat', 'reason_level_1', 'possible_reason', 'start_pos', 'end_pos', 'plain_whisper'])
+
+process_data('file.tsv', 3)  # replace 'file.tsv' with your filename
+
