@@ -376,3 +376,5 @@ def process_data(file_name: str, next_k: int) -> None:
 
 process_data('metadata-labeled-conversations.txt', 5)
 
+--------------- local copy of punkt
+https://raw.githubusercontent.com/nltk/nltk_data/gh-pages/packages/tokenizers/punkt.zip
