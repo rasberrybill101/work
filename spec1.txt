@@ -431,7 +431,8 @@ print(f'No reason found: {no_reason_found} / {total_count}')
 df_to_output.to_csv('possible_call_reason.tsv', sep='\t', index=False, quoting=csv.QUOTE_NONE)
 
 ..................... visualization 1 ...................
-import plotly.express as px
+import pandas as pd
+import matplotlib.pyplot as plt
 
 def display_token_bar_chart(filename: str):
     # Load the data from tsv
@@ -444,11 +445,18 @@ def display_token_bar_chart(filename: str):
     df_sorted = df.sort_values('num_tokens')
 
     # Plot the bars for all conv_ids
-    fig = px.bar(df_sorted, x='num_tokens', y='conv_id', orientation='h', title='Number of Tokens per conv_id')
-    fig.show()
+    plt.figure(figsize=(10, 6))
+    plt.barh(df_sorted['conv_id'], df_sorted['num_tokens'], color='skyblue', edgecolor='black')
+    
+    plt.xlabel('Number of Tokens')
+    plt.ylabel('conv_id')
+    plt.title('Number of Tokens per conv_id')
+
+    plt.show()
 
 # Call the function with the correct file path
 display_token_bar_chart('/chunk-complaint/category/possible_call_reason.tsv')
+
 
 
 
