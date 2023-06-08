@@ -283,11 +283,11 @@ def get_next_k_sentences(text: str, next_k: int, conv_id: str) -> Tuple[str, int
         introductory_sentence = re.compile(introductory_sentence.lower())
         for i in range(len(sentences)):
             if introductory_sentence.search(sentences[i].lower()):
-			    count = count + 1
+                count = count + 1
                 next_k_text = ' '.join(sentences[i+1:i+next_k+1]).strip(' )
                 start_pos = text.find(next_k_text)
                 end_pos = start_pos + len(next_k_text)
-				print('[' + str(count) + ']: ' + conv_id + next_k_text)
+                print('[' + str(count) + ']: ' + conv_id + next_k_text)
                 return next_k_text, start_pos, end_pos
                 
     return "No match found", -1, -1
@@ -300,7 +300,7 @@ generated_candidates = generate_candidates(introductory_candidates)
 df_to_output = pd.DataFrame(columns=['conv_id', 'complaint_disat', 'reason_level_1', 'possible_reason', 'start_pos', 'end_pos', 'plain_whisper'])
 
 for _, row in tqdm(df.iterrows(), total=df.shape[0]):
-    next_k_text, start_pos, end_pos = get_next_k_sentences(row['plain_whisper'], 5, row['conv_id])
+    next_k_text, start_pos, end_pos = get_next_k_sentences(row['plain_whisper'], 5, row['conv_id'])
     df_to_output = df_to_output.append({
         'conv_id': row['conv_id'], 
         'complaint_disat': row['complaint_disat'], 
@@ -311,6 +311,8 @@ for _, row in tqdm(df.iterrows(), total=df.shape[0]):
         'plain_whisper': row['plain_whisper']
     }, ignore_index=True)
 
+matched_rows = df_to_output[df_to_output['possible_reason'] != 'No match found']
+print(f'"No match found": {matched_rows.shape[0]} / df_to_output.shape[0]')
 df_to_output.to_csv('possible_call_reason.tsv', sep='\t', index=False, quoting=csv.QUOTE_NONE)
 
 
