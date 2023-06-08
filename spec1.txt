@@ -187,4 +187,110 @@ def process_csv(input_file: str, output_file: str):
 # Test the code
 process_csv('your_input_file.csv', 'reason_level_1-phrases.txt')
 
+========================== get sentences after introduction ===============
+Write a function to get the next 3 (configurable as next_k) sentences after an introductory sentence (introductory_sentence) in a piece of text.
+An introductory sentence has the following characteristics:
+1. It occurs relatively early in the piece of text
+2. It is very similar to one of the sentences in a list of introductory candidate sentences (introductory_candidates)
 
+Once the introductory sentence is found, then this function should return the next k (next_k) sentences that immediately follow the introductory sentences.
+
+Assume we have an initial list of introductory sentences:
+how may I help you today
+how can I help you today
+what can I do for you
+what can I do for you today
+what may I do for you today
+how can I assist you today
+how can I be of assistance ... today
+I will be able to assist ... today
+how can I provide you ... today
+how may I help you in today's call
+how may I ... you today
+how can I ... you today
+
+The ellipsis ... means up to 4 words. For instance:
+"how can I ... you today" can match any of the following:
+"how can I be of service to you today"
+"how can I provide service to you today"
+"how can I help you today"
+etc.
+
+We will be looking for the last occurrence of the introductory sentence, and then fetch the next k sentences (where k is an argument to the extraction function).
+
+The piece of text from which the next_k sentences will be obtained comes from a tab-separated file with the following columns (on the header line of the file):
+conv_id
+complaint_disat
+segment_id
+call_duration
+reason_level_1
+reason_level_2
+plain_whisper
+language_code
+
+The column 'plain_whisper' is where the introductory and next_k sentences are located.
+
+Only consider rows where the value of the column 'complaint_disat' is 'Complaint'
+
+Once all the introductory sentences have been identified, create a file named "possible_call_reason" which is a csv file with the following columns:
+conv_id
+complaint_disat
+reason_level_1
+possible_reason
+plain_whisper
+
+"possible_reason" is the next_k sentences
+all other columns are from the input file
+
+========================== introductory code
+import pandas as pd
+import re
+import nltk
+
+nltk.download('punkt')
+
+introductory_candidates = [
+    "how may I help you today",
+    "how can I help you today",
+    "what can I do for you",
+    "what can I do for you today",
+    "what may I do for you today",
+    "how can I assist you today",
+    "how can I be of assistance ... today",
+    "I will be able to assist ... today",
+    "how can I provide you ... today",
+    "how may I help you in today's call",
+    "how may I ... you today",
+    "how can I ... you today",
+]
+
+def get_next_k_sentences(introductory_sentence, text, next_k):
+    sentences = nltk.tokenize.sent_tokenize(text)
+    for i in range(len(sentences)):
+        if introductory_sentence in sentences[i]:
+            return ' '.join(sentences[i+1:i+next_k+1])
+    return ''
+
+def find_introductory_sentence(text, introductory_candidates):
+    sorted_candidates = sorted(introductory_candidates, key=len, reverse=True)  # sort from longest to shortest
+    for candidate in sorted_candidates:
+        if '...' in candidate:
+            regex_pattern = candidate.replace('...', '(\w+\b\s*){0,4}')  # create regex pattern allowing up to 4 words
+            match = re.search(regex_pattern, text)
+            if match:
+                return match.group()
+        elif candidate in text:
+            return candidate
+    return ''
+
+def process_data(file_name, next_k):
+    df = pd.read_csv(file_name, sep='\t')
+    df_complaint = df[df['complaint_disat'] == 'Complaint']
+    for idx, row in df_complaint.iterrows():
+        intro_sentence = find_introductory_sentence(row['plain_whisper'], introductory_candidates)
+        if intro_sentence:
+            possible_reason = get_next_k_sentences(intro_sentence, row['plain_whisper'], next_k)
+            df_complaint.loc[idx, 'possible_reason'] = possible_reason
+    df_complaint.to_csv('possible_call_reason.csv', index=False, columns=['conv_id', 'complaint_disat', 'reason_level_1', 'possible_reason', 'plain_whisper'])
+
+process_data('file.tsv', 3)  # replace 'file.tsv' with your filename
