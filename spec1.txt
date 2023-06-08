@@ -130,7 +130,7 @@ def process_row(row: pd.Series) -> Dict[str, str]:
     plain_whisper = row['plain_whisper']
 
     # Replace non-alpha characters
-    reason_level_1_clean = re.sub(r'[^a-zA-Z0-9 ]', ' ', reason_level_1).strip()
+    reason_level_1_clean = re.sub(r'[^a-zA-Z0-9 ]', ' ', reason_level_1).strip(' ')
 
     # Create sequences
     sequences = generate_sequences(reason_level_1_clean, 2)
@@ -284,7 +284,7 @@ def get_next_k_sentences(text: str, next_k: int, conv_id: str) -> Tuple[str, int
         for i in range(len(sentences)):
             if introductory_sentence.search(sentences[i].lower()):
                 count = count + 1
-                next_k_text = ' '.join(sentences[i+1:i+next_k+1]).strip(' )
+                next_k_text = ' '.join(sentences[i+1:i+next_k+1]).strip(' ')
                 start_pos = text.find(next_k_text)
                 end_pos = start_pos + len(next_k_text)
                 print('[' + str(count) + ']: ' + conv_id + next_k_text)
