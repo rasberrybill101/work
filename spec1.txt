@@ -318,6 +318,7 @@ from tqdm import tqdm
 from typing import List, Tuple
 
 nltk.data.path.append('/chunk-complaint/category/punkt')
+tokenizer = nltk.data.load('/tokenizers/punkt/english.pickle')
 
 introductory_candidates = [
     "how may I help you today",
@@ -335,14 +336,14 @@ introductory_candidates = [
 ]
 
 def get_next_k_sentences(introductory_sentence: str, text: str, next_k: int) -> Tuple[str, int, int]:
-    sentences = nltk.tokenize.sent_tokenize(text)
+    sentences = tokenizer.tokenize(text)
     for i in range(len(sentences)):
         if introductory_sentence in sentences[i]:
             next_k_text = ' '.join(sentences[i+1:i+next_k+1])
             start_pos = text.find(next_k_text)
             end_pos = start_pos + len(next_k_text)
             return next_k_text, start_pos, end_pos
-    return '', -1, -1
+    return '----', -1, -1
 
 def find_introductory_sentence(text: str, introductory_candidates: List[str]) -> str:
     sorted_candidates = sorted(introductory_candidates, key=len, reverse=True)
