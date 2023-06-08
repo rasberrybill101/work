@@ -431,11 +431,10 @@ print(f'No reason found: {no_reason_found} / {total_count}')
 df_to_output.to_csv('possible_call_reason.tsv', sep='\t', index=False, quoting=csv.QUOTE_NONE)
 
 ..................... visualization 1 ...................
-import matplotlib.pyplot as plt
-import pandas as pd
+import plotly.express as px
 
 def display_token_bar_chart(filename: str):
-    # Load the data from csv
+    # Load the data from tsv
     df = pd.read_csv(filename, sep='\t')
 
     # Filter the data where num_tokens > 0
@@ -444,25 +443,13 @@ def display_token_bar_chart(filename: str):
     # Sort the data by num_tokens
     df_sorted = df.sort_values('num_tokens')
 
-    # Extract the top 5 and bottom 5
-    df_top_bottom_5 = pd.concat([df_sorted[:5], df_sorted[-5:]])
-
     # Plot the bars for all conv_ids
-    plt.figure(figsize=(10, 6))
-    plt.bar(df_sorted['conv_id'], df_sorted['num_tokens'], color='skyblue', edgecolor='black')
+    fig = px.bar(df_sorted, x='num_tokens', y='conv_id', orientation='h', title='Number of Tokens per conv_id')
+    fig.show()
 
-    # Add labels for top and bottom 5
-    for i, row in df_top_bottom_5.iterrows():
-        plt.text(row['conv_id'], row['num_tokens'], row['conv_id'], rotation=90)
-    
-    plt.xlabel('conv_id')
-    plt.ylabel('Number of Tokens')
-    plt.title('Number of Tokens per conv_id')
-
-    plt.show()
-
-# Call the function
+# Call the function with the correct file path
 display_token_bar_chart('/chunk-complaint/category/possible_call_reason.tsv')
+
 
 
 
