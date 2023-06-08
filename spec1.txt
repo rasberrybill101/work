@@ -462,7 +462,7 @@ def display_token_bar_chart(filename: str):
     plt.show()
 
 # Call the function
-display_token_bar_chart('possible_call_reason.tsv')
+display_token_bar_chart('/chunk-complaint/category/possible_call_reason.tsv')
 
 
 
