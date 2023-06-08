@@ -438,6 +438,9 @@ def display_token_bar_chart(filename: str):
     # Load the data from csv
     df = pd.read_csv(filename, sep='\t')
 
+    # Filter the data where num_tokens > 0
+    df = df[df['num_tokens'] > 0]
+
     # Sort the data by num_tokens
     df_sorted = df.sort_values('num_tokens')
 
@@ -458,6 +461,7 @@ def display_token_bar_chart(filename: str):
 
     plt.show()
 
+# Call the function
 display_token_bar_chart('possible_call_reason.tsv')
 
 
