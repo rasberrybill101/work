@@ -316,7 +316,7 @@ import re
 import nltk
 from typing import List, Tuple
 
-nltk.download('punkt')
+nltk.data.path.append('/chunk-complaint/category/punkt/')
 
 introductory_candidates = [
     "how may I help you today",
