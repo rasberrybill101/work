@@ -45,6 +45,16 @@ The method returns the final result list.
 
 =====================
 
+import java.util.*;
+import java.util.stream.*;
+
+public class Main {
+    public static void main(String[] args) {
+        // testing the method with an example
+        List<String> output = createMovingIntervals("This is a test line, 1, conv123", 2, 4, 2);
+        System.out.println(output);
+    }
+
 public static List<String> createMovingIntervals(String inputLine, int k, int windowSize, int history) {
     String[] parts = inputLine.split(",");
     String currentLine = parts[0];
@@ -75,4 +85,6 @@ public static List<String> createMovingIntervals(String inputLine, int k, int wi
         }
     }
     return result;
+}
+
 }
