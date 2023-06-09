@@ -103,7 +103,6 @@ def search_phrases_in_dataframe(df, num_words):
                             # if match, write the row data to csv
                             writer.writerow([row['conv_id'], row['reason_level_1'], row['complaint_disat'], key, sentence.strip()])
 
-# load csv file into pandas DataFrame
 df = pd.read_csv('metadata-labeled-conversations.txt', sep='\t')
 
 # call function with num_words as 3
