@@ -45,45 +45,34 @@ The method returns the final result list.
 
 =====================
 
-import java.util.*;
-import java.util.stream.*;
+public static List<String> createMovingIntervals(String inputLine, int k, int windowSize, int history) {
+    String[] parts = inputLine.split(",");
+    String currentLine = parts[0];
+    int label = Integer.parseInt(parts[1].trim());
+    String convID = parts[2].trim();
 
-public class Main {
-    public static void main(String[] args) {
-        // testing the method with an example
-        List<String> output = createMovingIntervals("This is a test line, 1, conv123", 2, 4, 2);
-        System.out.println(output);
-    }
+    List<String> inputTokens = new ArrayList<>(Arrays.asList(currentLine.split("\\s+")));
+    int lastFrame = windowSize / k;
 
-    public static List<String> createMovingIntervals(String inputLine, int k, int windowSize, int history) {
-        String[] parts = inputLine.split(",");
-        String currentLine = parts[0];
-        int label = Integer.parseInt(parts[1].trim());
-        String convID = parts[2].trim();
+    List<String> result = new ArrayList<>();
 
-        List<String> inputTokens = new ArrayList<>(Arrays.asList(currentLine.split("\\s+")));
-        int lastFrame = windowSize / k;
-
-        List<String> result = new ArrayList<>();
-
-        LinkedList<String> subsequence = new LinkedList<>();
-        for (int i = 0; i < inputTokens.size(); i++) {
-            subsequence.add(inputTokens.get(i));
-            if (i >= k - 1) {
-                int chunkStart = i / k + 1;
-                int chunkEnd = chunkStart + subsequence.size() / k;
-                String resLine = String.join(" ", subsequence) + "," + label + "," + chunkStart + "," + chunkEnd + "," + convID;
-                result.add(resLine);
-                if (chunkStart > history) {
-                    for (int j = 0; j < k; j++) {
-                        subsequence.removeFirst();
-                    }
-                }
-                if (chunkStart == lastFrame) {
-                    break;
+    LinkedList<String> subsequence = new LinkedList<>();
+    for (int i = 0; i < inputTokens.size(); i++) {
+        subsequence.add(inputTokens.get(i));
+        if (i >= k - 1) {
+            int chunkStart = i / k + 1;
+            int chunkEnd = chunkStart + subsequence.size() / k;
+            String resLine = String.join(" ", subsequence) + "," + label + "," + chunkStart + "," + chunkEnd + "," + convID;
+            result.add(resLine);
+            if (chunkStart > history && !subsequence.isEmpty()) {
+                for (int j = 0; j < k; j++) {
+                    subsequence.removeFirst();
                 }
             }
+            if (chunkStart == lastFrame) {
+                break;
+            }
         }
-        return result;
     }
+    return result;
 }
