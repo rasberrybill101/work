@@ -84,29 +84,28 @@ dict_phrases = {
 
 # function to loop over rows in the dataframe
 def search_phrases_in_dataframe(df, num_words):
-    result = []
-    # loop over rows in the dataframe
-    for index, row in df.iterrows():
-        # loop over dictionary keys
-        for key in dict_phrases.keys():
-            # loop over phrases in each key
-            for phrase in dict_phrases[key]:
-                # handle ellipsis - replace with regex that matches up to num_words words
-                phrase = re.sub(r'\.\.\.', r'(\\b\\w{1,}\\b ){0,'+str(num_words)+'}', phrase)
-                # check if phrase matches part of 'plain_whisper' column
-                if re.search(phrase, str(row['plain_whisper']).lower()):
-                    # if match, append the row data to the result
-                    result.append([row['conv_id'], row['reason_level_1'], row['complaint_disat'], key, row['plain_whisper']])
-    return result
+    with open('output.csv', 'w', newline='') as f:
+        writer = csv.writer(f)
+        writer.writerow(['conv_id', 'reason_level_1', 'complaint_disat', 'dictionary_key', 'matching_sentence'])
+        # loop over rows in the dataframe
+        for _, row in df.iterrows():
+            # loop over dictionary keys
+            for key in dict_phrases.keys():
+                # loop over phrases in each key
+                for phrase in dict_phrases[key]:
+                    # handle ellipsis - replace with regex that matches up to num_words words
+                    phrase = re.sub(r'\.\.\.', r'(\\b\\w{1,}\\b ){0,'+str(num_words)+'}', phrase)
+                    # split 'plain_whisper' into sentences
+                    sentences = str(row['plain_whisper']).lower().split('.')
+                    # check each sentence if phrase matches part of it
+                    for sentence in sentences:
+                        if re.search(phrase, sentence):
+                            # if match, write the row data to csv
+                            writer.writerow([row['conv_id'], row['reason_level_1'], row['complaint_disat'], key, sentence.strip()])
 
 # load csv file into pandas DataFrame
-df = pd.read_csv('metadata-labeled-conversations.txt')
+df = pd.read_csv('metadata-labeled-conversations.txt', sep='\t')
 
 # call function with num_words as 3
-result = search_phrases_in_dataframe(df, 3)
+search_phrases_in_dataframe(df, 3)
 
-# write the result to csv
-with open('output.csv', 'w', newline='') as f:
-    writer = csv.writer(f)
-    writer.writerow(['conv_id', 'reason_level_1', 'complaint_disat', 'dictionary_key', 'matching_sentence'])
-    writer.writerows(result)
