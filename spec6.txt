@@ -233,7 +233,7 @@ Then createMovingIntervals(inputLine, k, windowSize) should create the following
     public static List<String> createMovingIntervals(String inputLine, int k, int windowSize, int history) {
         String[] parts = inputLine.split(",");
         String currentLine = parts[0];
-        int label = Integer.parseInt(parts[1].trim());
+        String label = parts[1].trim();
         String convID = parts[2].trim();
 
         List<String> inputTokens = new ArrayList<>(Arrays.asList(currentLine.split("\\s+")));
@@ -273,3 +273,51 @@ Then createMovingIntervals(inputLine, k, windowSize) should create the following
     }
 }
 
+------------------------------
+
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.LinkedList;
+import java.util.List;
+
+public static List<String> createMovingIntervals(String inputLine, int k, int windowSize, int history) {
+    String[] parts = inputLine.split(",");
+    String currentLine = parts[0];
+    String label = parts[1].trim();
+    String convID = parts[2].trim();
+
+    List<String> inputTokens = new ArrayList<>(Arrays.asList(currentLine.split("\\s+")));
+    int lastFrame = windowSize / k;
+
+    List<String> result = new ArrayList<>();
+    LinkedList<String> subsequence = new LinkedList<>();
+
+    int chunkStart = 1;
+    int chunkEnd = 0;
+
+    for (int i = 0; i < inputTokens.size(); i += k) {
+        for (int j = 0; j < k && i + j < inputTokens.size(); j++) {
+            subsequence.add(inputTokens.get(i + j));
+        }
+
+        if ((i / k + 1) <= history) {
+            chunkEnd = k * (i / k + 1);
+        } else {
+            chunkStart = chunkStart + k;
+            chunkEnd = chunkEnd + k;
+        }
+
+        if ((i / k + 1) <= lastFrame) {
+            String resLine = "\"" + String.join(" ", subsequence) + "\"," + label + "," + chunkStart + "," + chunkEnd + "," + convID;
+            result.add(resLine);
+        }
+
+        if ((i / k + 1) >= history && !subsequence.isEmpty()) {
+            for (int j = 0; j < k && !subsequence.isEmpty(); j++) {
+                subsequence.removeFirst();
+            }
+        }
+    }
+
+    return result;
+}
