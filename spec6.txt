@@ -52,7 +52,9 @@ public class Main {
     public static void main(String[] args) {
         // testing the method with an example
         List<String> output = createMovingIntervals(createTest(), 2, 4, 2);
-        System.out.println(output);
+        for (String s : output) {
+		  System.out.println(s);
+		}  
     }
 
 public static List<String> createMovingIntervals(String inputLine, int k, int windowSize, int history) {
