@@ -51,7 +51,7 @@ import java.util.stream.*;
 public class Main {
     public static void main(String[] args) {
         // testing the method with an example
-        List<String> output = createMovingIntervals(createTest(), 2, 4, 2);
+        List<String> output = createMovingIntervals(createTest(), 2, 20, 3);
         for (String s : output) {
 		  System.out.println(s);
 		}  
@@ -97,3 +97,101 @@ public static String createTest() {
   return sb.toString().trim() + ", 0, conv1";
   }
 }
+----------------
+Given this implementation: 
+public class Main {
+    public static void main(String[] args) {
+        // testing the method with an example
+        List<String> output = createMovingIntervals(createTest(), 2, 20, 3);
+        for (String s : output) {
+		  System.out.println(s);
+		}  
+    }
+
+public static List<String> createMovingIntervals(String inputLine, int k, int windowSize, int history) {
+    String[] parts = inputLine.split(",");
+    String currentLine = parts[0];
+    int label = Integer.parseInt(parts[1].trim());
+    String convID = parts[2].trim();
+
+    List<String> inputTokens = new ArrayList<>(Arrays.asList(currentLine.split("\\s+")));
+    int lastFrame = windowSize / k;
+
+    List<String> result = new ArrayList<>();
+
+    LinkedList<String> subsequence = new LinkedList<>();
+    for (int i = 0; i < inputTokens.size(); i++) {
+        subsequence.add(inputTokens.get(i));
+        if (i >= k - 1) {
+            int chunkStart = i / k + 1;
+            int chunkEnd = chunkStart + subsequence.size() / k;
+            String resLine = String.join(" ", subsequence) + "," + label + "," + chunkStart + "," + chunkEnd + "," + convID;
+            result.add(resLine);
+            if (chunkStart > history && !subsequence.isEmpty()) {
+                for (int j = 0; j < k; j++) {
+                    subsequence.removeFirst();
+                }
+            }
+            if (chunkStart == lastFrame) {
+                break;
+            }
+        }
+    }
+    return result;
+}
+
+public static String createTest() {
+  StringBuilder sb = new StringBuilder();
+  for (int k=1; k < 51; k++) {
+	sb.append(" t" + k);
+  }
+  return sb.toString().trim() + ", 0, conv1";
+  }
+}
+together with the input:
+t1 t2 t3 t4 t5 ... t50, 0, conv1
+I am getting the following wrong output initial subsequences
+t1 t2,0,1,2,conv1  this is correct
+t1 t2 t3,0,2,3,conv1 this should be t1 t2 t3 t4,0,1,4,conv1
+t1 t2 t3 t4,0,2,4,conv1 this should be t1 t2 t3 t4 t5 t6,0,1,6,conv1
+
+Let's fix this first and then we can move on to the remaining problems
+
+----------------------------------
+
+public static List<String> createMovingIntervals(String inputLine, int k, int windowSize, int history) {
+    String[] parts = inputLine.split(",");
+    String currentLine = parts[0];
+    int label = Integer.parseInt(parts[1].trim());
+    String convID = parts[2].trim();
+
+    List<String> inputTokens = new ArrayList<>(Arrays.asList(currentLine.split("\\s+")));
+    int lastFrame = windowSize / k;
+
+    List<String> result = new ArrayList<>();
+
+    LinkedList<String> subsequence = new LinkedList<>();
+    for (int i = 0; i < inputTokens.size(); i += k) {
+        for (int j = 0; j < k && i + j < inputTokens.size(); j++) {
+            subsequence.add(inputTokens.get(i + j));
+        }
+        int chunkStart = i / k + 1;
+        if (chunkStart <= history) {
+            int chunkEnd = chunkStart + subsequence.size() / k - 1;
+            String resLine = String.join(" ", subsequence) + "," + label + "," + chunkStart + "," + chunkEnd + "," + convID;
+            result.add(resLine);
+        } else if (chunkStart > history) {
+            for (int j = 0; j < k && !subsequence.isEmpty(); j++) {
+                subsequence.removeFirst();
+            }
+            if (chunkStart <= lastFrame) {
+                int chunkEnd = chunkStart + subsequence.size() / k - 1;
+                String resLine = String.join(" ", subsequence) + "," + label + "," + chunkStart + "," + chunkEnd + "," + convID;
+                result.add(resLine);
+            }
+        }
+    }
+    return result;
+}
+
+
