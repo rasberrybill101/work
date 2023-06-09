@@ -193,5 +193,83 @@ public static List<String> createMovingIntervals(String inputLine, int k, int wi
     }
     return result;
 }
+------------
+Much better. Well done. But there is still an issue... The outputs now look like this:
+t1 t2,0,1,1,conv1 instead of t1 t2,0,1,2,conv1
+t1 t2 t3 t4,2,3,conv1 instead of t1 t2 t3 t4,1,4,conv1
 
+There was a mistake in the specification. Instead of:
+3) chunkStart - the subsequence number
+4) chunkEnd - integer value of chunkStart + (num of tokens in subsequence)/k
+
+This should have been:
+if subsequence number (n) is less than or equal to "history"
+chunkStart should always be 1
+chunkEnd should be equal to k*subsequenceNumber
+
+If subsequence number is greater than "history" -- then we want to set the chunkStart to k tokens ahead of where the previous chunkStart was, and the
+chunkEnd 
+chunkStart should be equal to (previous chunkStart) + k
+chunkEnd should be equal to (previous chunkEnd) + k
+
+FOR EXAMPLE, given
+inputLine = "t1 t2 t3 t4 t5 t6 t7 t8 t9 t10 t11, 0, conv1"
+k = 2
+windowSize = 20
+history = 3
+
+Then createMovingIntervals(inputLine, k, windowSize) should create the following subsequences:
+"t1 t2",0,1,2,conv1 -- subsequence is 1, chunkStart is 1, chunkEnd is 2
+"t1 t2 t3 t4",0,1,4,conv1 -- subsequence is 2, chunkStart is 1, chunkEnd is 4
+"t1 t2 t3 t4 t5 t6",0,1,6,conv1   -- at this point, subsequence number == history, and the number of tokens in the subsequence is history*k. This will be the number of tokens for each other subsequence until all subsequences have been generated.
+
+"t3 t4 t5 t6 t7 t8",0,3,8,conv1   -- chunkStart = previous chunkStart + k, chunkEnd = previous chunkEnd
+
+"t5 t6 t7 t8 t9 t10",0,5,10,conv1
+"t7 t8 t9 t10 t11 t12",0,7,12,conv1
+
+-----------------------------------
+
+    public static List<String> createMovingIntervals(String inputLine, int k, int windowSize, int history) {
+        String[] parts = inputLine.split(",");
+        String currentLine = parts[0];
+        int label = Integer.parseInt(parts[1].trim());
+        String convID = parts[2].trim();
+
+        List<String> inputTokens = new ArrayList<>(Arrays.asList(currentLine.split("\\s+")));
+        int lastFrame = windowSize / k;
+
+        List<String> result = new ArrayList<>();
+        LinkedList<String> subsequence = new LinkedList<>();
+
+        int chunkStart = 1;
+        int chunkEnd = 0;
+
+        for (int i = 0; i < inputTokens.size(); i += k) {
+            for (int j = 0; j < k && i + j < inputTokens.size(); j++) {
+                subsequence.add(inputTokens.get(i + j));
+            }
+
+            if ((i / k + 1) <= history) {
+                chunkEnd = k * (i / k + 1);
+            } else {
+                chunkStart = chunkStart + k;
+                chunkEnd = chunkEnd + k;
+            }
+
+            if ((i / k + 1) <= lastFrame) {
+                String resLine = String.join(" ", subsequence) + "," + label + "," + chunkStart + "," + chunkEnd + "," + convID;
+                result.add(resLine);
+            }
+
+            if ((i / k + 1) >= history && !subsequence.isEmpty()) {
+                for (int j = 0; j < k && !subsequence.isEmpty(); j++) {
+                    subsequence.removeFirst();
+                }
+            }
+        }
+
+        return result;
+    }
+}
 
