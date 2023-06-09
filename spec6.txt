@@ -1,0 +1,89 @@
+In java 8 create a method "createMovingIntervals" that takes as input:
+inputLine - a String
+k - number of tokens per chunk
+windowSize - maximum number of tokens for each subsequence
+history - number of chunks, each of size chunkSize tokens
+
+The method will return a list of strings, where each string is known as a sub-sequence.
+At the start of the process:
+1) split the comma-separated inputLine into the following columns:
+currentLine - a string
+label - a number (0 or 1)
+convID - a String
+2) create inputTokens List<String> by converting the currentLine obtained above into a list of tokens by splitting on space character (any number of continuous spaces eg \\s+)
+3) calculate lastFrame = windowSize/k
+4) initialize List<String> result = new empty List<String>();
+
+After each subsequence is created as described below, it is added to the result. 
+Each subsequence is created as follows:
+if subsequence number (n) is less than or equal to "history"
+subsequence 1 is tokens 0 through k-1
+subsequence 2 is tokens in subsequence 1 + next k tokens
+subsequence 3 is tokens in subsequence 2 + next k tokens
+...
+subsequence n is tokens in sub-sequence n-1 + next k tokens
+
+if subsequence number (n) is greater than "history", then each subsequence is
+built by ignoring the first k tokens of the previous subsequence and then adding the next k tokens on the inputTokens List as follows:
+
+subsequence n+1 is the last (k-1)*history tokens in subsequence n + the next k tokens on the inputTokens
+subsequence n+2 is the last (k-1)*history tokens in subsequence (n+1) + next k tokens on the inputTokens
+subsequence n+3 is the last (k-1)*history tokens in subsequence (n+2) + next k tokens on the inputTokens
+
+subsequence generation stops when the subsequence number == lastFrame
+
+Using these subsequences, append each of the following strings to the result String list. The string to be created from each subsquence is a CSV string that comprises the following columns:
+1) space-separated tokens of the subsequence
+2) label - obtained from the inputLine label as above
+3) chunkStart - the subsequence number
+4) chunkEnd - integer value of chunkStart + (num of tokens in subsequence)/k
+5) convID - obtained from inputLine convID as above
+
+Each string created using columns (1) through (5) is appended to the result list
+
+The method returns the final result list.
+
+=====================
+
+import java.util.*;
+import java.util.stream.*;
+
+public class Main {
+    public static void main(String[] args) {
+        // testing the method with an example
+        List<String> output = createMovingIntervals("This is a test line, 1, conv123", 2, 4, 2);
+        System.out.println(output);
+    }
+
+    public static List<String> createMovingIntervals(String inputLine, int k, int windowSize, int history) {
+        String[] parts = inputLine.split(",");
+        String currentLine = parts[0];
+        int label = Integer.parseInt(parts[1].trim());
+        String convID = parts[2].trim();
+
+        List<String> inputTokens = new ArrayList<>(Arrays.asList(currentLine.split("\\s+")));
+        int lastFrame = windowSize / k;
+
+        List<String> result = new ArrayList<>();
+
+        LinkedList<String> subsequence = new LinkedList<>();
+        for (int i = 0; i < inputTokens.size(); i++) {
+            subsequence.add(inputTokens.get(i));
+            if (i >= k - 1) {
+                int chunkStart = i / k + 1;
+                int chunkEnd = chunkStart + subsequence.size() / k;
+                String resLine = String.join(" ", subsequence) + "," + label + "," + chunkStart + "," + chunkEnd + "," + convID;
+                result.add(resLine);
+                if (chunkStart > history) {
+                    for (int j = 0; j < k; j++) {
+                        subsequence.removeFirst();
+                    }
+                }
+                if (chunkStart == lastFrame) {
+                    break;
+                }
+            }
+        }
+        return result;
+    }
+}
