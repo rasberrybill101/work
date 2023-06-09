@@ -89,13 +89,11 @@ public static List<String> createMovingIntervals(String inputLine, int k, int wi
     return result;
 }
 
-public String createTest() {
+public static String createTest() {
   StringBuilder sb = new StringBuilder();
   for (int k=1; k < 51; k++) {
 	sb.append(" t" + k);
   }
   return sb.toString().trim() + ", 0, conv1";
   }
-}
-
 }
