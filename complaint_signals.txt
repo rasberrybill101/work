@@ -1,0 +1,45 @@
+Given a tab separated file "raw_data.tsv" that has the following columns (specified in the header):
+conv_id
+complaint_disat
+segment_id
+call_duration
+reason_level_1
+reason_level_2
+plain_whisper
+language_code
+
+Each row represents a conversation that identified using "conv_id" column value.
+All columns are strings, except for call_duration which is an integer.
+
+1) Step 1 - preprocessing step - remove all spanish language rows - reject_spanish()
+There is an initial pre-processing step. Any row that contains the word 'gracias' in the column 'plain_whisper' will be completely ignored and is not part of the data set. Encapsulate the functionality to reject 'gracias' as a pre-processing function called 'reject_spanish'. No rejected rows will be used during subsequent processing.
+
+2) Step 2
+For each sentence in 'plain_whisper', and for each keyed phrase in the phrase dictionary, calculate the jaccard score.
+
+3) Step 3
+For each sentence in 'plain_whisper' and for each keyed phrase, calculate the longest continuous subsequence similarity score according to the following function:
+
+def lcs_similarity(sentence, phrase):
+    return lcs(sentence.split(), phrase.split()) / max(len(sentence.split()), len(phrase.split()))
+	
+Step 4
+Note the starting position of each sentence used in steps 2 and 3. For instance if 'plain_whisper' contains the sentences:
+"the quick brown fox. I went to work today. Write a note to the manager"
+then the start_position of "I went to work today" will be 2 because it is the second sentence.
+
+Step 5
+Normalize the sentence starting position by expressing it as a proportion of the number of sentences present. For instance in the example above, the sentence "I went to work today" will be position 0.667 since it is at position 2 of 3 (second sentence out of 3, or 2/3 which is 0.667)
+
+Step 6
+For all sentences with jaccard score greater than zero, return a tab separated file consisting of the following columns:
+conv_id (from input file)
+complaint_disat (from input file)
+call_duration (from input file)
+reason_level_1 (from input file)
+jaccard (the jaccard score) 
+lcs (longest common subsequence score)
+norm_position (normalized position of sentence)
+phrase (the phrase used to calculate jaccard, lcs and norm_position scores
+
+group the data by conv_id, and order of appearance of sentences so t

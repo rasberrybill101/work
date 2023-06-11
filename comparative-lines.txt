@@ -74,7 +74,7 @@ language_code
 Each row represents a conversation that identified using "conv_id" column value.
 All columns are strings, except for call_duration which is an integer.
 
-1) Step 1 - preprocessin step - remove all spanish language rows - reject_spanish()
+1) Step 1 - preprocessing step - remove all spanish language rows - reject_spanish()
 There is an initial pre-processing step. Any row that contains the word 'gracias' in the column 'plain_whisper' will be completely ignored and is not part of the data set. Encapsulate the functionality to reject 'gracias' as a pre-processing function called 'reject_spanish'. No rejected rows will be used during subsequent processing. Any other robust method to identify and reject spanish language rows can also be used.
 
 2) Step 2 - find top k tf-idf scores: level_1_tf_idf(phrase_length, top_k), where:
