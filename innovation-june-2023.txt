@@ -309,6 +309,53 @@ $(function() {
     });
 });
 
+------------- main.js 2
+$(document).ready(function() {
+    // Fetch PDFs when page loads and populate list
+    $.ajax({
+        url: 'http://localhost:9009/pdfs',
+        type: 'GET',
+        success: function(res) {
+            let pdfs = res;
+            let pdfList = $('#middle-right-lower');
+            pdfList.empty();  // Clear existing list
+
+            // Append each PDF as a new list item
+            pdfs.forEach(function(pdf) {
+                let listItem = $('<div></div>').text(pdf);
+                listItem.addClass('list-group-item');
+                listItem.on('click', function() {
+                    let viewer = document.getElementById('pdf-viewer');
+                    viewer.src = `http://localhost:9009/pdfs/${pdf}`;
+                    viewer.onload = function () {
+                        PDFObject.embed(viewer.src, "#middle-left");
+                    }
+                });
+                pdfList.append(listItem);
+            });
+        }
+    });
+
+    // Handle resizing of the middle-right area
+    $('#middle-divider').draggable({
+        axis: 'x',
+        containment: 'parent',
+        drag: function(event, ui) {
+            let totalWidth = $('#middle').width();
+            let leftWidth = ui.position.left;
+            let rightWidth = totalWidth - leftWidth;
+            
+            $('#middle-left').css('flex', 'none').width(leftWidth);
+            $('#middle-right').css('flex', 'none').width(rightWidth);
+        },
+        stop: function(event, ui) {
+            $('#middle-left').css('flex', '');
+            $('#middle-right').css('flex', '');
+        }
+    });
+});
+
+
 ------------- flask server
 from flask import Flask, render_template, send_from_directory
 import os
