@@ -319,3 +319,17 @@ if __name__ == '__main__':
 
 - - - - - - -
 pip install flask flask_cors
+- - - - - - -
+---------------------- folder structure
+/app
+    /static
+        /css
+            jquery-ui.min.css
+        /js
+            jquery-3.7.0.min.js
+            main.js
+            pdf.js
+            pdf.worker.js
+    /templates
+        index.html
+    app.py
