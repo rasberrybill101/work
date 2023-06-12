@@ -3,10 +3,10 @@ function displayPdf(url) {
   let container = document.getElementById('middle-left');
   container.innerHTML = '';
 
-  // Create a hidden canvas for rendering the PDF
-  let hiddenCanvas = document.createElement('canvas');
-  hiddenCanvas.style.display = 'none';
-  container.appendChild(hiddenCanvas);
+  // Create a canvas for rendering the PDF
+  let canvas = document.createElement('canvas');
+  canvas.id = 'pdf-canvas';
+  container.appendChild(canvas);
 
   // Load the PDF document
   pdfjsLib.getDocument(url)
@@ -17,13 +17,16 @@ function displayPdf(url) {
       pdf.getPage(1).then(function (page) {
         let viewport = page.getViewport({ scale: 1 });
 
-        // Set hidden canvas dimensions
-        hiddenCanvas.height = viewport.height;
-        hiddenCanvas.width = viewport.width;
+        // Set canvas dimensions
+        canvas.height = viewport.height;
+        canvas.width = viewport.width;
 
-        // Render the PDF page on the hidden canvas
+        // Get canvas context
+        let context = canvas.getContext('2d');
+
+        // Render the PDF page on the canvas
         let renderContext = {
-          canvasContext: hiddenCanvas.getContext('2d'),
+          canvasContext: context,
           viewport: viewport
         };
         page.render(renderContext).promise.then(function () {
@@ -42,8 +45,6 @@ function highlightText(text) {
     return;
   }
 
-  let hiddenCanvas = document.querySelector('#middle-left canvas');
-  let hiddenContext = hiddenCanvas.getContext('2d');
   let canvas = document.querySelector('#pdf-canvas');
   let context = canvas.getContext('2d');
 
