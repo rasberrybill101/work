@@ -197,39 +197,62 @@ Please make the following modifications:
 
 
 ------------------- style.js
-html, body {
-    height: 100%;
+body {
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
     margin: 0;
-    padding: 0;
     overflow: hidden;
 }
 
-#top, #bottom {
-    width: 100%;
+#top {
+    flex: 0 0 auto;
+    border-bottom: 1px solid #ddd;
+    padding: 10px;
 }
 
 #middle {
-    height: calc(100% - 4em);
+    flex: 1 1 auto;
+    display: flex;
+    overflow: hidden;
 }
 
-#middle-left, #middle-right {
-    height: 100%;
+#middle-left {
+    flex: 1;
+    border-right: 1px solid #ddd;
     overflow: auto;
-}
-
-#middle-right-upper, #middle-right-lower {
-    height: 50%;
-    overflow: auto;
+    padding: 10px;
 }
 
 #middle-divider {
-    background-color: #0000f0;
-    width: 5px;
-    cursor: ew-resize;
+    flex: 0 0 auto;
+    width: 4px;
+    background: #ddd;
+    cursor: col-resize;
 }
 
-#pdf-renderer {
-    width: 100%;
+#middle-right {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+#middle-right-upper {
+    flex: 1;
+    border-bottom: 1px solid #ddd;
+    overflow: auto;
+    padding: 10px;
+}
+
+#middle-right-lower {
+    flex: 1;
+    overflow: auto;
+    padding: 10px;
+}
+
+.list-group-item {
+    cursor: pointer;
 }
 
 ------------------ main.js
