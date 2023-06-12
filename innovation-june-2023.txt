@@ -406,6 +406,29 @@ def list_pdfs():
 @app.route('/pdfs/<path:filename>')
 def serve_pdf(filename):
     return send_from_directory('pdfs', filename)
+	
+@app.route('/search', methods=['POST'])
+def search():
+    data = request.get_json()
+    pdf_filename = data['pdf_filename']
+    search_text = data['search_text']
+
+    # Open the PDF file
+    with open(pdf_filename, 'rb') as file:
+        pdf_reader = PyPDF2.PdfReader(file)
+
+        # Search for the text and get the page and coordinates
+        result = []
+        for page_num, page in enumerate(pdf_reader.pages, start=1):
+            for word in page.extract_text().split():
+                if search_text.lower() in word.lower():
+                    result.append({
+                        'page': page_num,
+                        'x': word.bbox[0],
+                        'y': word.bbox[3]
+                    })
+
+    return jsonify(result)
 
 if __name__ == '__main__':
     app.run(port=9009)
