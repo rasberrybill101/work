@@ -1,0 +1,173 @@
+$(document).ready(function() {
+  let pdfDisplayed = false;
+  let pdfInstance = null;
+  let canvas = null;
+  let context = null;
+
+  // Fetch PDFs when page loads and populate list
+  $.ajax({
+    url: 'http://localhost:9010/pdfs',
+    type: 'GET',
+    success: function(res) {
+      let pdfs = res.files;
+      let pdfList = $('#middle-right-lower');
+      pdfList.empty();  // Clear existing list
+
+      // Append each PDF as a new list item
+      pdfs.forEach(function(pdf) {
+        let listItem = $('<div></div>').text(pdf);
+        listItem.addClass('list-group-item');
+        listItem.on('click', function() {
+          let path = `http://localhost:9010/pdfs/${pdf}`;
+          displayPdf(path);
+        });
+        pdfList.append(listItem);
+      });
+    }
+  });
+
+  function displayPdf(url) {
+    pdfDisplayed = true;
+    let container = document.getElementById('middle-left');
+    container.innerHTML = '';
+
+    // Create a canvas for rendering the PDF
+    let canvas = document.createElement('canvas');
+    canvas.id = 'pdf-canvas';
+    container.appendChild(canvas);
+
+    // Load the PDF document
+    pdfjsLib.getDocument(url)
+      .promise.then(function(pdf) {
+        pdfInstance = pdf;
+
+        // Fetch the first page
+        pdf.getPage(1).then(function(page) {
+          let viewport = page.getViewport({ scale: 1 });
+
+          // Set canvas dimensions
+          canvas.height = viewport.height;
+          canvas.width = viewport.width;
+
+          // Get canvas context
+          let context = canvas.getContext('2d');
+
+          // Render the PDF page on the canvas
+          let renderContext = {
+            canvasContext: context,
+            viewport: viewport
+          };
+          return page.render(renderContext).promise;
+        }).then(function() {
+          console.log('PDF rendered successfully');
+        }).catch(function(error) {
+          console.error(error);
+        });
+      })
+      .catch(function(error) {
+        console.error(error);
+      });
+  }
+
+  // Handle resizing of the middle-right area
+  $('#middle-divider').draggable({
+    axis: 'x',
+    containment: 'parent',
+    drag: function(event, ui) {
+      let totalWidth = $('#middle').width();
+      let leftWidth = ui.position.left;
+      let rightWidth = totalWidth - leftWidth;
+
+      $('#middle-left').css('flex', 'none').width(leftWidth);
+      $('#middle-right').css('flex', 'none').width(rightWidth);
+    },
+    stop: function(event, ui) {
+      $('#middle-left').css('flex', '');
+      $('#middle-right').css('flex', '');
+    }
+  });
+
+  // Handle search button click
+  $('#search-button').on('click', function() {
+    if (pdfDisplayed) {
+      let pdfFilename = 'example.pdf'; // Replace with the actual PDF filename
+      let searchText = $('#search-text').val(); // Get the search text
+
+      fetchHighlightPositions('/search', pdfFilename, searchText);
+    }
+  });
+
+  // Function to fetch highlight positions from the server
+  function fetchHighlightPositions(url, pdfFilename, searchText) {
+    $.ajax({
+      url: url,
+      type: 'POST',
+      data: {
+        pdf_filename: pdfFilename,
+        search_text: searchText
+      },
+      success: function(response) {
+        let positions = response.positions;
+        highlightText(positions);
+      },
+      error: function(error) {
+        console.error('Error fetching highlight positions:', error);
+      }
+    });
+  }
+
+function highlightText(positions) {
+  if (!pdfInstance) {
+    console.error('PDF document not loaded');
+    return;
+  }
+
+  let canvas = document.querySelector('#pdf-canvas');
+  let context = canvas.getContext('2d');
+
+  // Clear previous highlights
+  context.clearRect(0, 0, canvas.width, canvas.height);
+
+  // Iterate through each page of the PDF
+  let numPages = pdfInstance.numPages;
+
+  // Define an array to store the highlight promises
+  let highlightPromises = [];
+
+  for (let pageNum = 1; pageNum <= numPages; pageNum++) {
+    highlightPromises.push(
+      pdfInstance.getPage(pageNum)
+        .then(function (page) {
+          let viewport = page.getViewport({ scale: 1 });
+
+          return page.getTextContent()
+            .then(function (textContent) {
+              textContent.items.forEach(function (textItem) {
+                positions.forEach(function (position) {
+                  if (position.page === pageNum && textItem.str.includes(position.text)) {
+                    let rect = viewport.convertToViewportRectangle(textItem.transform);
+
+                    context.save();
+                    context.fillStyle = 'rgba(255, 255, 0, 0.5)';
+                    context.fillRect(rect[0], rect[1], rect[2] - rect[0], rect[3] - rect[1]);
+                    context.restore();
+                  }
+                });
+              });
+            })
+            .catch(function (error) {
+              console.error(error);
+            });
+        })
+    );
+  }
+
+  // Wait for all highlight promises to resolve
+  Promise.all(highlightPromises)
+    .then(function () {
+      console.log('Text highlighted successfully');
+    })
+    .catch(function (error) {
+      console.error('Error highlighting text:', error);
+    });
+}

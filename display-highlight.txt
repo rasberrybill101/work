@@ -156,3 +156,34 @@ function highlightText(positions) {
       console.error('Error highlighting text:', error);
     });
 }
+
+
+
+// Handle search button click
+$('#search-button').on('click', function() {
+  if (pdfDisplayed) {
+    let pdfFilename = 'example.pdf'; // Replace with the actual PDF filename
+    let searchText = $('#search-text').val(); // Get the search text
+
+    fetchHighlightPositions('/search', pdfFilename, searchText);
+  }
+});
+
+// Function to fetch highlight positions from the server
+function fetchHighlightPositions(url, pdfFilename, searchText) {
+  $.ajax({
+    url: url,
+    type: 'POST',
+    data: {
+      pdf_filename: pdfFilename,
+      search_text: searchText
+    },
+    success: function(response) {
+      let positions = response.positions;
+      highlightText(positions);
+    },
+    error: function(error) {
+      console.error('Error fetching highlight positions:', error);
+    }
+  });
+}
