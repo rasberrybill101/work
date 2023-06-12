@@ -143,7 +143,7 @@ Please make the following modifications:
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Simple Site</title>
+    <title>FUEL Prototype</title>
     <link rel="stylesheet" type="text/css" href="bootstrap.min.css">
     <link rel="stylesheet" type="text/css" href="style.css">
 </head>
@@ -203,6 +203,7 @@ html, body {
 }
 
 #middle-divider {
+    background-color: #0000f0;
     width: 10px;
     cursor: ew-resize;
 }
@@ -269,12 +270,44 @@ $(function() {
         });
     }
 
-    // Handle resizing of the middle-right area
-    $('#middle-divider').draggable({
-        axis: 'x',
-        drag: function (event, ui) {
-            $('#middle-left').width(ui.position.left);
-            $('#middle-right').width($('#middle').width() - ui.position.left);
-        }
-    });
+	// Handle resizing of the middle-right area
+	$('#middle-divider').draggable({
+		axis: 'x',
+		containment: 'parent',
+		drag: function(event, ui) {
+			let totalWidth = $('#middle').width();
+			let leftWidth = ui.position.left;
+			let rightWidth = totalWidth - leftWidth;
+			
+			$('#middle-left').css('flex', 'none').width(leftWidth);
+			$('#middle-right').css('flex', 'none').width(rightWidth);
+		},
+		stop: function(event, ui) {
+			$('#middle-left').css('flex', '');
+			$('#middle-right').css('flex', '');
+		}
+	});
 });
+
+------------- flask server
+from flask import Flask, jsonify, send_from_directory
+from flask_cors import CORS
+import os
+
+app = Flask(__name__)
+CORS(app)  # This will enable CORS for all routes
+
+@app.route('./app/pdfs')
+def get_pdfs():
+    files = os.listdir('./pdfs')  # List all files in the "pdfs" directory
+    return jsonify(files)  # Return this list as JSON
+
+@app.route('./app/pdfs/<path:filename>')
+def get_pdf(filename):
+    return send_from_directory('./pdfs', filename)
+
+if __name__ == '__main__':
+    app.run(port=9009)
+
+- - - - - - -
+pip install flask flask_cors
