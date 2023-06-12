@@ -8,11 +8,14 @@ function highlightText(text) {
     return;
   }
 
-  // Create a separate canvas for highlighting
-  let highlightCanvas = document.createElement('canvas');
-  highlightCanvas.width = canvas.width;
-  highlightCanvas.height = canvas.height;
-  let highlightContext = highlightCanvas.getContext('2d');
+  // Create a temporary canvas for highlighting
+  let tempCanvas = document.createElement('canvas');
+  let tempContext = tempCanvas.getContext('2d');
+  tempCanvas.width = canvas.width;
+  tempCanvas.height = canvas.height;
+
+  // Clear previous highlights
+  tempContext.clearRect(0, 0, tempCanvas.width, tempCanvas.height);
 
   // Iterate through each page of the PDF
   let numPages = pdfInstance.numPages;
@@ -29,11 +32,11 @@ function highlightText(text) {
           return page.getTextContent()
             .then(function (textContent) {
               let renderContext = {
-                canvasContext: highlightContext,
+                canvasContext: tempContext,
                 viewport: viewport,
               };
 
-              // Render the page on the highlight canvas
+              // Render the page on the temporary canvas
               return page.render(renderContext)
                 .promise
                 .then(function () {
@@ -41,10 +44,10 @@ function highlightText(text) {
                     if (textItem.str.includes(text)) {
                       let rect = viewport.convertToViewportRectangle(textItem.transform);
 
-                      highlightContext.save();
-                      highlightContext.fillStyle = 'rgba(255, 255, 0, 0.5)';
-                      highlightContext.fillRect(rect[0], rect[1], rect[2] - rect[0], rect[3] - rect[1]);
-                      highlightContext.restore();
+                      tempContext.save();
+                      tempContext.fillStyle = 'rgba(255, 255, 0, 0.5)';
+                      tempContext.fillRect(rect[0], rect[1], rect[2] - rect[0], rect[3] - rect[1]);
+                      tempContext.restore();
                     }
                   });
                 });
@@ -60,7 +63,8 @@ function highlightText(text) {
   Promise.all(highlightPromises)
     .then(function () {
       // Draw the original canvas
-      context.drawImage(highlightCanvas, 0, 0);
+      context.clearRect(0, 0, canvas.width, canvas.height);
+      context.drawImage(tempCanvas, 0, 0);
       console.log('Text highlighted successfully');
     })
     .catch(function (error) {
