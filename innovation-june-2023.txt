@@ -903,10 +903,8 @@ $(document).ready(function() {
 
                             textContent.items.forEach(function(textItem) {
                                 if (textItem.str.includes(text)) {
-                                    let rect = PDFJS.Util.transform(
-                                        PDFJS.Util.transform(viewport.transform, textItem.transform),
-                                        [1, 0, 0, -1, 0, 0]
-                                    );
+                                    let rect = viewport.convertToViewportRectangle(textItem.transform);
+
 
                                     context.beginPath();
                                     context.rect(rect[4], rect[5] - textItem.height, rect[2] - rect[0], textItem.height);
