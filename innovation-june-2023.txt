@@ -772,10 +772,11 @@ $(document).ready(function() {
 
 $(document).ready(function() {
     let pdfDisplayed = false;
+    let searchText = "";
 
     // Fetch PDFs when page loads and populate list
     $.ajax({
-        url: 'http://localhost:9010/pdfs',
+        url: 'http://localhost:9009/pdfs',
         type: 'GET',
         success: function(res) {
             let pdfs = res.files;
@@ -787,7 +788,7 @@ $(document).ready(function() {
                 let listItem = $('<div></div>').text(pdf);
                 listItem.addClass('list-group-item');
                 listItem.on('click', function() {
-                    let path = `http://localhost:9010/pdfs/${pdf}`;
+                    let path = `http://localhost:9009/pdfs/${pdf}`;
                     displayPdf(path);
                 });
                 pdfList.append(listItem);
@@ -802,28 +803,29 @@ $(document).ready(function() {
 
         // Load the PDF document
         pdfjsLib.getDocument(url)
-        .promise.then(function(pdf) {
-            // Fetch the first page
-            pdf.getPage(1).then(function(page) {
-                let canvas = document.createElement('canvas');
-                let context = canvas.getContext('2d');
-                let viewport = page.getViewport({ scale: 1 });
+            .promise.then(function(pdf) {
+                // Fetch the first page
+                pdf.getPage(1).then(function(page) {
+                    let canvas = document.createElement('canvas');
+                    let context = canvas.getContext('2d');
+                    let viewport = page.getViewport({ scale: 1 });
 
-                canvas.height = viewport.height;
-                canvas.width = viewport.width;
+                    canvas.height = viewport.height;
+                    canvas.width = viewport.width;
 
-                // Render the PDF page on the canvas
-                let renderContext = {
-                    canvasContext: context,
-                    viewport: viewport
-                };
-                page.render(renderContext).promise.then(function() {
-                    container.appendChild(canvas);
+                    // Render the PDF page on the canvas
+                    let renderContext = {
+                        canvasContext: context,
+                        viewport: viewport
+                    };
+                    page.render(renderContext).promise.then(function() {
+                        container.appendChild(canvas);
+                    });
                 });
+            })
+            .catch(function(error) {
+                console.error(error);
             });
-        }).catch(function(error) {
-            console.error(error);
-        });
     }
 
     // Handle resizing of the middle-right area
@@ -834,7 +836,7 @@ $(document).ready(function() {
             let totalWidth = $('#middle').width();
             let leftWidth = ui.position.left;
             let rightWidth = totalWidth - leftWidth;
-            
+
             $('#middle-left').css('flex', 'none').width(leftWidth);
             $('#middle-right').css('flex', 'none').width(rightWidth);
         },
@@ -847,31 +849,49 @@ $(document).ready(function() {
     // Handle search button click
     $('#search-button').on('click', function() {
         if (pdfDisplayed) {
-            let searchText = $('#search-text').val();
+            searchText = $('#search-text').val();
             highlightText(searchText);
         }
     });
 
     function highlightText(text) {
-        let canvas = document.querySelector('#pdf-renderer canvas');
+        let container = document.getElementById('middle-left');
+        let canvas = container.querySelector('canvas');
+        if (!canvas) {
+            console.error('Canvas element not found');
+            return;
+        }
+
         let context = canvas.getContext('2d');
-        let pdf = canvas.pdfPageProxy.pdfDocument;
+        if (!context) {
+            console.error('Could not get canvas context');
+            return;
+        }
 
-        pdf.getPage(1).then(function(page) {
-            page.getTextContent().then(function(textContent) {
-                textContent.items.forEach(function(textItem) {
-                    if (textItem.str.includes(text)) {
-                        let x = textItem.transform[4];
-                        let y = canvas.height - textItem.transform[5];
-                        let width = textItem.width;
-                        let height = textItem.height;
+        let pdf = canvas.pdfDocument;
+        if (!pdf) {
+            console.error('PDF document not loaded');
+            return;
+        }
 
-                        context.fillStyle = 'rgba(255, 255, 0, 0.3)';
-                        context.fillRect(x, y, width, height);
-                    }
-                });
+    // Clear previous highlights
+    context.clearRect(0, 0, canvas.width, canvas.height);
+
+    pdf.getPage(1).then(function(page) {
+        page.getTextContent().then(function(textContent) {
+            textContent.items.forEach(function(textItem) {
+                if (textItem.str.includes(text)) {
+                    let x = textItem.transform[4];
+                    let y = canvas.height - textItem.transform[5];
+                    let width = textItem.width;
+                    let height = textItem.height;
+
+                    context.fillStyle = 'rgba(255, 255, 0, 0.3)';
+                    context.fillRect(x, y, width, height);
+                }
             });
         });
-    }
-});
+    });
+}
+
 
