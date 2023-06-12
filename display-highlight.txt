@@ -8,9 +8,6 @@ function highlightText(text) {
     return;
   }
 
-  // Clear previous highlights
-  context.clearRect(0, 0, canvas.width, canvas.height);
-
   // Iterate through each page of the PDF
   let numPages = pdfInstance.numPages;
 
@@ -22,27 +19,36 @@ function highlightText(text) {
       pdfInstance.getPage(pageNum)
         .then(function (page) {
           let viewport = page.getViewport({ scale: 1 });
-          let transform = viewport.transform;
 
           return page.getTextContent()
             .then(function (textContent) {
-              context.save();
-              context.fillStyle = 'rgba(255, 255, 0, 0.5)';
-              context.lineWidth = 1;
-              context.strokeStyle = 'rgba(255, 255, 0, 1)';
+              let renderContext = {
+                canvasContext: context,
+                viewport: viewport,
+              };
 
-              textContent.items.forEach(function (textItem) {
-                if (textItem.str.includes(text)) {
-                  let rect = viewport.convertToViewportRectangle(textItem.transform);
+              // Render the page first before highlighting
+              return page.render(renderContext)
+                .promise
+                .then(function () {
+                  context.save();
+                  context.fillStyle = 'rgba(255, 255, 0, 0.5)';
+                  context.lineWidth = 1;
+                  context.strokeStyle = 'rgba(255, 255, 0, 1)';
 
-                  context.beginPath();
-                  context.rect(rect[0], rect[1], rect[2] - rect[0], rect[3] - rect[1]);
-                  context.fill();
-                  context.stroke();
-                }
-              });
+                  textContent.items.forEach(function (textItem) {
+                    if (textItem.str.includes(text)) {
+                      let rect = viewport.convertToViewportRectangle(textItem.transform);
 
-              context.restore();
+                      context.beginPath();
+                      context.rect(rect[0], rect[1], rect[2] - rect[0], rect[3] - rect[1]);
+                      context.fill();
+                      context.stroke();
+                    }
+                  });
+
+                  context.restore();
+                });
             })
             .catch(function (error) {
               console.error(error);
