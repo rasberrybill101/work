@@ -866,54 +866,74 @@ $(document).ready(function() {
         }
     });
 
-    function highlightText(text) {
-        if (!pdfInstance) {
-            console.error('PDF document not loaded');
-            return;
-        }
-        if (!canvas || !context) {
-            console.error('Canvas element not found');
-            return;
-        }
-
-        // Clear previous highlights
-        context.clearRect(0, 0, canvas.width, canvas.height);
-
-        // Iterate through each page of the PDF
-        let numPages = pdfInstance.numPages;
-        let pagePromises = [];
-
-        for (let pageNum = 1; pageNum <= numPages; pageNum++) {
-            pagePromises.push(pdfInstance.getPage(pageNum));
-        }
-
-        Promise.all(pagePromises)
-            .then(function(pages) {
-                // Iterate through each page and highlight the text occurrences
-                pages.forEach(function(page) {
-                    page.getTextContent()
-                        .then(function(textContent) {
-                            textContent.items.forEach(function(textItem) {
-                                if (textItem.str.includes(text)) {
-                                    let rect = page.getViewport({ scale: 1 }).convertToViewportRectangle(textItem.transform);
-
-                                    // Draw a highlight rectangle
-                                    context.beginPath();
-                                    context.rect(rect[0], rect[1], rect[2] - rect[0], rect[3] - rect[1]);
-                                    context.fillStyle = 'yellow';
-                                    context.globalAlpha = 0.5;
-                                    context.fill();
-                                    context.closePath();
-                                }
-                            });
-                        })
-                        .catch(function(error) {
-                            console.error(error);
-                        });
-                });
-            })
-            .catch(function(error) {
-                console.error(error);
-            });
+function highlightText(text) {
+    if (!pdfInstance) {
+        console.error('PDF document not loaded');
+        return;
     }
+    if (!canvas || !context) {
+        console.error('Canvas element not found');
+        return;
+    }
+
+    // Clear previous highlights
+    context.clearRect(0, 0, canvas.width, canvas.height);
+
+    // Iterate through each page of the PDF
+    let numPages = pdfInstance.numPages;
+    let pagePromises = [];
+
+    for (let pageNum = 1; pageNum <= numPages; pageNum++) {
+        pagePromises.push(pdfInstance.getPage(pageNum));
+    }
+
+    Promise.all(pagePromises)
+        .then(function(pages) {
+            // Render the PDF pages on the canvas
+            let renderPromises = pages.map(function(page) {
+                let viewport = page.getViewport({ scale: 1 });
+                canvas.height = viewport.height;
+                canvas.width = viewport.width;
+
+                let renderContext = {
+                    canvasContext: context,
+                    viewport: viewport
+                };
+
+                return page.render(renderContext).promise;
+            });
+
+            Promise.all(renderPromises)
+                .then(function() {
+                    // Iterate through each page and highlight the text occurrences
+                    pages.forEach(function(page) {
+                        page.getTextContent()
+                            .then(function(textContent) {
+                                textContent.items.forEach(function(textItem) {
+                                    if (textItem.str.includes(text)) {
+                                        let rect = page.getViewport({ scale: 1 }).convertToViewportRectangle(textItem.transform);
+
+                                        // Draw a highlight rectangle
+                                        context.beginPath();
+                                        context.rect(rect[0], rect[1], rect[2] - rect[0], rect[3] - rect[1]);
+                                        context.fillStyle = 'yellow';
+                                        context.globalAlpha = 0.5;
+                                        context.fill();
+                                        context.closePath();
+                                    }
+                                });
+                            })
+                            .catch(function(error) {
+                                console.error(error);
+                            });
+                    });
+                })
+                .catch(function(error) {
+                    console.error(error);
+                });
+        })
+        .catch(function(error) {
+            console.error(error);
+        });
+}
 });
