@@ -294,12 +294,8 @@ from flask import Flask, jsonify, send_from_directory
 from flask_cors import CORS
 import os
 
-app = Flask(__name__, static_folder='.')
+app = Flask(__name__, static_url_path='', static_folder='.')
 CORS(app)  # This will enable CORS for all routes
-
-@app.route('/')
-def serve_index():
-    return send_from_directory('.', 'index.html')
 
 @app.route('/pdfs')
 def get_pdfs():
@@ -309,6 +305,14 @@ def get_pdfs():
 @app.route('/pdfs/<path:filename>')
 def get_pdf(filename):
     return send_from_directory('./pdfs', filename)
+
+@app.route('/')
+def serve_index():
+    return send_from_directory('.', 'index.html')
+
+@app.route('/<path:path>')
+def serve_file(path):
+    return send_from_directory('.', path)
 
 if __name__ == '__main__':
     app.run(port=9009)
