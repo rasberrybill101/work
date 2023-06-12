@@ -87,15 +87,15 @@ $(document).ready(function() {
     }
   });
 
-	// Handle search button click
-	$('#search-button').on('click', function() {
-	  if (pdfDisplayed) {
-		let pdfFilename = $('#pdf-filename').val(); // PDF filename from the input field
-		let searchText = $('#search-text').val(); // search text
+// Handle search button click
+$('#search-button').on('click', function() {
+  if (pdfDisplayed) {
+    let pdfFilename = $('#middle-right-lower .list-group-item.active').text();
+    let searchText = $('#search-text').val();
 
-		fetchHighlightPositions('/search', pdfFilename, searchText);
-	  }
-	});
+    fetchHighlightPositions('/search', pdfFilename, searchText);
+  }
+});
 
 
 function fetchHighlightPositions(url, pdfFilename, searchText) {
