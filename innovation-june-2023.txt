@@ -773,6 +773,7 @@ $(document).ready(function() {
 $(document).ready(function() {
     let pdfDisplayed = false;
     let searchText = "";
+    let pdfInstance = null;
 
     // Fetch PDFs when page loads and populate list
     $.ajax({
@@ -804,6 +805,8 @@ $(document).ready(function() {
         // Load the PDF document
         pdfjsLib.getDocument(url)
             .promise.then(function(pdf) {
+                pdfInstance = pdf;
+
                 // Fetch the first page
                 pdf.getPage(1).then(function(page) {
                     let canvas = document.createElement('canvas');
@@ -855,6 +858,11 @@ $(document).ready(function() {
     });
 
     function highlightText(text) {
+        if (!pdfInstance) {
+            console.error('PDF document not loaded');
+            return;
+        }
+
         let container = document.getElementById('middle-left');
         let canvas = container.querySelector('canvas');
         if (!canvas) {
@@ -868,30 +876,41 @@ $(document).ready(function() {
             return;
         }
 
-        let pdf = canvas.pdfDocument;
-        if (!pdf) {
-            console.error('PDF document not loaded');
-            return;
+        // Clear previous highlights
+        context.clearRect(0, 0, canvas.width, canvas.height);
+
+        // Iterate through each page of the PDF
+        let numPages = pdfInstance.numPages;
+        let pagePromises = [];
+
+        for (let pageNum = 1; pageNum <= numPages; pageNum++) {
+            pagePromises.push(pdfInstance.getPage(pageNum));
         }
 
-    // Clear previous highlights
-    context.clearRect(0, 0, canvas.width, canvas.height);
+		Promise.all(pagePromises)
+			.then(function(pages) {
+                // Iterate through each page and highlight the text occurrences
+                pages.forEach(function(page) {
+                    page.getTextContent()
+                        .then(function(textContent) {
+                            textContent.items.forEach(function(textItem) {
+                                if (textItem.str.includes(text)) {
+                                    let x = textItem.transform[4];
+                                    let y = canvas.height - textItem.transform[5];
+                                    let width = textItem.width;
+                                    let height = textItem.height;
 
-    pdf.getPage(1).then(function(page) {
-        page.getTextContent().then(function(textContent) {
-            textContent.items.forEach(function(textItem) {
-                if (textItem.str.includes(text)) {
-                    let x = textItem.transform[4];
-                    let y = canvas.height - textItem.transform[5];
-                    let width = textItem.width;
-                    let height = textItem.height;
-
-                    context.fillStyle = 'rgba(255, 255, 0, 0.3)';
-                    context.fillRect(x, y, width, height);
-                }
+                                    // Draw a highlight rectangle
+                                    context.fillStyle = 'yellow';
+                                    context.fillRect(x, y, width, height);
+                                }
+                            });
+                        });
+                });
+            })
+            .catch(function(error) {
+                console.error(error);
             });
-        });
-    });
-}
-
+    }
+});
 
