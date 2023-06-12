@@ -1,3 +1,39 @@
+from flask import Flask, render_template, request, jsonify
+import PyPDF2
+
+app = Flask(__name__)
+
+@app.route('/')
+def index():
+    return render_template('index.html')
+
+@app.route('/search', methods=['POST'])
+def search():
+    pdf_filename = request.form['pdf_filename']
+    search_text = request.form['search_text']
+
+    # Open the PDF file
+    with open(pdf_filename, 'rb') as file:
+        pdf_reader = PyPDF2.PdfReader(file)
+
+        # Search for the text and get the page and coordinates
+        result = []
+        for page_num, page in enumerate(pdf_reader.pages, start=1):
+            for word in page.extract_text().split():
+                if search_text.lower() in word.lower():
+                    result.append({
+                        'page': page_num,
+                        'x': word.bbox[0],
+                        'y': word.bbox[3]
+                    })
+
+    return jsonify(result)
+
+if __name__ == '__main__':
+    app.run(debug=True)
+
+===================================
+
 function displayPdf(url) {
   pdfDisplayed = true;
   let container = document.getElementById('middle-left');
