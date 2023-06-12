@@ -1,21 +1,54 @@
+function displayPdf(url) {
+  pdfDisplayed = true;
+  let container = document.getElementById('middle-left');
+  container.innerHTML = '';
+
+  // Create a hidden canvas for rendering the PDF
+  let hiddenCanvas = document.createElement('canvas');
+  hiddenCanvas.style.display = 'none';
+  container.appendChild(hiddenCanvas);
+
+  // Load the PDF document
+  pdfjsLib.getDocument(url)
+    .promise.then(function (pdf) {
+      pdfInstance = pdf;
+
+      // Fetch the first page
+      pdf.getPage(1).then(function (page) {
+        let viewport = page.getViewport({ scale: 1 });
+
+        // Set hidden canvas dimensions
+        hiddenCanvas.height = viewport.height;
+        hiddenCanvas.width = viewport.width;
+
+        // Render the PDF page on the hidden canvas
+        let renderContext = {
+          canvasContext: hiddenCanvas.getContext('2d'),
+          viewport: viewport
+        };
+        page.render(renderContext).promise.then(function () {
+          console.log('PDF rendered successfully');
+        });
+      });
+    })
+    .catch(function (error) {
+      console.error(error);
+    });
+}
+
 function highlightText(text) {
   if (!pdfInstance) {
     console.error('PDF document not loaded');
     return;
   }
-  if (!canvas || !context) {
-    console.error('Canvas element not found');
-    return;
-  }
 
-  // Create a temporary canvas for highlighting
-  let tempCanvas = document.createElement('canvas');
-  let tempContext = tempCanvas.getContext('2d');
-  tempCanvas.width = canvas.width;
-  tempCanvas.height = canvas.height;
+  let hiddenCanvas = document.querySelector('#middle-left canvas');
+  let hiddenContext = hiddenCanvas.getContext('2d');
+  let canvas = document.querySelector('#pdf-canvas');
+  let context = canvas.getContext('2d');
 
   // Clear previous highlights
-  tempContext.clearRect(0, 0, tempCanvas.width, tempCanvas.height);
+  context.clearRect(0, 0, canvas.width, canvas.height);
 
   // Iterate through each page of the PDF
   let numPages = pdfInstance.numPages;
@@ -31,26 +64,16 @@ function highlightText(text) {
 
           return page.getTextContent()
             .then(function (textContent) {
-              let renderContext = {
-                canvasContext: tempContext,
-                viewport: viewport,
-              };
+              textContent.items.forEach(function (textItem) {
+                if (textItem.str.includes(text)) {
+                  let rect = viewport.convertToViewportRectangle(textItem.transform);
 
-              // Render the page on the temporary canvas
-              return page.render(renderContext)
-                .promise
-                .then(function () {
-                  textContent.items.forEach(function (textItem) {
-                    if (textItem.str.includes(text)) {
-                      let rect = viewport.convertToViewportRectangle(textItem.transform);
-
-                      tempContext.save();
-                      tempContext.fillStyle = 'rgba(255, 255, 0, 0.5)';
-                      tempContext.fillRect(rect[0], rect[1], rect[2] - rect[0], rect[3] - rect[1]);
-                      tempContext.restore();
-                    }
-                  });
-                });
+                  context.save();
+                  context.fillStyle = 'rgba(255, 255, 0, 0.5)';
+                  context.fillRect(rect[0], rect[1], rect[2] - rect[0], rect[3] - rect[1]);
+                  context.restore();
+                }
+              });
             })
             .catch(function (error) {
               console.error(error);
@@ -62,9 +85,6 @@ function highlightText(text) {
   // Wait for all highlight promises to resolve
   Promise.all(highlightPromises)
     .then(function () {
-      // Draw the original canvas
-      context.clearRect(0, 0, canvas.width, canvas.height);
-      context.drawImage(tempCanvas, 0, 0);
       console.log('Text highlighted successfully');
     })
     .catch(function (error) {
