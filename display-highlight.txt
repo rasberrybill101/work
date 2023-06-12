@@ -91,7 +91,7 @@ function fetchHighlightPositions(url, text) {
   return new Promise(function(resolve, reject) {
     // Make a POST request to the Flask server to fetch the highlight positions
     $.ajax({
-      url: 'http://localhost:9009/highlight-positions',
+      url: 'http://localhost:9010/highlight-positions',
       type: 'POST',
       data: {
         pdfUrl: url,
