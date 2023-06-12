@@ -866,55 +866,67 @@ $(document).ready(function() {
         }
     });
 
-    function highlightText(text) {
-        if (!pdfInstance) {
-            console.error('PDF document not loaded');
-            return;
-        }
-        if (!canvas || !context) {
-            console.error('Canvas element not found');
-            return;
-        }
+function highlightText(text) {
+  if (!pdfInstance) {
+    console.error('PDF document not loaded');
+    return;
+  }
+  if (!canvas || !context) {
+    console.error('Canvas element not found');
+    return;
+  }
 
-        // Clear previous highlights
-        context.clearRect(0, 0, canvas.width, canvas.height);
+  // Clear previous highlights
+  context.clearRect(0, 0, canvas.width, canvas.height);
 
-        // Iterate through each page of the PDF
-        let numPages = pdfInstance.numPages;
-        let pagePromises = [];
+  // Iterate through each page of the PDF
+  let numPages = pdfInstance.numPages;
 
-        for (let pageNum = 1; pageNum <= numPages; pageNum++) {
-            pagePromises.push(pdfInstance.getPage(pageNum));
-        }
+  // Define an array to store the highlight promises
+  let highlightPromises = [];
 
-        Promise.all(pagePromises)
-            .then(function(pages) {
-                // Iterate through each page and highlight the text occurrences
-                pages.forEach(function(page) {
-                    page.getTextContent()
-                        .then(function(textContent) {
-                            let viewport = page.getViewport({ scale: 1 });
+  for (let pageNum = 1; pageNum <= numPages; pageNum++) {
+    highlightPromises.push(
+      pdfInstance.getPage(pageNum)
+        .then(function (page) {
+          return page.getTextContent()
+            .then(function (textContent) {
+              let viewport = page.getViewport({ scale: 1 });
+              let transform = viewport.transform;
 
-                            textContent.items.forEach(function(textItem) {
-                                if (textItem.str.includes(text)) {
-                                    let rect = viewport.convertToViewportRectangle(textItem.transform);
+              context.save();
+              context.fillStyle = 'rgba(255, 255, 0, 0.5)';
+              context.lineWidth = 1;
+              context.strokeStyle = 'rgba(255, 255, 0, 1)';
 
-                                    // Draw a highlight rectangle
-                                    context.beginPath();
-                                    context.rect(rect[0], rect[1], rect[2] - rect[0], rect[3] - rect[1]);
-                                    context.fillStyle = 'rgba(255, 255, 0, 0.5)';
-                                    context.fill();
-                                    context.closePath();
-                                }
-                            });
-                        })
-                        .catch(function(error) {
-                            console.error(error);
-                        });
-                });
+              textContent.items.forEach(function (textItem) {
+                if (textItem.str.includes(text)) {
+                  let rect = viewport.convertToViewportRectangle(textItem.transform);
+
+                  context.beginPath();
+                  context.rect(rect[0], rect[1], rect[2] - rect[0], rect[3] - rect[1]);
+                  context.fill();
+                  context.stroke();
+                }
+              });
+
+              context.restore();
             })
-            .catch(function(error) {
-                console.error(error);
+            .catch(function (error) {
+              console.error(error);
             });
-    }
+        })
+    );
+  }
+
+  // Wait for all highlight promises to resolve
+  Promise.all(highlightPromises)
+    .then(function () {
+      console.log('Text highlighted successfully');
+    })
+    .catch(function (error) {
+      console.error('Error highlighting text:', error);
+    });
+}
+
 });
