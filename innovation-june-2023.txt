@@ -204,7 +204,7 @@ html, body {
 
 #middle-divider {
     background-color: #0000f0;
-    width: 10px;
+    width: 5px;
     cursor: ew-resize;
 }
 
@@ -217,14 +217,14 @@ $(function() {
     var pdfjsLib = window['pdfjs-dist/build/pdf'];
 
     // The workerSrc property shall be specified.
-    pdfjsLib.GlobalWorkerOptions.workerSrc = 'pdf.worker.js';
+    pdfjsLib.GlobalWorkerOptions.workerSrc = '/pdf.worker.js';
 
     fetch('http://localhost:9009/pdfs')
     .then(response => response.json())
     .then(data => {
-        const pdfList = document.getElementById('pdf-list');
+        const pdfList = document.getElementById('middle-right-lower');
         data.forEach(file => {
-            const listItem = document.createElement('li');
+            const listItem = document.createElement('div');
             listItem.textContent = file;
             listItem.className = 'list-group-item';
             listItem.addEventListener('click', function() {
