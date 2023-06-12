@@ -1,0 +1,280 @@
+code for a simple site that has 4 areas. A top edit box will be at the top and run the entire width. It should be 2 lines high. The middle area will be split into 2 vertical areas. The left area will display a displays a PDF document, and a right area will display text. Each window will be full height of browser and half the browser width. Put a divider bar that can be dragged left or right to change the width either window. Use PDF.js or similar to display the PDF. The bottom area will run the entire width and will contain an edit area that will enable the location of the PDF document to be entered. On the right of the bottom area will be a button, which when clicked will display the PDF document that has been entered in the bottom left area. Thus the simple site will have 3 areas : top, middle, and bottom. Where:
+top is a text input field that fills the entire width and is 1 line high
+bottom consists of a text input field on the left and a button on the right. bottom will fill the entire width
+middle fills the all the remaining space between top and bottom. It is split into 2 vertical areas. There will be a divider between the 2 areas that can be pulled left and right to adjust the horizontal size of each area such that both areas always fill the entire width of the middle. The position of the vertical divider will determine the width of each area. The middle left area will contain a pdf document whose location is specified in the bottom input text box. The right area will contain text.
+I am open to the use of PDF.js for displaying the PDF.
+
+The html, css, and javascript will be in the directory "app", and the pdfs will be in the directory "app/pdfs". I have a server spun up with "python -m http.server 9009" started in directory "app".
+
+========================index.html
+<!-- index.html -->
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Simple Site</title>
+    <link rel="stylesheet" type="text/css" href="style.css">
+</head>
+<body>
+    <div id="top">
+        <textarea id="top-input" rows="2"></textarea>
+    </div>
+
+    <div id="middle">
+        <div id="middle-left">
+            <canvas id="pdf-renderer"></canvas>
+        </div>
+        <div id="middle-right">
+            <textarea id="middle-right-input"></textarea>
+        </div>
+    </div>
+
+    <div id="bottom">
+        <textarea id="pdf-location-input"></textarea>
+        <button id="load-pdf">Load PDF</button>
+    </div>
+
+    <script src="jquery.min.js"></script>
+    <script src="jquery-ui.js"></script>
+    <script src="pdf.js"></script>
+    <script src="main.js"></script>
+</body>
+</html>
+
+===================style.css
+html, body {
+    height: 100%;
+    margin: 0;
+    padding: 0;
+    overflow: hidden;
+}
+
+#top, #bottom {
+    width: 100%;
+}
+
+#top-input, #pdf-location-input, #middle-right-input {
+    width: 100%;
+}
+
+#middle {
+    display: flex;
+    height: calc(100% - 4em); /* Adjust as per the height of top and bottom */
+}
+
+#middle-left, #middle-right {
+    flex: 1;
+    overflow: auto;
+}
+
+#middle-right {
+    border-left: 1px solid #000;
+    resize: horizontal;
+    overflow: auto;
+}
+
+#pdf-renderer {
+    width: 100%;
+}
+
+===================== main.js
+$(function() {
+    var pdfjsLib = window['pdfjs-dist/build/pdf'];
+
+    // The workerSrc property shall be specified.
+    pdfjsLib.GlobalWorkerOptions.workerSrc = 'pdf.worker.js';
+
+    $("#load-pdf").click(function() {
+        var url = $("#pdf-location-input").val();
+
+        // Asynchronously downloads PDF.
+        var loadingTask = pdfjsLib.getDocument(url);
+        loadingTask.promise.then(function(pdf) {
+            console.log('PDF loaded');
+            
+            // Fetch the first page
+            var pageNumber = 1;
+            pdf.getPage(pageNumber).then(function(page) {
+                console.log('Page loaded');
+                
+                var scale = 1.5;
+                var viewport = page.getViewport({scale: scale});
+
+                // Prepare canvas using PDF page dimensions
+                var canvas = $("#pdf-renderer")[0];
+                var context = canvas.getContext('2d');
+                canvas.height = viewport.height;
+                canvas.width = viewport.width;
+
+                // Render PDF page into canvas context
+                var renderContext = {
+                    canvasContext: context,
+                    viewport: viewport
+                };
+                var renderTask = page.render(renderContext);
+                renderTask.promise.then
+                renderTask.promise.then(function () {
+                    console.log('Page rendered');
+                });
+            });
+        }, function (reason) {
+            // PDF loading error
+            console.error(reason);
+        });
+    });
+
+    // Handle resizing of the middle-right area
+    $('#middle-right').resizable({
+        handles: 'w',
+        resize: function (event, ui) {
+            $('#middle-left').width($('#middle').width() - ui.size.width);
+        }
+    });
+});
+
+Some updates:
+jquery library is named "jquery-3.7.0.min"
+Please make the following modifications:
+1) remove the bottom edit/button, and instead split the right side of the middle vertical area (which now extends from just below the bottom of the top edit all the way to the bottom) into two parts horizontally to create a "middle_right_upper" and "middle_right_lower" part. Use the "middle_right_upper" part to display some text. On the "middle_right_lower" part, show the list of files in the "app/pdfs" folder. Enable clicking on a filename to display the pdf file on the middle left window.
+
+2) Use Bootstrap CSS framework for the UI
+
+------------ index.html
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Simple Site</title>
+    <link rel="stylesheet" type="text/css" href="bootstrap.min.css">
+    <link rel="stylesheet" type="text/css" href="style.css">
+</head>
+<body>
+    <div id="top" class="mb-3">
+        <textarea id="top-input" rows="2" class="form-control"></textarea>
+    </div>
+
+    <div id="middle" class="row g-0">
+        <div id="middle-left" class="col">
+            <canvas id="pdf-renderer"></canvas>
+        </div>
+        <div id="middle-divider" class="col-auto">
+            <div id="resizer" class="bg-light border"></div>
+        </div>
+        <div id="middle-right" class="col">
+            <div id="middle-right-upper" class="border-bottom">
+                <textarea id="middle-right-upper-input" class="form-control"></textarea>
+            </div>
+            <div id="middle-right-lower" class="border-top">
+                <ul id="pdf-list" class="list-group list-group-flush"></ul>
+            </div>
+        </div>
+    </div>
+
+    <script src="jquery-3.7.0.min.js"></script>
+    <script src="jquery-ui.min.js"></script>
+    <script src="pdf.min.js"></script>
+    <script src="main.js"></script>
+</body>
+</html>
+
+------------------- style.js
+html, body {
+    height: 100%;
+    margin: 0;
+    padding: 0;
+    overflow: hidden;
+}
+
+#top, #bottom {
+    width: 100%;
+}
+
+#middle {
+    height: calc(100% - 4em);
+}
+
+#middle-left, #middle-right {
+    height: 100%;
+    overflow: auto;
+}
+
+#middle-right-upper, #middle-right-lower {
+    height: 50%;
+    overflow: auto;
+}
+
+#middle-divider {
+    width: 10px;
+    cursor: ew-resize;
+}
+
+#pdf-renderer {
+    width: 100%;
+}
+
+###################################################################################
+------------------ main.js
+$(function() {
+    var pdfjsLib = window['pdfjs-dist/build/pdf'];
+
+    // The workerSrc property shall be specified.
+    pdfjsLib.GlobalWorkerOptions.workerSrc = 'pdf.worker.js';
+
+    fetch('http://localhost:9009/pdfs')
+    .then(response => response.json())
+    .then(data => {
+        const pdfList = document.getElementById('pdf-list');
+        data.forEach(file => {
+            const listItem = document.createElement('li');
+            listItem.textContent = file;
+            listItem.className = 'list-group-item';
+            listItem.addEventListener('click', function() {
+                loadPdf('http://localhost:9009/pdfs/' + file);
+            });
+            pdfList.appendChild(listItem);
+        });
+    });
+
+    function loadPdf(url) {
+        // Asynchronously downloads PDF.
+        var loadingTask = pdfjsLib.getDocument(url);
+        loadingTask.promise.then(function(pdf) {
+            console.log('PDF loaded');
+            
+            // Fetch the first page
+            var pageNumber = 1;
+            pdf.getPage(pageNumber).then(function(page) {
+                console.log('Page loaded');
+                
+                var scale = 1.5;
+                var viewport = page.getViewport({scale: scale});
+
+                // Prepare canvas using PDF page dimensions
+                var canvas = $("#pdf-renderer")[0];
+                var context = canvas.getContext('2d');
+                canvas.height = viewport.height;
+                canvas.width = viewport.width;
+
+                // Render PDF page into canvas context
+                var renderContext = {
+                    canvasContext: context,
+                    viewport: viewport
+                };
+                var renderTask = page.render(renderContext);
+                renderTask.promise.then(function () {
+                    console.log('Page rendered');
+                });
+            });
+        }, function (reason) {
+            // PDF loading error
+            console.error(reason);
+        });
+    }
+
+    // Handle resizing of the middle-right area
+    $('#middle-divider').draggable({
+        axis: 'x',
+        drag: function (event, ui) {
+            $('#middle-left').width(ui.position.left);
+            $('#middle-right').width($('#middle').width() - ui.position.left);
+        }
+    });
+});

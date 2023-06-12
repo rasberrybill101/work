@@ -32,7 +32,7 @@ Step 5
 Normalize the sentence starting position by expressing it as a proportion of the number of sentences present. For instance in the example above, the sentence "I went to work today" will be position 0.667 since it is at position 2 of 3 (second sentence out of 3, or 2/3 which is 0.667)
 
 Step 6
-For all sentences with jaccard score greater than zero, return a tab separated file consisting of the following columns:
+For all sentences with jaccard score greater than zero, and with 'complaint_disat' equal to either 'Complaint' or 'No Complaint', then return a tab separated file consisting of the following columns:
 conv_id (from input file)
 complaint_disat (from input file)
 call_duration (from input file)
@@ -42,4 +42,6 @@ lcs (longest common subsequence score)
 norm_position (normalized position of sentence)
 phrase (the phrase used to calculate jaccard, lcs and norm_position scores
 
-group the data by conv_id, and order of appearance of sentences so t
+group the data by conv_id, and order of appearance of sentences so that the lines in the output csv file are ordered by conv_id and the sentences that belong to the same conv_id appear in the order that they occurred in the input csv file.
+
+Do all comparisons in lower case so that case sensitivity does not cause problems with string and token comparisons.
