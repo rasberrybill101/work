@@ -143,38 +143,58 @@ Please make the following modifications:
 <!DOCTYPE html>
 <html>
 <head>
+    <meta charset="utf-8">
     <title>FUEL Prototype</title>
-    <link rel="stylesheet" type="text/css" href="bootstrap.min.css">
-    <link rel="stylesheet" type="text/css" href="style.css">
+    <link rel="stylesheet" href="/static/css/bootstrap.min.css">
+    <link rel="stylesheet" href="/static/css/jquery-ui.min.css">
+    <style>
+        #middle {
+            display: flex;
+            flex-direction: row;
+            height: calc(100vh - 40px);
+        }
+        #middle-left, #middle-right {
+            flex-grow: 1;
+            overflow: auto;
+            padding: 10px;
+        }
+        #middle-divider {
+            width: 10px;
+            cursor: col-resize;
+            background-color: #ccc;
+        }
+        #middle-right-upper, #middle-right-lower {
+            height: 50%;
+            overflow: auto;
+        }
+    </style>
 </head>
 <body>
-    <div id="top" class="mb-3">
-        <textarea id="top-input" rows="2" class="form-control"></textarea>
-    </div>
-
-    <div id="middle" class="row g-0">
-        <div id="middle-left" class="col">
-            <canvas id="pdf-renderer"></canvas>
+    <div class="container-fluid">
+        <div id="top" class="row">
+            <textarea class="form-control" rows="2"></textarea>
         </div>
-        <div id="middle-divider" class="col-auto">
-            <div id="resizer" class="bg-light border"></div>
-        </div>
-        <div id="middle-right" class="col">
-            <div id="middle-right-upper" class="border-bottom">
-                <textarea id="middle-right-upper-input" class="form-control"></textarea>
+        <div id="middle" class="row">
+            <div id="middle-left">
+                <canvas id="pdf-renderer"></canvas>
             </div>
-            <div id="middle-right-lower" class="border-top">
-                <ul id="pdf-list" class="list-group list-group-flush"></ul>
+            <div id="middle-divider"></div>
+            <div id="middle-right">
+                <div id="middle-right-upper">
+                    <p>This is some text in the upper part of the right side.</p>
+                </div>
+                <div id="middle-right-lower" class="list-group"></div>
             </div>
         </div>
     </div>
-
-    <script src="jquery-3.7.0.min.js"></script>
-    <script src="jquery-ui.min.js"></script>
-    <script src="pdf.min.js"></script>
-    <script src="main.js"></script>
+    <script src="/static/js/jquery-3.7.0.min.js"></script>
+    <script src="/static/js/jquery-ui.min.js"></script>
+    <script src="/static/js/pdf.js"></script>
+    <script src="/static/js/pdf.worker.js"></script>
+    <script src="/static/js/main.js"></script>
 </body>
 </html>
+
 
 ------------------- style.js
 html, body {
