@@ -335,6 +335,9 @@ def serve_pdf(filename):
 if __name__ == '__main__':
     app.run(port=9009)
 
+if __name__ == '__main__':
+    app.run(port=9009)
+
 - - - - - - -
 pip install flask flask_cors
 - - - - - - -
