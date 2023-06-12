@@ -138,6 +138,7 @@ Please make the following modifications:
 
 2) Use Bootstrap CSS framework for the UI
 
+###################################################################################
 ------------ index.html
 <!DOCTYPE html>
 <html>
@@ -210,7 +211,6 @@ html, body {
     width: 100%;
 }
 
-###################################################################################
 ------------------ main.js
 $(function() {
     var pdfjsLib = window['pdfjs-dist/build/pdf'];
