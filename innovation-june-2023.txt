@@ -849,68 +849,71 @@ $(document).ready(function() {
         }
     });
 
-    // Handle search button click
-    $('#search-button').on('click', function() {
-        if (pdfDisplayed) {
-            searchText = $('#search-text').val();
-            highlightText(searchText);
-        }
-    });
+// Handle search button click
+$('#search-button').on('click', function() {
+    if (pdfDisplayed) {
+        searchText = $('#search-text').val();
+        highlightText(searchText);
+    }
+});
 
-    function highlightText(text) {
-        if (!pdfInstance) {
-            console.error('PDF document not loaded');
-            return;
-        }
+function highlightText(text) {
+    if (!pdfInstance) {
+        console.error('PDF document not loaded');
+        return;
+    }
 
-        let container = document.getElementById('middle-left');
-        let canvas = container.querySelector('canvas');
-        if (!canvas) {
-            console.error('Canvas element not found');
-            return;
-        }
+    let container = document.getElementById('middle-left');
+    let canvas = container.querySelector('canvas');
+    if (!canvas) {
+        console.error('Canvas element not found');
+        return;
+    }
 
-        let context = canvas.getContext('2d');
-        if (!context) {
-            console.error('Could not get canvas context');
-            return;
-        }
+    let context = canvas.getContext('2d');
+    if (!context) {
+        console.error('Could not get canvas context');
+        return;
+    }
 
-        // Clear previous highlights
-        context.clearRect(0, 0, canvas.width, canvas.height);
+    // Clear previous highlights
+    context.clearRect(0, 0, canvas.width, canvas.height);
 
-        // Iterate through each page of the PDF
-        let numPages = pdfInstance.numPages;
-        let pagePromises = [];
+    // Iterate through each page of the PDF
+    let numPages = pdfInstance.numPages;
+    let pagePromises = [];
 
-        for (let pageNum = 1; pageNum <= numPages; pageNum++) {
-            pagePromises.push(pdfInstance.getPage(pageNum));
-        }
+    for (let pageNum = 1; pageNum <= numPages; pageNum++) {
+        pagePromises.push(pdfInstance.getPage(pageNum));
+    }
 
-		Promise.all(pagePromises)
-			.then(function(pages) {
-                // Iterate through each page and highlight the text occurrences
-                pages.forEach(function(page) {
-                    page.getTextContent()
-                        .then(function(textContent) {
-                            textContent.items.forEach(function(textItem) {
-                                if (textItem.str.includes(text)) {
-                                    let x = textItem.transform[4];
-                                    let y = canvas.height - textItem.transform[5];
-                                    let width = textItem.width;
-                                    let height = textItem.height;
+    Promise.all(pagePromises)
+        .then(function(pages) {
+            // Iterate through each page and highlight the text occurrences
+            pages.forEach(function(page) {
+                page.getTextContent()
+                    .then(function(textContent) {
+                        textContent.items.forEach(function(textItem) {
+                            if (textItem.str.includes(text)) {
+                                let x = textItem.transform[4];
+                                let y = canvas.height - textItem.transform[5];
+                                let width = textItem.width;
+                                let height = textItem.height;
 
-                                    // Draw a highlight rectangle
-                                    context.fillStyle = 'yellow';
-                                    context.fillRect(x, y, width, height);
-                                }
-                            });
+                                // Draw a highlight rectangle
+                                context.fillStyle = 'yellow';
+                                context.fillRect(x, y, width, height);
+                            }
                         });
-                });
-            })
-            .catch(function(error) {
-                console.error(error);
+                    })
+                    .catch(function(error) {
+                        console.error(error);
+                    });
             });
+        })
+        .catch(function(error) {
+            console.error(error);
+        });
     }
 });
 
