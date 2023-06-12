@@ -500,3 +500,378 @@ $(document).ready(function() {
     });
 });
 
+---------------- do some updates
+Given the following existing code which is used to display a PDF document using PDF.js:
+
+$(document).ready(function() {
+    // Fetch PDFs when page loads and populate list
+    $.ajax({
+        url: 'http://localhost:9009/pdfs',
+        type: 'GET',
+        success: function(res) {
+            let pdfs = res.files;
+            let pdfList = $('#middle-right-lower');
+            pdfList.empty();  // Clear existing list
+
+            // Append each PDF as a new list item
+            pdfs.forEach(function(pdf) {
+                let listItem = $('<div></div>').text(pdf);
+                listItem.addClass('list-group-item');
+                listItem.on('click', function() {
+                    let path = `http://localhost:9009/pdfs/${pdf}`;
+                    displayPdf(path);
+                });
+                pdfList.append(listItem);
+            });
+        }
+    });
+
+    function displayPdf(url) {
+        let container = document.getElementById('middle-left');
+        container.innerHTML = '';
+
+        // Load the PDF document
+        pdfjsLib.getDocument(url)
+        .promise.then(function(pdf) {
+            // Fetch the first page
+            pdf.getPage(1).then(function(page) {
+                let canvas = document.createElement('canvas');
+                let context = canvas.getContext('2d');
+                let viewport = page.getViewport({ scale: 1 });
+
+                canvas.height = viewport.height;
+                canvas.width = viewport.width;
+
+                // Render the PDF page on the canvas
+                let renderContext = {
+                    canvasContext: context,
+                    viewport: viewport
+                };
+                page.render(renderContext).promise.then(function() {
+                    container.appendChild(canvas);
+                });
+            });
+        }).catch(function(error) {
+            console.error(error);
+        });
+    }
+
+    // Handle resizing of the middle-right area
+    $('#middle-divider').draggable({
+        axis: 'x',
+        containment: 'parent',
+        drag: function(event, ui) {
+            let totalWidth = $('#middle').width();
+            let leftWidth = ui.position.left;
+            let rightWidth = totalWidth - leftWidth;
+            
+            $('#middle-left').css('flex', 'none').width(leftWidth);
+            $('#middle-right').css('flex', 'none').width(rightWidth);
+        },
+        stop: function(event, ui) {
+            $('#middle-left').css('flex', '');
+            $('#middle-right').css('flex', '');
+        }
+    });
+});
+
+given the text entered into the top textarea, Highlight the places in the displayed pdf where the text occurs
+
+--------- 
+given the following existing UI code:
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>FUEL Prototype</title>
+    <link rel="stylesheet" href="/static/css/bootstrap.min.css">
+    <link rel="stylesheet" href="/static/css/jquery-ui.min.css">
+    <style>
+        #middle {
+            display: flex;
+            flex-direction: row;
+            height: calc(100vh - 40px);
+        }
+        #middle-left, #middle-right {
+            flex-grow: 1;
+            overflow: auto;
+            padding: 10px;
+        }
+        #middle-divider {
+            width: 10px;
+            cursor: col-resize;
+            background-color: #ccc;
+        }
+        #middle-right-upper, #middle-right-lower {
+            height: 50%;
+            overflow: auto;
+        }
+    </style>
+</head>
+<body>
+    <div class="container-fluid">
+        <div id="top" class="row">
+            <textarea class="form-control" rows="2"></textarea>
+        </div>
+        <div id="middle" class="row">
+            <div id="middle-left">
+                <canvas id="pdf-renderer"></canvas>
+            </div>
+            <div id="middle-divider"></div>
+            <div id="middle-right">
+                <div id="middle-right-upper">
+                    <p>This is some text in the upper part of the right side.</p>
+                </div>
+                <div id="middle-right-lower" class="list-group"></div>
+            </div>
+        </div>
+    </div>
+
+</body>
+</html>
+
+Change the top textarea from a textarea into a div that contains an inputtext and a button at the right. When the button is clicked, then highlight all occurrences of the text within the PDF document displayed in the middle left element using PDF.js. If there is no pdf displayed, then ignore the button click.
+
+The existing working code to display the PDF document is:
+$(document).ready(function() {
+    // Fetch PDFs when page loads and populate list
+    $.ajax({
+        url: 'http://localhost:9009/pdfs',
+        type: 'GET',
+        success: function(res) {
+            let pdfs = res.files;
+            let pdfList = $('#middle-right-lower');
+            pdfList.empty();  // Clear existing list
+
+            // Append each PDF as a new list item
+            pdfs.forEach(function(pdf) {
+                let listItem = $('<div></div>').text(pdf);
+                listItem.addClass('list-group-item');
+                listItem.on('click', function() {
+                    let path = `http://localhost:9009/pdfs/${pdf}`;
+                    displayPdf(path);
+                });
+                pdfList.append(listItem);
+            });
+        }
+    });
+
+    function displayPdf(url) {
+        let container = document.getElementById('middle-left');
+        container.innerHTML = '';
+
+        // Load the PDF document
+        pdfjsLib.getDocument(url)
+        .promise.then(function(pdf) {
+            // Fetch the first page
+            pdf.getPage(1).then(function(page) {
+                let canvas = document.createElement('canvas');
+                let context = canvas.getContext('2d');
+                let viewport = page.getViewport({ scale: 1 });
+
+                canvas.height = viewport.height;
+                canvas.width = viewport.width;
+
+                // Render the PDF page on the canvas
+                let renderContext = {
+                    canvasContext: context,
+                    viewport: viewport
+                };
+                page.render(renderContext).promise.then(function() {
+                    container.appendChild(canvas);
+                });
+            });
+        }).catch(function(error) {
+            console.error(error);
+        });
+    }
+
+    // Handle resizing of the middle-right area
+    $('#middle-divider').draggable({
+        axis: 'x',
+        containment: 'parent',
+        drag: function(event, ui) {
+            let totalWidth = $('#middle').width();
+            let leftWidth = ui.position.left;
+            let rightWidth = totalWidth - leftWidth;
+            
+            $('#middle-left').css('flex', 'none').width(leftWidth);
+            $('#middle-right').css('flex', 'none').width(rightWidth);
+        },
+        stop: function(event, ui) {
+            $('#middle-left').css('flex', '');
+            $('#middle-right').css('flex', '');
+        }
+    });
+});
+
+=================== updates for highlighting:
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>FUEL Prototype</title>
+    <link rel="stylesheet" href="/static/css/bootstrap.min.css">
+    <link rel="stylesheet" href="/static/css/jquery-ui.min.css">
+    <style>
+        #middle {
+            display: flex;
+            flex-direction: row;
+            height: calc(100vh - 40px);
+        }
+        #middle-left, #middle-right {
+            flex-grow: 1;
+            overflow: auto;
+            padding: 10px;
+        }
+        #middle-divider {
+            width: 10px;
+            cursor: col-resize;
+            background-color: #ccc;
+        }
+        #middle-right-upper, #middle-right-lower {
+            height: 50%;
+            overflow: auto;
+        }
+    </style>
+</head>
+<body>
+    <div class="container-fluid">
+        <div id="top" class="row">
+            <div class="input-group">
+                <input type="text" class="form-control" id="search-text" placeholder="Enter text">
+                <div class="input-group-append">
+                    <button class="btn btn-primary" id="search-button">Search</button>
+                </div>
+            </div>
+        </div>
+        <div id="middle" class="row">
+            <div id="middle-left">
+                <canvas id="pdf-renderer"></canvas>
+            </div>
+            <div id="middle-divider"></div>
+            <div id="middle-right">
+                <div id="middle-right-upper">
+                    <p>This is some text in the upper part of the right side.</p>
+                </div>
+                <div id="middle-right-lower" class="list-group"></div>
+            </div>
+        </div>
+    </div>
+
+    <script src="/static/js/jquery-3.7.0.min.js"></script>
+    <script src="/static/js/jquery-ui.min.js"></script>
+    <script src="/static/js/pdf.js"></script>
+    <script src="/static/js/pdf.worker.js"></script>
+    <script src="/static/js/main.js"></script>
+</body>
+</html>
+
+
+---
+
+$(document).ready(function() {
+    let pdfDisplayed = false;
+
+    // Fetch PDFs when page loads and populate list
+    $.ajax({
+        url: 'http://localhost:9010/pdfs',
+        type: 'GET',
+        success: function(res) {
+            let pdfs = res.files;
+            let pdfList = $('#middle-right-lower');
+            pdfList.empty();  // Clear existing list
+
+            // Append each PDF as a new list item
+            pdfs.forEach(function(pdf) {
+                let listItem = $('<div></div>').text(pdf);
+                listItem.addClass('list-group-item');
+                listItem.on('click', function() {
+                    let path = `http://localhost:9010/pdfs/${pdf}`;
+                    displayPdf(path);
+                });
+                pdfList.append(listItem);
+            });
+        }
+    });
+
+    function displayPdf(url) {
+        pdfDisplayed = true;
+        let container = document.getElementById('middle-left');
+        container.innerHTML = '';
+
+        // Load the PDF document
+        pdfjsLib.getDocument(url)
+        .promise.then(function(pdf) {
+            // Fetch the first page
+            pdf.getPage(1).then(function(page) {
+                let canvas = document.createElement('canvas');
+                let context = canvas.getContext('2d');
+                let viewport = page.getViewport({ scale: 1 });
+
+                canvas.height = viewport.height;
+                canvas.width = viewport.width;
+
+                // Render the PDF page on the canvas
+                let renderContext = {
+                    canvasContext: context,
+                    viewport: viewport
+                };
+                page.render(renderContext).promise.then(function() {
+                    container.appendChild(canvas);
+                });
+            });
+        }).catch(function(error) {
+            console.error(error);
+        });
+    }
+
+    // Handle resizing of the middle-right area
+    $('#middle-divider').draggable({
+        axis: 'x',
+        containment: 'parent',
+        drag: function(event, ui) {
+            let totalWidth = $('#middle').width();
+            let leftWidth = ui.position.left;
+            let rightWidth = totalWidth - leftWidth;
+            
+            $('#middle-left').css('flex', 'none').width(leftWidth);
+            $('#middle-right').css('flex', 'none').width(rightWidth);
+        },
+        stop: function(event, ui) {
+            $('#middle-left').css('flex', '');
+            $('#middle-right').css('flex', '');
+        }
+    });
+
+    // Handle search button click
+    $('#search-button').on('click', function() {
+        if (pdfDisplayed) {
+            let searchText = $('#search-text').val();
+            highlightText(searchText);
+        }
+    });
+
+    function highlightText(text) {
+        let canvas = document.querySelector('#pdf-renderer canvas');
+        let context = canvas.getContext('2d');
+        let pdf = canvas.pdfPageProxy.pdfDocument;
+
+        pdf.getPage(1).then(function(page) {
+            page.getTextContent().then(function(textContent) {
+                textContent.items.forEach(function(textItem) {
+                    if (textItem.str.includes(text)) {
+                        let x = textItem.transform[4];
+                        let y = canvas.height - textItem.transform[5];
+                        let width = textItem.width;
+                        let height = textItem.height;
+
+                        context.fillStyle = 'rgba(255, 255, 0, 0.3)';
+                        context.fillRect(x, y, width, height);
+                    }
+                });
+            });
+        });
+    }
+});
+
