@@ -893,34 +893,29 @@ function highlightText(text) {
             pages.forEach(function(page) {
                 page.getTextContent()
                     .then(function(textContent) {
-                        let textLayer = document.createElement('div');
-                        textLayer.className = 'textLayer';
-
                         let viewport = page.getViewport({ scale: 1 });
-                        textLayer.style.width = viewport.width + 'px';
-                        textLayer.style.height = viewport.height + 'px';
+                        let transform = viewport.transform;
+
+                        context.save();
+                        context.fillStyle = 'rgba(255, 255, 0, 0.5)';
+                        context.lineWidth = 1;
+                        context.strokeStyle = 'rgba(255, 255, 0, 1)';
 
                         textContent.items.forEach(function(textItem) {
                             if (textItem.str.includes(text)) {
-                                let span = document.createElement('span');
-                                span.textContent = textItem.str;
-
-                                let transform = pdfjsLib.Util.transform(
-                                    pdfjsLib.Util.transform(viewport.transform, textItem.transform),
+                                let rect = PDFJS.Util.transform(
+                                    PDFJS.Util.transform(viewport.transform, textItem.transform),
                                     [1, 0, 0, -1, 0, 0]
                                 );
 
-                                let style = 'left: ' + transform[4] + 'px; ' +
-                                            'top: ' + transform[5] + 'px; ' +
-                                            'font-size: ' + textItem.height + 'px;';
-
-                                span.style.cssText = style;
-                                textLayer.appendChild(span);
+                                context.beginPath();
+                                context.rect(rect[4], rect[5] - textItem.height, rect[2] - rect[0], textItem.height);
+                                context.fill();
+                                context.stroke();
                             }
                         });
 
-                        let canvasWrapper = document.getElementById('middle-left');
-                        canvasWrapper.appendChild(textLayer);
+                        context.restore();
                     })
                     .catch(function(error) {
                         console.error(error);
