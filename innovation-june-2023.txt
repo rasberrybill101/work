@@ -265,6 +265,7 @@ $(function() {
     fetch('http://localhost:9009/pdfs')
     .then(response => response.json())
     .then(data => {
+		console.log(data);
         const pdfList = document.getElementById('middle-right-lower');
         data.forEach(file => {
             const listItem = document.createElement('div');
@@ -334,11 +335,12 @@ $(function() {
 
 ------------- main.js 2
 $(document).ready(function() {
-    // Fetch PDFs when page loads and populate list
     $.ajax({
         url: 'http://localhost:9009/pdfs',
         type: 'GET',
         success: function(res) {
+            console.log(res); // Log the response to the console for inspection
+
             let pdfs = res.files;
             let pdfList = $('#middle-right-lower');
             pdfList.empty();  // Clear existing list
@@ -353,6 +355,9 @@ $(document).ready(function() {
                 });
                 pdfList.append(listItem);
             });
+        },
+        error: function(xhr, status, error) {
+            console.error(xhr.responseText); // Log the error response to the console
         }
     });
 
@@ -364,7 +369,7 @@ $(document).ready(function() {
             let totalWidth = $('#middle').width();
             let leftWidth = ui.position.left;
             let rightWidth = totalWidth - leftWidth;
-            
+
             $('#middle-left').css('flex', 'none').width(leftWidth);
             $('#middle-right').css('flex', 'none').width(rightWidth);
         },
