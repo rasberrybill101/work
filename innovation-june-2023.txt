@@ -310,29 +310,27 @@ $(function() {
 });
 
 ------------- flask server
-from flask import Flask, jsonify, send_from_directory
-from flask_cors import CORS
+from flask import Flask, render_template, send_from_directory
 import os
 
-app = Flask(__name__, static_url_path='', static_folder='.')
-CORS(app)  # This will enable CORS for all routes
-
-@app.route('/pdfs')
-def get_pdfs():
-    files = os.listdir('./pdfs')  # List all files in the "pdfs" directory
-    return jsonify(files)  # Return this list as JSON
-
-@app.route('/pdfs/<path:filename>')
-def get_pdf(filename):
-    return send_from_directory('./pdfs', filename)
+app = Flask(__name__, static_folder='static')
 
 @app.route('/')
-def serve_index():
-    return send_from_directory('.', 'index.html')
+def home():
+    return render_template('index.html')
 
-@app.route('/<path:path>')
-def serve_file(path):
-    return send_from_directory('.', path)
+@app.route('/static/<path:filename>')
+def staticfiles(filename):
+    return send_from_directory(app.static_folder, filename)
+
+@app.route('/pdfs')
+def list_pdfs():
+    files = os.listdir('pdfs')
+    return { 'files': files }
+
+@app.route('/pdfs/<path:filename>')
+def serve_pdf(filename):
+    return send_from_directory('pdfs', filename)
 
 if __name__ == '__main__':
     app.run(port=9009)
