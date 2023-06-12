@@ -8,6 +8,12 @@ function highlightText(text) {
     return;
   }
 
+  // Create a separate canvas for highlighting
+  let highlightCanvas = document.createElement('canvas');
+  highlightCanvas.width = canvas.width;
+  highlightCanvas.height = canvas.height;
+  let highlightContext = highlightCanvas.getContext('2d');
+
   // Iterate through each page of the PDF
   let numPages = pdfInstance.numPages;
 
@@ -23,31 +29,24 @@ function highlightText(text) {
           return page.getTextContent()
             .then(function (textContent) {
               let renderContext = {
-                canvasContext: context,
+                canvasContext: highlightContext,
                 viewport: viewport,
               };
 
-              // Render the page first before highlighting
+              // Render the page on the highlight canvas
               return page.render(renderContext)
                 .promise
                 .then(function () {
-                  context.save();
-                  context.fillStyle = 'rgba(255, 255, 0, 0.5)';
-                  context.lineWidth = 1;
-                  context.strokeStyle = 'rgba(255, 255, 0, 1)';
-
                   textContent.items.forEach(function (textItem) {
                     if (textItem.str.includes(text)) {
                       let rect = viewport.convertToViewportRectangle(textItem.transform);
 
-                      context.beginPath();
-                      context.rect(rect[0], rect[1], rect[2] - rect[0], rect[3] - rect[1]);
-                      context.fill();
-                      context.stroke();
+                      highlightContext.save();
+                      highlightContext.fillStyle = 'rgba(255, 255, 0, 0.5)';
+                      highlightContext.fillRect(rect[0], rect[1], rect[2] - rect[0], rect[3] - rect[1]);
+                      highlightContext.restore();
                     }
                   });
-
-                  context.restore();
                 });
             })
             .catch(function (error) {
@@ -60,6 +59,8 @@ function highlightText(text) {
   // Wait for all highlight promises to resolve
   Promise.all(highlightPromises)
     .then(function () {
+      // Draw the original canvas
+      context.drawImage(highlightCanvas, 0, 0);
       console.log('Text highlighted successfully');
     })
     .catch(function (error) {
