@@ -777,7 +777,7 @@ $(document).ready(function() {
 
     // Fetch PDFs when page loads and populate list
     $.ajax({
-        url: 'http://localhost:9009/pdfs',
+        url: 'http://localhost:9010/pdfs',
         type: 'GET',
         success: function(res) {
             let pdfs = res.files;
@@ -789,7 +789,7 @@ $(document).ready(function() {
                 let listItem = $('<div></div>').text(pdf);
                 listItem.addClass('list-group-item');
                 listItem.on('click', function() {
-                    let path = `http://localhost:9009/pdfs/${pdf}`;
+                    let path = `http://localhost:9010/pdfs/${pdf}`;
                     displayPdf(path);
                 });
                 pdfList.append(listItem);
