@@ -29,9 +29,15 @@ function displayPdf(url) {
           canvasContext: context,
           viewport: viewport
         };
-        page.render(renderContext).promise.then(function () {
-          console.log('PDF rendered successfully');
-        });
+        return page.render(renderContext).promise;
+      }).then(function () {
+        console.log('PDF rendered successfully');
+        // Once the PDF is rendered, check if there is a search text and apply the highlight
+        if (searchText) {
+          highlightText(searchText);
+        }
+      }).catch(function (error) {
+        console.error(error);
       });
     })
     .catch(function (error) {
