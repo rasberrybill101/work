@@ -888,32 +888,25 @@ $(document).ready(function() {
         }
 
         Promise.all(pagePromises)
-                        .then(function(pages) {
+            .then(function(pages) {
                 // Iterate through each page and highlight the text occurrences
                 pages.forEach(function(page) {
                     page.getTextContent()
                         .then(function(textContent) {
                             let viewport = page.getViewport({ scale: 1 });
-                            let transform = viewport.transform;
-
-                            context.save();
-                            context.fillStyle = 'rgba(255, 255, 0, 0.5)';
-                            context.lineWidth = 1;
-                            context.strokeStyle = 'rgba(255, 255, 0, 1)';
 
                             textContent.items.forEach(function(textItem) {
                                 if (textItem.str.includes(text)) {
                                     let rect = viewport.convertToViewportRectangle(textItem.transform);
 
-
+                                    // Draw a highlight rectangle
                                     context.beginPath();
-                                    context.rect(rect[4], rect[5] - textItem.height, rect[2] - rect[0], textItem.height);
+                                    context.rect(rect[0], rect[1], rect[2] - rect[0], rect[3] - rect[1]);
+                                    context.fillStyle = 'rgba(255, 255, 0, 0.5)';
                                     context.fill();
-                                    context.stroke();
+                                    context.closePath();
                                 }
                             });
-
-                            context.restore();
                         })
                         .catch(function(error) {
                             console.error(error);
@@ -925,6 +918,3 @@ $(document).ready(function() {
             });
     }
 });
-
-
-
