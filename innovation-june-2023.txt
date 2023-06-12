@@ -192,6 +192,8 @@ Please make the following modifications:
     <script src="/static/js/pdf.js"></script>
     <script src="/static/js/pdf.worker.js"></script>
     <script src="/static/js/main.js"></script>
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/pdfobject/2.2.6/pdfobject.min.js"></script>
+
 </body>
 </html>
 
@@ -424,3 +426,77 @@ pip install flask flask_cors
     /templates
         index.html
     app.py
+
+================= main.js 3
+$(document).ready(function() {
+    // Fetch PDFs when page loads and populate list
+    $.ajax({
+        url: 'http://localhost:9009/pdfs',
+        type: 'GET',
+        success: function(res) {
+            let pdfs = res.files;
+            let pdfList = $('#middle-right-lower');
+            pdfList.empty();  // Clear existing list
+
+            // Append each PDF as a new list item
+            pdfs.forEach(function(pdf) {
+                let listItem = $('<div></div>').text(pdf);
+                listItem.addClass('list-group-item');
+                listItem.on('click', function() {
+                    let path = `http://localhost:9009/pdfs/${pdf}`;
+                    displayPdf(path);
+                });
+                pdfList.append(listItem);
+            });
+        }
+    });
+
+    function displayPdf(url) {
+        let container = document.getElementById('middle-left');
+        container.innerHTML = '';
+
+        // Load the PDF document
+        pdfjsLib.getDocument(url)
+        .promise.then(function(pdf) {
+            // Fetch the first page
+            pdf.getPage(1).then(function(page) {
+                let canvas = document.createElement('canvas');
+                let context = canvas.getContext('2d');
+                let viewport = page.getViewport({ scale: 1 });
+
+                canvas.height = viewport.height;
+                canvas.width = viewport.width;
+
+                // Render the PDF page on the canvas
+                let renderContext = {
+                    canvasContext: context,
+                    viewport: viewport
+                };
+                page.render(renderContext).promise.then(function() {
+                    container.appendChild(canvas);
+                });
+            });
+        }).catch(function(error) {
+            console.error(error);
+        });
+    }
+
+    // Handle resizing of the middle-right area
+    $('#middle-divider').draggable({
+        axis: 'x',
+        containment: 'parent',
+        drag: function(event, ui) {
+            let totalWidth = $('#middle').width();
+            let leftWidth = ui.position.left;
+            let rightWidth = totalWidth - leftWidth;
+            
+            $('#middle-left').css('flex', 'none').width(leftWidth);
+            $('#middle-right').css('flex', 'none').width(rightWidth);
+        },
+        stop: function(event, ui) {
+            $('#middle-left').css('flex', '');
+            $('#middle-right').css('flex', '');
+        }
+    });
+});
+
