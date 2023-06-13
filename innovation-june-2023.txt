@@ -962,3 +962,18 @@ def convertUrlToLocalPath(pdf_url):
     # Join the filename with the local directory path
     local_path = os.path.join('pdfs', filename)
     return local_path
+
+=================
+
+import fitz
+
+def extract_text_from_pdf(pdf_path):
+    doc = fitz.open(pdf_path)
+    text = ''
+    for page in doc:
+        text += page.getText()
+    return text
+
+pdf_path = 'your_pdf_file.pdf'
+extracted_text = extract_text_from_pdf(pdf_path)
+print(extracted_text)
