@@ -990,3 +990,15 @@ text = extract_text(pdf_path)
 
 # Print the extracted text
 print(text)
+
+===================
+
+// Get a reference to the div element
+let divElement = document.getElementById('middle-right-upper');
+
+// Get the paragraph element inside the div
+let paragraphElement = divElement.querySelector('p');
+
+// Change the text of the paragraph element
+paragraphElement.innerText = 'New text here';
+
