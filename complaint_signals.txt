@@ -164,3 +164,87 @@ precision, recall, f1, _ = precision_recall_fscore_support(test_dataset.targets.
 
 print(f'Accuracy: {accuracy}\nPrecision: {precision}\nRecall: {recall}\nF1: {f1}')
 
+==================== Longest Common Subsequence (Token Implementation)
+import re
+import string
+
+def preprocess_sentence(sentence):
+    # Remove punctuation
+    sentence = sentence.translate(str.maketrans('', '', string.punctuation))
+    # Replace multiple spaces with a single space
+    sentence = re.sub(' +', ' ', sentence)
+    # Strip leading and trailing spaces
+    sentence = sentence.strip()
+    return sentence
+
+def lcs_similarity(sentence, phrase):
+    sentence = preprocess_sentence(sentence)
+    phrase = preprocess_sentence(phrase)
+    sentence_words = sentence.split()
+    phrase_words = phrase.split()
+    return lcs(sentence_words, phrase_words) / max(len(sentence_words), len(phrase_words))
+
+def lcs(X , Y):
+    m = len(X)
+    n = len(Y)
+
+    # Create a table to store lengths of longest common suffixes of substrings.
+    # Note that LCSuff[i][j] contains the length of LCS of X[0..i-1] and Y[0..j-1].
+    L = [[None]*(n+1) for i in range(m+1)]
+
+    # Following steps build LCSuff[m+1][n+1] in bottom-up fashion.
+    for i in range(m+1):
+        for j in range(n+1):
+            if i == 0 or j == 0 :
+                L[i][j] = 0
+            elif X[i-1] == Y[j-1]:
+                L[i][j] = L[i-1][j-1]+1
+            else:
+                L[i][j] = max(L[i-1][j], L[i][j-1])
+    return L[m][n]
+
+def lcs_similarity(sentence, phrase):
+    sentence_words = sentence.split()
+    phrase_words = phrase.split()
+    return lcs(sentence_words, phrase_words) / max(len(sentence_words), len(phrase_words))
+	
+================= jaccard_similarity
+
+def jaccard_similarity(sentence, phrase):
+    # Preprocess and tokenize the sentence and phrase
+    sentence = preprocess_sentence(sentence)
+    phrase = preprocess_sentence(phrase)
+    sentence_words = set(sentence.split())
+    phrase_words = set(phrase.split())
+    
+    # Compute the intersection and union of the words in sentence and phrase
+    intersection = sentence_words.intersection(phrase_words)
+    union = sentence_words.union(phrase_words)
+    
+    # Compute Jaccard similarity
+    jaccard = len(intersection) / len(union)
+    return jaccard
+	
+XXXXXXXXXXXXXXXXXXXXXXXXXXX initial defintion XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
+Given a tab separated file "raw_data.tsv" that has the following columns (specified in the header):
+conv_id
+complaint_disat
+segment_id
+call_duration
+reason_level_1
+reason_level_2
+plain_whisper
+language_code
+
+Each row represents a conversation that identified using "conv_id" column value.
+All columns are strings, except for call_duration which is an integer.
+
+1) Step 1 - preprocessing step - remove all spanish language rows - reject_spanish()
+There is an initial pre-processing step. Any row that contains the word 'gracias' in the column 'plain_whisper' will be completely ignored and is not part of the data set. Encapsulate the functionality to reject 'gracias' as a pre-processing function called 'reject_spanish'. No rejected rows will be used during subsequent processing.
+
+The data from this first step will be used in all subsequent steps.
+
+Write the functions "getTSVData(filename)" and "rejectSpanish()", noting that the output of getTSVData will be fed as input to "rejectSpanish". In turn the output from "rejectSpanish" will be used in subseqent step. For generality, enable getTSVData to take a column separator character "sep" as a second input. "sep" will default to the tab characer.
+
+============== word frequency count by type of conversation
+

@@ -1,0 +1,439 @@
+Given a tab separated file "raw_data.tsv" that has the following columns (specified in the header):
+conv_id
+complaint_disat
+segment_id
+call_duration
+reason_level_1
+reason_level_2
+plain_whisper
+language_code
+
+Each row represents a conversation that identified using "conv_id" column value.
+All columns are strings, except for call_duration which is an integer.
+
+1) Step 1 - preprocessing step - remove all spanish language rows - reject_spanish()
+There is an initial pre-processing step. Any row that contains the word 'gracias' in the column 'plain_whisper' will be completely ignored and is not part of the data set. Encapsulate the functionality to reject 'gracias' as a pre-processing function called 'reject_spanish'. No rejected rows will be used during subsequent processing.
+
+The data from this first step will be used in all subsequent steps.
+
+Write the functions "getTSVData(filename)" and "rejectSpanish()", noting that the output of getTSVData will be fed as input to "rejectSpanish". In turn the output from "rejectSpanish" will be used in subseqent step. For generality, enable getTSVData to take a column separator character "sep" as a second input. "sep" will default to the tab characer.
+======================================== Preprocessing ===
+import pandas as pd
+
+def getTSVData(filename, sep='\t'):
+    """ 
+    This function reads a TSV file into a pandas DataFrame.
+
+    Parameters: 
+    filename (str): The path to the TSV file.
+    sep (str): The column separator character. It defaults to the tab character.
+
+    Returns: 
+    DataFrame: The data from the TSV file.
+    """
+    data = pd.read_csv(filename, sep=sep)
+    return data
+
+def rejectSpanish(data):
+    """ 
+    This function rejects rows with the word 'gracias' in the 'plain_whisper' column.
+
+    Parameters: 
+    data (DataFrame): The data from the TSV file.
+
+    Returns: 
+    DataFrame: The data without rows containing 'gracias' in the 'plain_whisper' column.
+    """
+    data = data[data['plain_whisper'].apply(lambda x: 'gracias' not in str(x).lower())]
+    return data
+
+>>>> usage
+filename = 'raw_data.tsv'
+data = getTSVData(filename)
+data = rejectSpanish(data)
+
+==================================== Token distribution by conversation type
+
+Given the dataframe from rejectSpanish, create a table of values which will be visualized. The table will comprise the columns:
+conv_id (from dataframe)
+complaint_disat (from dataframe)
+reason_level_1
+token
+count
+density
+
+where:
+token is an individual token or word found in the conversation
+count is the number of times that the token appears in the conversation
+density is the count divided by the total number of tokens in the conversation
+
+Tokens are the individual words in the conversation after all punctuation marks are removed. Tokens are typically separated by one or more spaces.
+
+write the function "conversationTokenDensity" that will return a list of rows with columns stated above. Order the list by the token density.
+
+write another function "densityVsComplaintHeatmap" that will display a heatmap of the 20 (or topK) tokens against "complaint_disat" column values. Use seaborn so that both the density value and color are used to show the distribution.
+
+write another function to write the columns to file. The filename will be "tokenDensity.csv" (comma-separated). It will have a header based on the columns:
+conv_id (from dataframe)
+complaint_disat (from dataframe)
+token
+count
+density
+
+Write another group of function that generalizes the functionality above, but rather than only considering single tokens, uses bigrams (2 consecutive tokens) or ngrams (n consecutive tokens) in the calculations, heatmap, and output csv file above. Actually, it may be more beneficial to write all the functions above so that they take an additional argument that indicates how many consecutive tokens should be considered. For instance passing in "1" as the ngram value will use a single token, etc.
+
+import nltk
+import string
+import itertools
+from collections import Counter
+from operator import itemgetter
+
+nltk.download('punkt')
+
+def conversationTokenDensity(df, ngram=1):
+    """
+    This function calculates the token density of each conversation.
+    
+    Parameters:
+    df (DataFrame): The data from the TSV file.
+    ngram (int): The number of consecutive tokens to consider.
+    
+    Returns:
+    DataFrame: A DataFrame with the token density of each conversation.
+    """
+    # Create a translation table that maps every punctuation character to None
+    translator = str.maketrans('', '', string.punctuation)
+    
+    # Initialize an empty list to store the results
+    results = []
+    
+    # For each row in the DataFrame
+    for _, row in df.iterrows():
+        # Remove punctuation and tokenize the conversation
+        tokens = nltk.word_tokenize(row['plain_whisper'].translate(translator))
+        
+        # Generate n-grams
+        ngrams = list(itertools.zip_longest(*(itertools.islice(seq, index, None) for index, seq in enumerate(itertools.tee(tokens, ngram)))))
+        
+        # Count the occurrences of each n-gram
+        counts = Counter(ngrams)
+        
+        # Calculate the total number of n-grams
+        total = sum(counts.values())
+        
+        # For each unique n-gram
+        for ngram, count in counts.items():
+            # Calculate the density
+            density = count / total
+            
+            # Append the result to the list
+            results.append([row['conv_id'], row['complaint_disat'], ' '.join(ngram), count, density])
+    
+    # Convert the list to a DataFrame and sort it by the density
+    result_df = pd.DataFrame(results, columns=['conv_id', 'complaint_disat', 'token', 'count', 'density'])
+    result_df = result_df.sort_values(by='density', ascending=False)
+    
+    return result_df
+
+-----
+
+import seaborn as sns
+import matplotlib.pyplot as plt
+
+def densityVsComplaintHeatmap(df, ngram=1, topK=20):
+    """
+    This function displays a heatmap of the topK tokens or ngrams against complaint_disat column values.
+
+    Parameters:
+    df (DataFrame): The token or ngram density data.
+    ngram (int): The number of consecutive tokens to consider.
+    topK (int): The number of top tokens or ngrams to consider.
+
+    Returns:
+    None
+    """
+    # Get the topK tokens or ngrams
+    top_tokens = df['token'].value_counts().index[:topK]
+    
+    # Filter the DataFrame to only include the topK tokens or ngrams
+    df_topK = df[df['token'].isin(top_tokens)]
+    
+    # Create a pivot table
+    pivot = df_topK.pivot_table(values='density', index='token', columns='complaint_disat')
+    
+    # Create a heatmap
+    plt.figure(figsize=(10, 8))
+    sns.heatmap(pivot, annot=True, cmap="YlGnBu")
+    plt.title(f'{ngram}-gram Density vs Complaint Disatisfaction')
+    plt.show()
+
+-----
+
+def writeToFile(df, ngram=1, filename=None):
+    """
+    This function writes a DataFrame to a CSV file.
+
+    Parameters:
+    df (DataFrame): The DataFrame to write.
+    ngram (int): The number of consecutive tokens to consider.
+    filename (str): The name of the file. If None, defaults to 'tokenDensity_n.csv' where n is the ngram value.
+
+    Returns:
+    None
+    """
+    if filename is None:
+        filename = f"tokenDensity_{ngram}.csv"
+
+    df.to_csv(filename, index=False)
+
+======================== More general heatmaps
+
+Again using the dataframe from rejectSpanish as the starting point, create a heatmap of topK token n-gram density ACROSS ALL CONVERSATIONS vs. the values in "complaint_disat" column
+
+Create another heatmap of topK token n-gram density (top k most dense tokens) across all conversations vs. the values in reason_level_1 column
+
+-----
+def overallTokenDensity(df, ngram=1):
+    """
+    This function calculates the overall token density across all conversations.
+    
+    Parameters:
+    df (DataFrame): The data from the TSV file.
+    ngram (int): The number of consecutive tokens to consider.
+    
+    Returns:
+    DataFrame: A DataFrame with the overall token density.
+    """
+    # Create a translation table that maps every punctuation character to None
+    translator = str.maketrans('', '', string.punctuation)
+    
+    # Initialize an empty list to store the tokens
+    tokens = []
+    
+    # For each row in the DataFrame
+    for _, row in df.iterrows():
+        # Remove punctuation and tokenize the conversation
+        tokens.extend(nltk.word_tokenize(row['plain_whisper'].translate(translator)))
+    
+    # Generate n-grams
+    ngrams = list(itertools.zip_longest(*(itertools.islice(seq, index, None) for index, seq in enumerate(itertools.tee(tokens, ngram)))))
+    
+    # Count the occurrences of each n-gram
+    counts = Counter(ngrams)
+    
+    # Calculate the total number of n-grams
+    total = sum(counts.values())
+    
+    # Initialize an empty list to store the results
+    results = []
+    
+    # For each unique n-gram
+    for ngram, count in counts.items():
+        # Calculate the density
+        density = count / total
+        
+        # Append the result to the list
+        results.append([' '.join(ngram), count, density])
+    
+    # Convert the list to a DataFrame and sort it by the density
+    result_df = pd.DataFrame(results, columns=['token', 'count', 'density'])
+    result_df = result_df.sort_values(by='density', ascending=False)
+    
+    return result_df
+
+----
+
+def columnVsTokenDensity(df, density_df, column, ngram=1, topK=20):
+    """
+    This function calculates the token density for each unique value in a column.
+
+    Parameters:
+    df (DataFrame): The original data.
+    density_df (DataFrame): The overall token density data.
+    column (str): The name of the column.
+    ngram (int): The number of consecutive tokens to consider.
+    topK (int): The number of top tokens or ngrams to consider.
+
+    Returns:
+    DataFrame: A DataFrame with the token density for each unique value in the column.
+    """
+    # Get the topK tokens
+    top_tokens = density_df['token'].head(topK)
+    
+    # Initialize an empty list to store the results
+    results = []
+    
+    # For each unique value in the column
+    for value in df[column].unique():
+        # Filter the DataFrame to only include rows where the column equals the value
+        value_df = df[df[column] == value]
+        
+        # Calculate the token density
+        token_density = overallTokenDensity(value_df, ngram)
+        
+        # Filter the token density to only include the topK tokens
+        token_density = token_density[token_density['token'].isin(top_tokens)]
+        
+        # For each row in the token density
+        for _, row in token_density.iterrows():
+            # Append the result to the list
+            results.append([value, row['token'], row['count'], row['density']])
+    
+    # Convert the list to a DataFrame
+    result_df = pd.DataFrame(results, columns=[column, 'token', 'count', 'density'])
+    
+    return result_df
+
+-----
+
+def createHeatmap(df, column, ngram=1, topK=20):
+    """
+    This function creates a heatmap of the token density against a column.
+
+    Parameters:
+    df (DataFrame): The original data.
+    column (str): The name of the column.
+    ngram (int): The number of consecutive tokens to consider.
+    topK (int): The number of top tokens or ngrams to consider.
+
+    Returns:
+    None
+    """
+    # Calculate the overall token density
+    density_df = overallTokenDensity(df, ngram)
+    
+    # Calculate the token density for each unique value in the column
+    column_density = columnVsTokenDensity(df, density_df, column, ngram, topK)
+    
+    # Create a pivot table
+    pivot = column_density.pivot_table(values='density', index='token', columns=column)
+    
+    # Create a heatmap
+    plt.figure(figsize=(10, 8))
+    sns.heatmap(pivot, annot=True, cmap="YlGnBu")
+    plt.title(f'{ngram}-gram Density vs {column}')
+    plt.show()
+
+# Create heatmaps for 'complaint_disat' and 'reason_level_1'
+createHeatmap(df, 'complaint_disat')
+createHeatmap(df, 'reason_level_1')
+
+============================== most frequently occurring n-grams for each complaint type
+
+Again starting with the dataframe from rejectSpanish, what n-grams occur most frequently (by raw count) for each value of reason_level_1
+
+Modify this function to include arg topK such that at most topK most frequent n-grams are returned for each unique value in reason_level_1
+
+----
+
+def mostFrequentNGrams(df, column='reason_level_1', ngram=1, topK=1):
+    """
+    This function calculates the most frequent n-grams for each unique value in a column.
+
+    Parameters:
+    df (DataFrame): The original data.
+    column (str): The name of the column.
+    ngram (int): The number of consecutive tokens to consider.
+    topK (int): The number of top frequent ngrams to return for each unique value in the column.
+
+    Returns:
+    DataFrame: A DataFrame with the most frequent n-grams for each unique value in the column.
+    """
+    # Initialize an empty list to store the results
+    results = []
+    
+    # For each unique value in the column
+    for value in df[column].unique():
+        # Filter the DataFrame to only include rows where the column equals the value
+        value_df = df[df[column] == value]
+        
+        # Calculate the token density
+        token_density = overallTokenDensity(value_df, ngram)
+        
+        # Sort the DataFrame by the count in descending order and get the topK rows
+        most_frequent = token_density.sort_values(by='count', ascending=False).head(topK)
+        
+        # For each row in the most frequent n-grams
+        for _, row in most_frequent.iterrows():
+            # Append the result to the list
+            results.append([value, row['token'], row['count']])
+    
+    # Convert the list to a DataFrame
+    result_df = pd.DataFrame(results, columns=[column, 'token', 'count'])
+    
+    return result_df
+
+-----
+
+Rather than using token density, use the raw token count to re-implement mostFrequentNGrams
+
+----
+def rawTokenCount(df, ngram=1):
+    """
+    This function calculates the raw token count for a DataFrame.
+
+    Parameters:
+    df (DataFrame): The data.
+    ngram (int): The number of consecutive tokens to consider.
+
+    Returns:
+    DataFrame: A DataFrame with the token and count.
+    """
+    # Get the text data
+    text_data = df['plain_whisper'].values
+
+    # Tokenize the text data and create n-grams
+    ngrams = [ngram for text in text_data for ngram in generate_ngrams(text, ngram)]
+    
+    # Calculate the raw token count
+    token_count = Counter(ngrams)
+    
+    # Convert the counter to a DataFrame
+    count_df = pd.DataFrame.from_dict(token_count, orient='index').reset_index()
+    count_df.columns = ['token', 'count']
+    
+    return count_df
+
+
+def mostFrequentNGrams(df, column='reason_level_1', ngram=1, topK=1):
+    """
+    This function calculates the most frequent n-grams for each unique value in a column.
+
+    Parameters:
+    df (DataFrame): The original data.
+    column (str): The name of the column.
+    ngram (int): The number of consecutive tokens to consider.
+    topK (int): The number of top frequent ngrams to return for each unique value in the column.
+
+    Returns:
+    DataFrame: A DataFrame with the most frequent n-grams for each unique value in the column.
+    """
+    # Initialize an empty list to store the results
+    results = []
+    
+    # For each unique value in the column
+    for value in df[column].unique():
+        # Filter the DataFrame to only include rows where the column equals the value
+        value_df = df[df[column] == value]
+        
+        # Calculate the raw token count
+        token_count = rawTokenCount(value_df, ngram)
+        
+        # Sort the DataFrame by the count in descending order and get the topK rows
+        most_frequent = token_count.sort_values(by='count', ascending=False).head(topK)
+        
+        # For each row in the most frequent n-grams
+        for _, row in most_frequent.iterrows():
+            # Append the result to the list
+            results.append([value, row['token'], row['count']])
+    
+    # Convert the list to a DataFrame
+    result_df = pd.DataFrame(results, columns=[column, 'token', 'count'])
+    
+    return result_df
+
+-----
+
+
+
+
