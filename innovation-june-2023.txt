@@ -977,3 +977,16 @@ def extract_text_from_pdf(pdf_path):
 pdf_path = 'your_pdf_file.pdf'
 extracted_text = extract_text_from_pdf(pdf_path)
 print(extracted_text)
+
+====================
+
+from pdfminer.high_level import extract_text
+
+# Specify the path to the PDF file
+pdf_path = 'path/to/your/pdf/file.pdf'
+
+# Extract text from the PDF
+text = extract_text(pdf_path)
+
+# Print the extracted text
+print(text)
