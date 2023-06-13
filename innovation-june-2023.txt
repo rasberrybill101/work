@@ -953,3 +953,12 @@ function highlightText(text) {
 }
 
 });
+
+================
+
+def convertUrlToLocalPath(pdf_url):
+    # Get the last segment of the URL
+    filename = pdf_url.split('/')[-1]
+    # Join the filename with the local directory path
+    local_path = os.path.join('pdfs', filename)
+    return local_path
