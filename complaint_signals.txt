@@ -45,3 +45,122 @@ phrase (the phrase used to calculate jaccard, lcs and norm_position scores
 group the data by conv_id, and order of appearance of sentences so that the lines in the output csv file are ordered by conv_id and the sentences that belong to the same conv_id appear in the order that they occurred in the input csv file.
 
 Do all comparisons in lower case so that case sensitivity does not cause problems with string and token comparisons.
+
+====================
+def lcs_similarity(sentence, phrase):
+    return lcs(sentence.split(), phrase.split()) / max(len(sentence.split()), len(phrase.split()))
+
+def jaccard_similarity(list1, list2):
+    s1 = set(list1)
+    s2 = set(list2)
+    return len(s1.intersection(s2)) / len(s1.union(s2))
+
+====================
+
+import pandas as pd
+from sklearn.feature_extraction.text import CountVectorizer
+from sklearn.metrics.pairwise import cosine_similarity
+
+def reject_spanish(df):
+    df = df[df['plain_whisper'].str.contains('gracias') == False]
+    return df
+
+def calculate_scores(df, phrase_dict):
+    for phrase in phrase_dict:
+        df['jaccard'] = df['plain_whisper'].apply(lambda x: jaccard_similarity(x.lower().split(), phrase.lower().split()))
+        df['lcs'] = df['plain_whisper'].apply(lambda x: lcs_similarity(x.lower(), phrase.lower()))
+        df['phrase'] = phrase
+    return df
+
+def normalize_position(df):
+    df['norm_position'] = df.groupby('conv_id').cumcount() / (df.groupby('conv_id').transform('count')['plain_whisper'] - 1)
+    return df
+
+def filter_data(df):
+    df = df[(df['jaccard'] > 0) & (df['complaint_disat'].isin(['Complaint', 'No Complaint']))]
+    return df
+
+def export_data(df):
+    df.to_csv('output.tsv', sep='\t', index=False)
+
+# Load the data
+df = pd.read_csv('raw_data.tsv', sep='\t')
+
+# Apply preprocessing
+df = reject_spanish(df)
+
+# Assume phrase_dict is given
+phrase_dict = {"phrase1": "key1", "phrase2": "key2"}
+
+# Apply Jaccard, LCS, normalization and filtering
+df = calculate_scores(df, phrase_dict)
+df = normalize_position(df)
+df = filter_data(df)
+
+# Export the result
+export_data(df)
+
+=====================
+
+import torch
+import torch.nn as nn
+import torch.optim as optim
+from sklearn.model_selection import train_test_split
+from sklearn.metrics import accuracy_score, precision_recall_fscore_support
+from torch.utils.data import Dataset, DataLoader
+from sklearn.preprocessing import LabelEncoder
+
+# Assume we already loaded and preprocessed our DataFrame df
+
+# Convert the 'complaint_disat' column to binary
+df['complaint_disat'] = df['complaint_disat'].map({'Complaint': 1, 'No Complaint': 0})
+
+# Convert string columns to categories with LabelEncoder
+for col in df.columns:
+    if df[col].dtype == 'object':
+        df[col] = LabelEncoder().fit_transform(df[col])
+
+# Split the data
+train_df, test_df = train_test_split(df, test_size=0.2, random_state=42)
+
+class ComplaintDataset(Dataset):
+    def __init__(self, data):
+        self.data = torch.tensor(data.drop('complaint_disat', axis=1).values, dtype=torch.float32)
+        self.targets = torch.tensor(data['complaint_disat'].values, dtype=torch.float32)
+
+    def __len__(self):
+        return len(self.data)
+
+    def __getitem__(self, idx):
+        return self.data[idx], self.targets[idx]
+
+# Initialize DataLoaders
+train_dataset = ComplaintDataset(train_df)
+test_dataset = ComplaintDataset(test_df)
+train_loader = DataLoader(train_dataset, batch_size=32)
+test_loader = DataLoader(test_dataset, batch_size=32)
+
+# Create MaxEnt model
+model = nn.Linear(train_df.shape[1] - 1, 1)
+loss_fn = nn.BCEWithLogitsLoss()
+optimizer = optim.Adam(model.parameters(), lr=0.01)
+
+# Training
+for epoch in range(10):
+    for i, (data, target) in enumerate(train_loader):
+        optimizer.zero_grad()
+        output = model(data)
+        loss = loss_fn(output.squeeze(), target)
+        loss.backward()
+        optimizer.step()
+
+# Evaluate
+model.eval()
+with torch.no_grad():
+    output = model(test_dataset.data)
+predictions = (torch.sigmoid(output) > 0.5).numpy()
+accuracy = accuracy_score(test_dataset.targets.numpy(), predictions)
+precision, recall, f1, _ = precision_recall_fscore_support(test_dataset.targets.numpy(), predictions, average='binary')
+
+print(f'Accuracy: {accuracy}\nPrecision: {precision}\nRecall: {recall}\nF1: {f1}')
+
