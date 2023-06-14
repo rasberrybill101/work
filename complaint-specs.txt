@@ -433,7 +433,17 @@ def mostFrequentNGrams(df, column='reason_level_1', ngram=1, topK=1):
     return result_df
 
 -----
+Given a tab separated file "raw_data.tsv" that has the following columns (specified in the header):
+conv_id
+complaint_disat
+segment_id
+call_duration
+reason_level_1
+reason_level_2
+plain_whisper
+language_code
 
+Write a function that will return the number of distinct strings in a column.
 
 
 
