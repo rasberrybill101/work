@@ -146,7 +146,7 @@ def conversationTokenDensity(df, ngram=1):
             # Calculate the density
             density = count / total
             
-            print(uniqueNgram + ': ' + str(count) + '/' + str(total)
+            print(uniqueNgram + ': ' + str(count) + '/' + str(total))
             
             # Append the result to the list
             results.append([row['conv_id'], row['complaint_disat'], uniqueNgram, count, density])
