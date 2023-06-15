@@ -18,8 +18,12 @@ The data from this first step will be used in all subsequent steps.
 
 Write the functions "getTSVData(filename)" and "rejectSpanish()", noting that the output of getTSVData will be fed as input to "rejectSpanish". In turn the output from "rejectSpanish" will be used in subseqent step. For generality, enable getTSVData to take a column separator character "sep" as a second input. "sep" will default to the tab characer.
 ======================================== Preprocessing ===
+
 import pandas as pd
 
+#=======================================================================
+# Read TSV file and return pandas df that excludes spanish language rows
+#=======================================================================
 def getTSVData(filename, sep='\t'):
     """ 
     This function reads a TSV file into a pandas DataFrame.
@@ -51,6 +55,7 @@ def rejectSpanish(data):
 filename = 'raw_data.tsv'
 data = getTSVData(filename)
 data = rejectSpanish(data)
+#print(data.head())
 
 ==================================== Token distribution by conversation type
 
@@ -90,6 +95,9 @@ from operator import itemgetter
 
 nltk.download('punkt')
 
+#=======================================================================
+# Find token density across level_1 categories
+#=======================================================================
 def conversationTokenDensity(df, ngram=1):
     """
     This function calculates the token density of each conversation.
@@ -432,8 +440,334 @@ def mostFrequentNGrams(df, column='reason_level_1', ngram=1, topK=1):
     
     return result_df
 
------
+XXXXXXXXXXXXXXXXXXXXXXXXXXXX highlight sentences in a text passage XXXXXXXXXXXXXXXX
+I want to do some visualization around the conversations that have been analyzed so far.
+The visualization code will be in javascript. The analysis and results will be on the server side. Server side will be based on Python Fast. The server should be accessible to all IP addresses and should run on port 9595.
+Here is the specification of the UI:
+There will be 4 main areas on the screen
+top - horizontal container across the top of the screen (width == screen width)
+main - remaining area below the top
+main consists of 2 main areas (left and right), separated by a vertical line (about 3 pixels thick and dark green color) that starts from just below end of top, and runs to bottom of main.
+right (70% of the screen width) - split into two areas by a horizontal line.
+right_above - upper part of right will be 80% of the height of right. Will contain text that will come from the server.
+right_below - will contain additional information from server
+left - will be 30% of the screen width. Will contain a vertical stacked list of "flat" buttons. When a button on the list is clicked, it will trigger a call to the server (for instance through a "fetch"). The results of the fetch will be in json format. Each element of the json (ui.top, ui.right_above, ui.right_below) will be displayed in top, right-above, or left-above depending on a "mappingDictionary" element which will be returned as part of the response from the server. mappingDictionary will look like this:
+{
+	"ui": { "top":"data for top",
+	  "right_above": "text for right_above area",
+	  "right_below": "text for right_below area"
+	}
+}
+
+At the start of the web application, the javascript code will call the server to get the list of names to be used for the buttons on the left area of the UI (the "flat" buttons). This json will be returned from the server for the initial call:
+
+{
+	"ui": { "left": comma separated list of values each representing the name of a button
+	}
+}
+
+Write the UI code in javascript, minimizing the use of external js libraries, but leveraging bootstrap and CSS as much as possible. Also be very modular in the implementation. The server side will be a separate implementation. The focus here is on the client side. Organize the elements into html, css, js, and images folders.
+
+Also:
+We want 2 areas (top_left, and top_right) on the top navbar. There should be a div on the left and a drop down menu on the right. Depending on the item selected from the drop down, then the top_left, main_right_above, main_right_below will be populated by the json returned from calling the server. Basically, selecting an item from the dropdown will trigger a fetch to the server that then populates the UI elements specified.
+
+And:
+A scroll bar will be needed on the "left" since the list of items to create the buttons will be long. A scroll bar might also be needed on "right_above" as well. The list of items for "left" will be a comma separated list with a structure like this:
+{
+  "ui" : { "left":comma separated list of strings to be used as button labels }
+}
+
+Additionally: the area "right_above" may sometimes be used to display an image
+Note that an image may be used in "right_above" if the string has .png or .jpg extension. The server will have added the image to its images folder. For example:
+http://server-host:9595/images/image1.png
+
+The buttons on the "left" area should also be triggered by arrow keys entering, so that the keyboard can be used (in addition to mouse clicks) for triggering the action of the buttons. Please include this event handling to work the same as mouse clicks.
+
+---- client implementation/my-app
+  /html
+    index.html
+  /css
+    style.css
+  /js
+    main.js
+  /images
+    // Your images here
+
+---- html
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Application</title>
+  <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" rel="stylesheet">
+  <link href="../css/style.css" rel="stylesheet">
+</head>
+<body>
+  <nav class="navbar navbar-expand-lg navbar-light bg-light justify-content-between">
+    <div id="top_left" class="p-2 top-left-class">
+      <!-- Content dynamically added by JavaScript -->
+    </div>
+    <div class="dropdown">
+      <button class="btn btn-secondary dropdown-toggle" type="button" id="dropdownMenuButton" data-toggle="dropdown">
+        Select
+      </button>
+      <div id="dropdown-menu" class="dropdown-menu">
+        <!-- Dropdown options dynamically added by JavaScript -->
+      </div>
+    </div>
+  </nav>
+  <div id="main" class="container-fluid">
+    <div class="row">
+      <div id="left" class="col-4 p-3 left-class"></div>
+      <div id="right" class="col-8 p-3 right-class">
+        <div id="right_above" class="right-above-class"></div>
+        <div id="right_below" class="right-below-class"></div>
+      </div>
+    </div>
+  </div>
+  <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+  <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.0/js/bootstrap.min.js"></script>
+  <script src="../js/main.js" defer></script>
+</body>
+</html>
+
+---- css
+body {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+}
+
+#top {
+  height: 10%;
+  width: 100%;
+  background-color: lightgray;
+}
+
+#main {
+  display: flex;
+  height: 90%;
+  width: 100%;
+}
+
+#left {
+  width: 30%;
+  border-right: 3px solid darkgreen;
+}
+
+#right {
+  width: 70%;
+  display: flex;
+  flex-direction: column;
+}
+
+#right_above {
+  height: 80%;
+  border-bottom: 3px solid darkgreen;
+}
+
+#right_below {
+  height: 20%;
+}
+
+.top-class {
+  background-color: lightgray;
+}
+
+.top-left-class {
+  flex-grow: 1;
+}
+
+.left-class {
+  border-right: 3px solid darkgreen;
+}
+
+.right-class {
+  display: flex;
+  flex-direction: column;
+}
+
+.right-above-class {
+  height: 80%;
+  border-bottom: 3px solid darkgreen;
+}
+
+.right-below-class {
+  height: 20%;
+}
+
+.left-class {
+  border-right: 3px solid darkgreen;
+  overflow-y: auto; /* This makes the area scrollable in the y-direction */
+  height: calc(100vh - 56px); /* Adjust as necessary */
+}
+
+.right-above-class {
+  height: 80%;
+  border-bottom: 3px solid darkgreen;
+  overflow-y: auto; /* This makes the area scrollable in the y-direction */
+}
+
+---- js
+window.onload = async function() {
+  // Fetch initial data for dropdown options and button labels
+  let response = await fetch("http://your-server-address:9595/initial-data");
+  let data = await response.json();
+
+  // Use data to populate left section with buttons
+  let buttonLabels = data.ui.left.split(",");
+  let leftSection = document.getElementById("left");
+  buttonLabels.forEach(label => {
+    let button = document.createElement("button");
+    button.textContent = label;
+    button.className = "btn btn-primary mb-2"; // Bootstrap classes for basic styling
+    leftSection.appendChild(button);
+  });
+
+  // Add keydown event listener after button creation
+  addKeyboardNavigation();
+
+  // Use data to populate dropdown with options
+  let dropdownOptions = data.ui.dropdown.split(",");
+  let dropdownMenu = document.getElementById("dropdown-menu");
+  dropdownOptions.forEach(option => {
+    let dropdownItem = document.createElement("a");
+    dropdownItem.className = "dropdown-item";
+    dropdownItem.href = "#";
+    dropdownItem.textContent = option;
+    dropdownItem.onclick = handleDropdownSelection;
+    dropdownMenu.appendChild(dropdownItem);
+  });
+};
+
+// Add keyboard navigation functionality
+function addKeyboardNavigation() {
+  document.body.addEventListener('keydown', function(e) {
+    const leftArea = document.getElementById('left');
+    const buttons = leftArea.getElementsByTagName('button');
+
+    let activeButton = document.activeElement.tagName === 'BUTTON' ? document.activeElement : buttons[0];
+    let activeButtonIndex = Array.from(buttons).indexOf(activeButton);
+
+    switch (e.code) {
+      case 'ArrowUp':
+        if (activeButtonIndex > 0) {
+          activeButtonIndex--;
+          buttons[activeButtonIndex].focus();
+        }
+        break;
+      case 'ArrowDown':
+        if (activeButtonIndex < buttons.length - 1) {
+          activeButtonIndex++;
+          buttons[activeButtonIndex].focus();
+        }
+        break;
+      case 'Enter':
+        activeButton.click();
+        break;
+    }
+  });
+}
+
+async function handleDropdownSelection(e) {
+  e.preventDefault();
+
+  let dropdownSelection = e.target.textContent;
+
+  // Fetch data from server based on dropdown selection
+  let response = await fetch(`http://your-server-address:9595/data?dropdown=${dropdownSelection}`);
+  let data = await response.json();
+
+  // Use data to populate areas
+  document.getElementById("top_left").textContent = data.ui.top_left;
+
+  // If right_above data is an image URL, create an img element. Otherwise, treat it as text
+  let rightAboveData = data.ui.right_above;
+  let rightAboveElement = document.getElementById("right_above");
+  rightAboveElement.innerHTML = ''; // Clear previous content
+  if (rightAboveData.endsWith('.png') || rightAboveData.endsWith('.jpg')) {
+    let img = document.createElement('img');
+    img.src = rightAboveData;
+    img.alt = 'Image';
+    img.style.width = '100%'; // to ensure the image fits the container
+    rightAboveElement.appendChild(img);
+  } else {
+    rightAboveElement.textContent = rightAboveData;
+  }
+
+  document.getElementById("right_below").textContent = data.ui.right_below;
+}
 
 
+==================== server side
+Implement the server side using Python Fast. Include CORS handling, and make it possible for any IP address to access the server.
 
+Implement the following GETs :
+getDropdownOptions() - return a json of items that will be used to populate the top_right dropdown
+{
+	"ui": { "top_right": comma separated list of values each representing an item on the dropdown list
+	}
+}
 
+getConvIDs() - return a list of strings that will be used as button labels on the "left" of the UI. The list of button labels should be returned as follows:
+{
+  "ui" : { "left":comma separated list of strings to be used as button labels }
+}
+
+handleButtonClick(buttonLabel) - return the ui elements to be used in each of the UI areas. 
+do some processing
+return results in json format like:
+{
+	"ui": { "top":"data for top",
+	  "right_above": "text or image for right_above area",
+	  "right_below": "text for right_below area"
+	}
+}
+
+----
+from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
+import uvicorn
+
+app = FastAPI()
+
+origins = ["*"]
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=origins,
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+@app.get("/getDropdownOptions")
+async def get_dropdown_options():
+    # TODO: replace with actual implementation
+    return {
+        "ui": {
+            "top_right": "option1,option2,option3"
+        }
+    }
+
+@app.get("/getConvIDs")
+async def get_conv_ids():
+    # TODO: replace with actual implementation
+    return {
+        "ui": {
+            "left": "label1,label2,label3"
+        }
+    }
+
+@app.get("/handleButtonClick/{button_label}")
+async def handle_button_click(button_label: str):
+    # TODO: replace with actual implementation
+    return {
+        "ui": {
+            "top": "data for top",
+            "right_above": "text or image for right_above area",
+            "right_below": "text for right_below area"
+        }
+    }
+
+if __name__ == "__main__":
+    uvicorn.run(app, host="0.0.0.0", port=9595)
