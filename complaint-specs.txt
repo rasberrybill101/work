@@ -142,6 +142,23 @@ def conversationTokenDensity(df, ngram=1):
     result_df = result_df.sort_values(by='density', ascending=False)
     
     return result_df
+    
+def writeToFile(df, ngram=1, filename=None):
+    """
+    This function writes a DataFrame to a CSV file.
+
+    Parameters:
+    df (DataFrame): The DataFrame to write.
+    ngram (int): The number of consecutive tokens to consider.
+    filename (str): The name of the file. If None, defaults to 'tokenDensity_n.csv' where n is the ngram value.
+
+    Returns:
+    None
+    """
+    if filename is None:
+        filename = f"tokenDensity_{ngram}.csv"
+
+    df.to_csv(filename, index=False)
 
 -----
 
@@ -174,25 +191,6 @@ def densityVsComplaintHeatmap(df, ngram=1, topK=20):
     sns.heatmap(pivot, annot=True, cmap="YlGnBu")
     plt.title(f'{ngram}-gram Density vs Complaint Disatisfaction')
     plt.show()
-
------
-
-def writeToFile(df, ngram=1, filename=None):
-    """
-    This function writes a DataFrame to a CSV file.
-
-    Parameters:
-    df (DataFrame): The DataFrame to write.
-    ngram (int): The number of consecutive tokens to consider.
-    filename (str): The name of the file. If None, defaults to 'tokenDensity_n.csv' where n is the ngram value.
-
-    Returns:
-    None
-    """
-    if filename is None:
-        filename = f"tokenDensity_{ngram}.csv"
-
-    df.to_csv(filename, index=False)
 
 ======================== More general heatmaps
 
