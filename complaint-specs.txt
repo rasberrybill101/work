@@ -697,6 +697,45 @@ async function handleDropdownSelection(e) {
   document.getElementById("right_below").textContent = data.ui.right_below;
 }
 
+=======
+-----
+Given a tab separated file "raw_data.tsv" that has the following columns (specified in the header):
+conv_id
+complaint_disat
+segment_id
+call_duration
+reason_level_1
+reason_level_2
+plain_whisper
+language_code
+
+Write a function that will return the number of distinct strings in a column.
+-------
+import pandas as pd
+
+def count_unique_strings(filename, column):
+    try:
+        # Read the TSV file
+        df = pd.read_csv(filename, sep='\t')
+
+        # Check if the column exists in the DataFrame
+        if column not in df.columns:
+            return f"Error: Column '{column}' not found in the data."
+
+        # Count the unique strings in the specified column
+        unique_strings = df[column].nunique()
+
+        return unique_strings
+
+    except FileNotFoundError:
+        return f"Error: File '{filename}' not found."
+
+    except Exception as e:
+        return f"Error: {str(e)}"
+--
+filename = "raw_data.tsv"
+column = "conv_id"
+print(count_unique_strings(filename, column))
 
 ==================== server side
 Implement the server side using Python Fast. Include CORS handling, and make it possible for any IP address to access the server.
