@@ -8,3 +8,5 @@ Number of UP chunks in a conversation
 Number of tokens before the first UP chunk
 Length of the first UP chunk should be equal to, or greater than the number of history chunks (this is the "effective sustained" length of the traveling chunk.
 Are there transition frames more significant than the first transition frame? What determines such significance.
+
+check if a word contains a character
