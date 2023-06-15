@@ -103,6 +103,11 @@ from operator import itemgetter
 
 nltk.download('punkt')
 
+def generate_ngrams(text, n):
+    tokens = text.split(' ')
+    ngrams = zip(*[tokens[i:] for i in range(n)])
+    return [' '.join(ngram) for ngram in ngrams]
+
 def conversationTokenDensity(df, ngram=1):
     """
     This function calculates the token density of each conversation.
@@ -123,10 +128,10 @@ def conversationTokenDensity(df, ngram=1):
     # For each row in the DataFrame
     for _, row in df.iterrows():
         # Remove punctuation and tokenize the conversation
-        tokens = nltk.word_tokenize(row['plain_whisper'].translate(translator))
+        text = row['plain_whisper'].translate(translator)
         
         # Generate n-grams
-        ngrams = list(zip(*(itertools.islice(seq, index, None) for index, seq in enumerate(itertools.tee(tokens, ngram)))))
+        ngrams = generate_ngrams(text, ngram)
         
         # Count the occurrences of each n-gram
         counts = Counter(ngrams)
@@ -140,7 +145,7 @@ def conversationTokenDensity(df, ngram=1):
             density = count / total
             
             # Append the result to the list
-            results.append([row['conv_id'], row['complaint_disat'], ' '.join(ngram), count, density])
+            results.append([row['conv_id'], row['complaint_disat'], ngram, count, density])
     
     # Convert the list to a DataFrame and sort it by the density
     result_df = pd.DataFrame(results, columns=['conv_id', 'complaint_disat', 'token', 'count', 'density'])
