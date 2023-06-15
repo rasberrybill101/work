@@ -142,12 +142,14 @@ def conversationTokenDensity(df, ngram=1):
         total = sum(counts.values())
         
         # For each unique n-gram
-        for ngram, count in counts.items():
+        for uniqueNgram, count in counts.items():
             # Calculate the density
             density = count / total
             
+            print(uniqueNgram + ': ' + str(count) + '/' + str(total)
+            
             # Append the result to the list
-            results.append([row['conv_id'], row['complaint_disat'], ngram, count, density])
+            results.append([row['conv_id'], row['complaint_disat'], uniqueNgram, count, density])
     
     # Convert the list to a DataFrame and sort it by the density
     result_df = pd.DataFrame(results, columns=['conv_id', 'complaint_disat', 'token', 'count', 'density'])
