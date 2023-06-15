@@ -87,6 +87,9 @@ density
 
 Write another group of function that generalizes the functionality above, but rather than only considering single tokens, uses bigrams (2 consecutive tokens) or ngrams (n consecutive tokens) in the calculations, heatmap, and output csv file above. Actually, it may be more beneficial to write all the functions above so that they take an additional argument that indicates how many consecutive tokens should be considered. For instance passing in "1" as the ngram value will use a single token, etc.
 
+#=======================================================================
+# Find token density across level_1 categories
+#=======================================================================
 import nltk
 import string
 import itertools
@@ -95,9 +98,6 @@ from operator import itemgetter
 
 nltk.download('punkt')
 
-#=======================================================================
-# Find token density across level_1 categories
-#=======================================================================
 def conversationTokenDensity(df, ngram=1):
     """
     This function calculates the token density of each conversation.
