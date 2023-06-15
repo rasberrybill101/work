@@ -18,6 +18,11 @@ The data from this first step will be used in all subsequent steps.
 
 Write the functions "getTSVData(filename)" and "rejectSpanish()", noting that the output of getTSVData will be fed as input to "rejectSpanish". In turn the output from "rejectSpanish" will be used in subseqent step. For generality, enable getTSVData to take a column separator character "sep" as a second input. "sep" will default to the tab characer.
 ======================================== Preprocessing ===
+#==============================================
+# Input data
+#==============================================
+dir = '/chunk-complaints/categories/'
+filename = 'metadata-labeled-conversations.txt'
 
 import pandas as pd
 
@@ -88,7 +93,7 @@ density
 Write another group of function that generalizes the functionality above, but rather than only considering single tokens, uses bigrams (2 consecutive tokens) or ngrams (n consecutive tokens) in the calculations, heatmap, and output csv file above. Actually, it may be more beneficial to write all the functions above so that they take an additional argument that indicates how many consecutive tokens should be considered. For instance passing in "1" as the ngram value will use a single token, etc.
 
 #=======================================================================
-# Find token density across level_1 categories
+# Find token density in each conversation
 #=======================================================================
 import nltk
 import string
@@ -121,7 +126,7 @@ def conversationTokenDensity(df, ngram=1):
         tokens = nltk.word_tokenize(row['plain_whisper'].translate(translator))
         
         # Generate n-grams
-        ngrams = list(itertools.zip_longest(*(itertools.islice(seq, index, None) for index, seq in enumerate(itertools.tee(tokens, ngram)))))
+        ngrams = list(zip(*(itertools.islice(seq, index, None) for index, seq in enumerate(itertools.tee(tokens, ngram)))))
         
         # Count the occurrences of each n-gram
         counts = Counter(ngrams)
@@ -142,6 +147,7 @@ def conversationTokenDensity(df, ngram=1):
     result_df = result_df.sort_values(by='density', ascending=False)
     
     return result_df
+
     
 def writeToFile(df, ngram=1, filename=None):
     """
