@@ -119,6 +119,8 @@ def conversationTokenDensity(df, ngram=1):
     Returns:
     DataFrame: A DataFrame with the token density of each conversation.
     """
+    assert isinstance(ngram, int), "ngram parameter must be an integer"
+    
     # Create a translation table that maps every punctuation character to None
     translator = str.maketrans('', '', string.punctuation)
     
@@ -152,6 +154,7 @@ def conversationTokenDensity(df, ngram=1):
     result_df = result_df.sort_values(by='density', ascending=False)
     
     return result_df
+
 
     
 def writeToFile(df, ngram=1, filename=None):
