@@ -8,14 +8,14 @@ def truncate_columns(input_file):
     # Load the DataFrame
     df = pd.read_csv(input_file)
     
-    # Truncate the DataFrame to the first 43 columns
-    df = df.iloc[:, :43]
+    # Truncate the DataFrame to columns 0 to 42
+    df = df.iloc[:, 0:43]
     
     # Get the original filename without the extension
     original_filename = input_file.split(".")[0]
     
     # Create the output filename
-    output_file = original_filename + "_42.csv"
+    output_file = original_filename + "_truncated.txt"
     
     # Write the truncated DataFrame to a new CSV file
     df.to_csv(output_file, index=False)
