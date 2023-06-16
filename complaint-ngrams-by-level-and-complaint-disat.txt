@@ -177,7 +177,7 @@ import seaborn as sns
 import matplotlib.pyplot as plt
 import re
 
-def ngramVsReasonHeatmap(df, ngram=1, topK=20):
+def ngramVsReasonHeatmap2(df, ngram=1, topK=20):
     """
     This function generates a heatmap of ngrams vs reason_level_1.
 
@@ -189,9 +189,6 @@ def ngramVsReasonHeatmap(df, ngram=1, topK=20):
     # Calculate the ngram density by reason and complaint type
     density_df = ngramDensityByReasonAndComplaintType(df, ngram)
     
-    # Get the topK most common ngrams
-    top_ngrams = density_df['token'].value_counts().index[:topK]
-    
     # Get unique values from the reason_level_1 column, replace non-alphanumeric characters with a space and lower case
     reason_level_1_values = df['reason_level_1'].unique()
     reason_level_1_values = [re.sub(r'\W+', ' ', value).lower() for value in reason_level_1_values]
@@ -201,13 +198,14 @@ def ngramVsReasonHeatmap(df, ngram=1, topK=20):
     for value in reason_level_1_values:
         reason_tokens.update(value.split())
     
-    # Print reason tokens
-    print('Reason tokens:', reason_tokens)
-    
     # Filter ngrams to include only those found in tokens of 'reason_level_1'
-    top_ngrams = [ngram for ngram in top_ngrams if any(token.lower() in reason_tokens for token in ngram.split())]
+    valid_ngrams = [ngram for ngram in density_df['token'].unique() if any(token.lower() in reason_tokens for token in ngram.split())]
     
     # Filter the density DataFrame
+    density_df = density_df[density_df['token'].isin(valid_ngrams)]
+    
+    # Get the topK most common ngrams after the filtering
+    top_ngrams = density_df['token'].value_counts().index[:topK]
     density_df = density_df[density_df['token'].isin(top_ngrams)]
     
     # Pivot the DataFrame to create a matrix where rows are ngrams and columns are reason_level_1
@@ -221,7 +219,7 @@ def ngramVsReasonHeatmap(df, ngram=1, topK=20):
     plt.ylabel('Ngram')
 
     # Save the heatmap image to a file
-    plt.savefig("ngramVsReasonHeatmap.png", dpi=300, bbox_inches='tight')
+    plt.savefig("ngramVsReasonHeatmap2.png", dpi=300, bbox_inches='tight')
 
     plt.show()
 
