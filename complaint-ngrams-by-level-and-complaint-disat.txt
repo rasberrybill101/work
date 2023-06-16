@@ -1,0 +1,129 @@
+In the following working code (given after the new requirement has been stated):
+token is an individual token (either single word or ngram of multiple words) found in the conversation (the arg. ngram is used to set the ngram value)
+count is the number of times that the token appears in the conversation
+density is the count divided by the total number of tokens in the conversation
+
+The new requirement is to determine the number of token ngrams, and density of tokens that appear in each category of reason_level_1 across all conversations based on the value in the complaint_disat column. Therefore, for each combination of reason_level_1 and complaint_disat, we want to know the number of times a particular ngram appears. We also want to know the density, which is defined as the number of times an ngram appears divided by the total number of ngrams in the reason_level_1, complaint_disat combination.
+
+The columns of the output dataframe should be in this order:
+uniqueNgram
+count
+density
+complaint_disat (from dataframe)
+reason_level_1
+conv_id (from dataframe)
+
+
+The function to implement the specification above should be called "ngramDensityByReasonAndComplaintType"
+
+Here is the existing working code that can form the basis of this new requirement:
+
+def generate_ngrams(text, n):
+    tokens = text.split(' ')
+    ngrams = zip(*[tokens[i:] for i in range(n)])
+    return [' '.join(ngram) for ngram in ngrams]
+
+def conversationTokenDensity(df, ngram=1):
+    """
+    This function calculates the token density of each conversation.
+    
+    Parameters:
+    df (DataFrame): The data from the TSV file.
+    ngram (int): The number of consecutive tokens to consider.
+    
+    Returns:
+    DataFrame: A DataFrame with the token density of each conversation.
+    """
+    assert isinstance(ngram, int), "ngram parameter must be an integer"
+    
+    # Create a translation table that maps every punctuation character to None
+    translator = str.maketrans('', '', string.punctuation)
+    
+    # Initialize an empty list to store the results
+    results = []
+    
+    # For each row in the DataFrame
+    for _, row in df.iterrows():
+        # Remove punctuation and tokenize the conversation
+        text = row['plain_whisper'].translate(translator)
+        
+        # Generate n-grams
+        ngrams = generate_ngrams(text, ngram)
+        
+        # Count the occurrences of each n-gram
+        counts = Counter(ngrams)
+        
+        # Calculate the total number of n-grams
+        total = sum(counts.values())
+        
+        # For each unique n-gram
+        for uniqueNgram, count in counts.items():
+            # Calculate the density
+            density = count / total
+            
+            print(uniqueNgram + ': ' + str(count) + '/' + str(total))
+            
+            # Append the result to the list
+            results.append([row['conv_id'], row['complaint_disat'], uniqueNgram, count, density])
+    
+    # Convert the list to a DataFrame and sort it by the density
+    result_df = pd.DataFrame(results, columns=['conv_id', 'complaint_disat', 'token', 'count', 'density'])
+    result_df = result_df.sort_values(by='density', ascending=False)
+    
+    return result_df
+
+==================== updated code:
+
+def ngramDensityByReasonAndComplaintType(df, ngram=1):
+    """
+    This function calculates the token density for each reason_level_1 and complaint_disat combination.
+
+    Parameters:
+    df (DataFrame): The data from the TSV file.
+    ngram (int): The number of consecutive tokens to consider.
+
+    Returns:
+    DataFrame: A DataFrame with the token density for each reason_level_1 and complaint_disat combination.
+    """
+    assert isinstance(ngram, int), "ngram parameter must be an integer"
+    
+    # Create a translation table that maps every punctuation character to None
+    translator = str.maketrans('', '', string.punctuation)
+    
+    # Initialize an empty list to store the results
+    results = []
+
+    # Group the DataFrame by 'reason_level_1' and 'complaint_disat'
+    grouped_df = df.groupby(['reason_level_1', 'complaint_disat'])
+    
+    # For each group
+    for name, group in grouped_df:
+        # Concatenate the 'plain_whisper' column
+        text = ' '.join(group['plain_whisper'])
+
+        # Remove punctuation and generate n-grams
+        text = text.translate(translator)
+        ngrams = generate_ngrams(text, ngram)
+        
+        # Count the occurrences of each n-gram
+        counts = Counter(ngrams)
+        
+        # Calculate the total number of n-grams
+        total = sum(counts.values())
+        
+        # For each unique n-gram
+        for uniqueNgram, count in counts.items():
+            # Calculate the density
+            density = count / total
+            
+            # Append the result to the list
+            results.append([uniqueNgram, count, density, name[1], name[0], group['conv_id'].iloc[0]])
+    
+    # Convert the list to a DataFrame and sort it by the density
+    result_df = pd.DataFrame(results, columns=['token', 'count', 'density', 'complaint_disat', 'reason_level_1', 'conv_id'])
+    result_df = result_df.sort_values(by='density', ascending=False)
+    
+    return result_df
+
+
+
