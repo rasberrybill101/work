@@ -125,5 +125,41 @@ def ngramDensityByReasonAndComplaintType(df, ngram=1):
     
     return result_df
 
+================================================
+
+Based on this implementation, create and display a heatmap of ngrams (vertical axis) versus reason_level_1 (horizontal axis) to visualize how ngrams are related to reason_level_1.
+call the function "ngramVsReasonHeatmap"
+
+import seaborn as sns
+import matplotlib.pyplot as plt
+
+def ngramVsReasonHeatmap(df, ngram=1, topK=20):
+    """
+    This function generates a heatmap of ngrams vs reason_level_1.
+
+    Parameters:
+    df (DataFrame): The data from the TSV file.
+    ngram (int): The number of consecutive tokens to consider.
+    topK (int): The number of most common ngrams to consider.
+    """
+    # Calculate the ngram density by reason and complaint type
+    density_df = ngramDensityByReasonAndComplaintType(df, ngram)
+    
+    # Get the topK most common ngrams
+    top_ngrams = density_df['token'].value_counts().index[:topK]
+    
+    # Filter the density DataFrame
+    density_df = density_df[density_df['token'].isin(top_ngrams)]
+    
+    # Pivot the DataFrame to create a matrix where rows are ngrams and columns are reason_level_1
+    pivot_df = density_df.pivot_table(index='token', columns='reason_level_1', values='density', fill_value=0)
+    
+    # Create the heatmap
+    plt.figure(figsize=(10, 12))
+    sns.heatmap(pivot_df, annot=True, cmap='viridis')
+    plt.title('Heatmap of ngram densities by reason level')
+    plt.xlabel('Reason Level')
+    plt.ylabel('Ngram')
+    plt.show()
 
 
