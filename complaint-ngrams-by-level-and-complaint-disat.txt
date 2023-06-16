@@ -211,7 +211,8 @@ def ngramVsReasonHeatmap(df, ngram=1, topK=20):
     
     # Create the heatmap
     plt.figure(figsize=(10, 12))
-    sns.heatmap(pivot_df, annot=True, cmap='viridis')
+    #sns.heatmap(pivot_df, annot=True, cmap='viridis')
+    sns.heatmap(pivot_df, cmap='viridis')
     plt.title('Heatmap of ngram densities by reason level')
     plt.xlabel('Reason Level')
     plt.ylabel('Ngram')
