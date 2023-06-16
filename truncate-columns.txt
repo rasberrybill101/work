@@ -1,0 +1,21 @@
+Given an input csv data file, truncate each line as follows:
+delete all columns after the 43rd column.
+Write each line up to the 43rd column only to a file named <original_filename>_42.csv where <original_filename> is the original filename
+
+import pandas as pd
+
+def truncate_columns(input_file):
+    # Load the DataFrame
+    df = pd.read_csv(input_file)
+    
+    # Truncate the DataFrame to the first 43 columns
+    df = df.iloc[:, :43]
+    
+    # Get the original filename without the extension
+    original_filename = input_file.split(".")[0]
+    
+    # Create the output filename
+    output_file = original_filename + "_42.csv"
+    
+    # Write the truncated DataFrame to a new CSV file
+    df.to_csv(output_file, index=False)

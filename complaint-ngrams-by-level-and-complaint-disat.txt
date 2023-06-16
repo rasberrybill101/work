@@ -130,6 +130,8 @@ def ngramDensityByReasonAndComplaintType(df, ngram=1):
 Based on this implementation, create and display a heatmap of ngrams (vertical axis) versus reason_level_1 (horizontal axis) to visualize how ngrams are related to reason_level_1.
 call the function "ngramVsReasonHeatmap"
 
+show the line of code to save a copy of the heatmap image to "ngramVsReasonHeatmap.png"
+
 import seaborn as sns
 import matplotlib.pyplot as plt
 
@@ -160,6 +162,10 @@ def ngramVsReasonHeatmap(df, ngram=1, topK=20):
     plt.title('Heatmap of ngram densities by reason level')
     plt.xlabel('Reason Level')
     plt.ylabel('Ngram')
+
+    # Save the heatmap image to a file
+    plt.savefig("ngramVsReasonHeatmap.png", dpi=300, bbox_inches='tight')
+
     plt.show()
 
 
