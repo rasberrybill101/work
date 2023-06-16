@@ -177,7 +177,7 @@ import seaborn as sns
 import matplotlib.pyplot as plt
 import re
 
-def ngramVsReasonHeatmap(df, ngram=1, topK=20):
+def ngramVsReasonHeatmap2(df, ngram=1, topK=20):
     """
     This function generates a heatmap of ngrams vs reason_level_1.
 
