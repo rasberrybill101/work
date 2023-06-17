@@ -1,0 +1,13 @@
+show a vanilla implementation of sentence sentiment using TextBlob
+
+-----
+from textblob import TextBlob
+
+# Input text
+text = "I love this library! It's incredibly user-friendly and versatile."
+
+# Create a TextBlob object
+blob = TextBlob(text)
+
+# Print out the sentiment
+print(blob.sentiment)
