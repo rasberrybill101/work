@@ -127,9 +127,5 @@ def tabulateDistribution(data, filename):
     # Sort dataframe by count in descending order
     df.sort_values('count', ascending=False, inplace=True)
 
-    # Prepare the LaTeX table
-    table = df.to_latex(index=False, escape=False, column_format='lp{1.5cm}')
-
-    # Write the table to a .tex file
-    with open(filename, 'w') as f:
-        f.write(table)
+    # Write the DataFrame to a TSV file
+    df.to_csv(filename, sep='\t', index=False)
