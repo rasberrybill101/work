@@ -77,8 +77,16 @@ def plotReasonDistribution(data, include_not_a_complaint=True):
         
     reason_counts = data['reason_level_1'].value_counts()
 
-    # Sorting the counts in descending order
-    reason_counts = reason_counts.sort_values(ascending=False)
+    # Sorting the counts in ascending order
+    reason_counts = reason_counts.sort_values(ascending=True)
+
+    # Increase the font size using plt.rc
+    plt.rc('font', size=12) # controls default text size
+    plt.rc('axes', titlesize=15) # controls axis title size
+    plt.rc('axes', labelsize=13) # controls x and y labels size
+    plt.rc('xtick', labelsize=12) # controls tick labels size
+    plt.rc('ytick', labelsize=12) # controls tick labels size
+    plt.rc('legend', fontsize=12) # controls legend size
 
     # Plotting
     plt.figure(figsize=(10,20))  # Adjust the size of the figure as per your needs
