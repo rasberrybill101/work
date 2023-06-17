@@ -170,52 +170,46 @@ ngram matching should be done at the token level, rather than at a character lev
 #=============================================
 import pandas as pd
 import re
-from sklearn.feature_extraction.text import CountVectorizer
 from tqdm import tqdm
+from datetime import datetime
 
-def ngramFrequencyInLevel1(data, ngramSize=2, topK=10, includedLevel1=None, excludedNgrams=None):
+def ngramFrequencyInLevel1(data, ngramSize=2, topK=10, includedLevel1=None, excludedNgrams=None, filename='commonNgramsByReasonLevel.txt'):
     if includedLevel1 is None:
         includedLevel1 = ["Call Handling/Treatment", "Card Issues (Credit/Debit/ATM)"]
-    
+
+    # If no excluded ngrams are provided, read from file  
     if excludedNgrams is None:
-        excludedNgrams = ["thank you", "bank of", "being a", "to be", "to do", "to go", "to you", "want to", "you for"]
-    
-    # Convert excludedNgrams to lower case as we're doing case-insensitive matching
-    excludedNgrams = [x.lower() for x in excludedNgrams]
+        with open('excludeNgrams.txt', 'r') as f:
+            excludedNgrams = [line.strip().lower() for line in f]
 
     # Create a new DataFrame based on conditions
     new_data = data[(data['complaint_disat'] == 'Complaint') & (data['reason_level_1'].isin(includedLevel1))].copy()
 
-    # Initialize CountVectorizer
-    vec = CountVectorizer(ngram_range=(ngramSize, ngramSize), lowercase=True)
-
-    # Fit and transform on 'plain_whisper' column
-    word_count_vec = vec.fit_transform(new_data['plain_whisper'])
-
-    # Summarize the word counts
-    sum_words = word_count_vec.sum(axis=0) 
-    words_freq = [(word, sum_words[0, idx]) for word, idx in vec.vocabulary_.items()]
-    words_freq = sorted(words_freq, key = lambda x: x[1], reverse=True)
-    
-    # Exclude ngrams in the excludedNgrams list
-    words_freq = [wf for wf in words_freq if wf[0] not in excludedNgrams]
-    
-    # Select top K n-grams
-    top_ngrams = words_freq[:topK]
-
     # Tokenize text into words and construct list of n-grams for each row
     new_data['plain_whisper_ngrams'] = new_data['plain_whisper'].apply(lambda x: [' '.join(re.findall(r'\b\w+\b', x.lower())[i:i+ngramSize]) for i in range(len(re.findall(r'\b\w+\b', x.lower()))-ngramSize+1)])
 
+    # Remove excluded n-grams
+    new_data['plain_whisper_ngrams'] = new_data['plain_whisper_ngrams'].apply(lambda ngrams: [ngram for ngram in ngrams if ngram not in excludedNgrams])
+
+    # Count n-grams
+    ngrams_series = pd.Series([ngram for ngrams_list in new_data['plain_whisper_ngrams'].tolist() for ngram in ngrams_list])
+    top_ngrams = ngrams_series.value_counts().head(topK).reset_index().values.tolist()
+
     # Prepare output
     output = []
-    
+
     for ngram, count in tqdm(top_ngrams, desc="Processing ngrams", unit="ngram"):
         matching_rows = new_data[new_data['plain_whisper_ngrams'].apply(lambda x: ngram in x)]
         for _, row in matching_rows.iterrows():
             output.append((ngram, count, row['reason_level_1'], row['conv_id']))
+        
+        # Print each distinct n-gram to console
+        print(ngram)
 
     # Print and append to file
-    with open('commonNgramsByReasonLevel.txt', 'a') as f:
+    with open(filename, 'a') as f:
+        timestamp = datetime.now().strftime('%Y-%m-%d:%H-%M')
+        f.write("#================== batch {} ================\n".format(timestamp))
         for item in output:
             f.write("ngram: \"{}\", count: {}, reason_level_1: \"{}\", conv_id: {}\n".format(*item))
             
