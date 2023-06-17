@@ -119,7 +119,7 @@ I want to make a compact "cheat sheet" that can be displayed on single printed p
 #=============================================
 from tabulate import tabulate
 
-def showReasonDistribution(data, filename):
+def showReasonDistribution(data, filename, omitFormatChars=False):
     reason_counts = data['reason_level_1'].value_counts()
 
     # Convert the series to a DataFrame
@@ -141,6 +141,12 @@ def showReasonDistribution(data, filename):
 
     # Write the dataframe to a text file using tabulate
     with open(filename, 'w') as f:
-        f.write(tabulate(df, headers='keys', tablefmt='psql', showindex=False))
+        if omitFormatChars:
+            f.write(tabulate(df, headers='keys', tablefmt='plain', showindex=False))
+        else:
+            f.write(tabulate(df, headers='keys', tablefmt='psql', showindex=False))
 
-    print(tabulate(df, headers='keys', tablefmt='psql', showindex=False))
+    if omitFormatChars:
+        print(tabulate(df, headers='keys', tablefmt='plain', showindex=False))
+    else:
+        print(tabulate(df, headers='keys', tablefmt='psql', showindex=False))
