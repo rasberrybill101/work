@@ -11,3 +11,11 @@ blob = TextBlob(text)
 
 # Print out the sentiment
 print(blob.sentiment)
+
+--- Spyder pip venv usage:
+pip install spyder-kernels==1.9.2
+
+from cmd line in the venv folder (/chunk-complaint/category)
+python -c "import sys; print(sys.executable)"
+copy the value printed and apply it to Spyder/Tools/Python Environment
+restart Spyder

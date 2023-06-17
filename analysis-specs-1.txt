@@ -1,0 +1,64 @@
+Analysis specs:
+Given a tab separated file "raw_data.tsv" that has the following columns (specified in the header):
+conv_id
+complaint_disat
+segment_id
+call_duration
+reason_level_1
+reason_level_2
+plain_whisper
+language_code
+
+together with this code that extracts a datframe from the file:
+#==============================================
+# Input data
+#==============================================
+dir = '/chunk-complaints/categories/'
+filename = 'metadata-labeled-conversations.txt'
+
+import pandas as pd
+
+#=======================================================================
+# Read TSV file and return pandas df that excludes spanish language rows
+#=======================================================================
+def getTSVData(filename, sep='\t'):
+    data = pd.read_csv(filename, sep=sep)
+    return data
+
+def rejectSpanish(data):
+    data = data[data['plain_whisper'].apply(lambda x: 'gracias' not in str(x).lower())]
+    return data
+
+The dataframe obtained from rejectSpanish will be used as input to the following function
+1. Given a define a function "rejectReasonLevels" that rejects any rows whose reason_level_1 contains tokens in a an input dataframe, and a list initialized to:
+["CTRL SQL Database", "tbd"]
+2. Given a dataframe (eg. the one obtained from rejectReasonLevels), write a function "showReasonDistribution" that will print a list of tab-separated lines for each reason_level_1, where each line contains:
+unique value of reason_level_1
+number of conv_id lines associated with reason_level_1
+comma-separated list of individual tokens in the string value of reason_level_1
+
+To print the individual tokens, treat non alphanumeric characters as spaces and separate the resulting string on spaces.
+
+"showReasonDistribution" will also write each line to a file named "category_biz_labels.txt"
+
+#=============================================
+# Remove level-1 reasons not required
+#=============================================
+def rejectReasonLevels(data, levels_list=["CTRL SQL Database", "tbd"]):
+    for level in levels_list:
+        data = data[~data['reason_level_1'].str.contains(level)]
+    return data
+
+#=============================================
+# 
+#=============================================
+def showReasonDistribution(data):
+    reason_counts = data['reason_level_1'].value_counts()
+
+    with open('category_biz_labels.txt', 'w') as f:
+        for reason, count in reason_counts.iteritems():
+            reason_cleaned = re.sub('\W+', ' ', reason)
+            tokens = reason_cleaned.split()
+            print(f'{reason}\t{count}\t{",".join(tokens)}')
+            f.write(f'{reason}\t{count}\t{",".join(tokens)}\n')
+
