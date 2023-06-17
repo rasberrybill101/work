@@ -44,7 +44,7 @@ To print the individual tokens, treat non alphanumeric characters as spaces and 
 #=============================================
 # Remove level-1 reasons not required
 #=============================================
-def rejectReasonLevels(data, levels_list=["CTRL SQL Database", "tbd"]):
+def rejectReasonLevels(data, levels_list=["CTR SQL Database", "tbd"]):
     # Convert the 'reason_level_1' column to strings
     data['reason_level_1'] = data['reason_level_1'].astype(str)
     
@@ -111,4 +111,36 @@ def plotReasonDistribution(data, include_not_a_complaint=True):
     plt.tight_layout()
     plt.show()
 
+--------------------------- show compact data
+I want to make a compact "cheat sheet" that can be displayed on single printed page. It's also ok to take a screenshot and print that. The data I want to show will come from the data generated using this function: showReasonDistribution(data, filename)
 
+#=============================================
+# Tabulate reasons and counts
+#=============================================
+from tabulate import tabulate
+
+def showReasonDistribution(data, filename):
+    reason_counts = data['reason_level_1'].value_counts()
+
+    # Convert the series to a DataFrame
+    df = reason_counts.reset_index()
+    df.columns = ['reason_level_1', 'count']
+
+    # Sort dataframe by count in descending order
+    df.sort_values('count', ascending=False, inplace=True)
+
+    # Prepare the data for tabulate
+    rows = df.shape[0]
+    third = -(-rows // 3)  # Equivalent of ceiling division
+
+    # Split the dataframe into 3 equal parts
+    df1, df2, df3 = df.iloc[:third], df.iloc[third:2*third], df.iloc[2*third:]
+
+    # Create a single dataframe from the 3 parts
+    df = pd.concat([df1.reset_index(drop=True), df2.reset_index(drop=True), df3.reset_index(drop=True)], axis=1)
+
+    # Write the dataframe to a text file using tabulate
+    with open(filename, 'w') as f:
+        f.write(tabulate(df, headers='keys', tablefmt='psql', showindex=False))
+
+    print(tabulate(df, headers='keys', tablefmt='psql', showindex=False))
