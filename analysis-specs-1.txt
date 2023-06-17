@@ -77,18 +77,26 @@ def plotReasonDistribution(data, include_not_a_complaint=True):
         
     reason_counts = data['reason_level_1'].value_counts()
 
+    # Sorting the counts in descending order
+    reason_counts = reason_counts.sort_values(ascending=False)
+
     # Plotting
-    plt.figure(figsize=(20,10))
-    reason_counts.plot(kind='bar')
-    plt.xlabel('Reason Level 1')
-    plt.ylabel('Count')
+    plt.figure(figsize=(10,20))  # Adjust the size of the figure as per your needs
+    reason_counts.plot(kind='barh')  # Changed to 'barh' for horizontal bars
+    plt.ylabel('Reason Level 1')
+    plt.xlabel('Count')
     if include_not_a_complaint:
         plt.title('Distribution of Reason Level 1')
         plt.savefig('plotWithComplaint.png', dpi=300)
     else:
         plt.title('Distribution of Reason Level 1 excluding "Not a Complaint"')
         plt.savefig('plotWithoutComplaint.png', dpi=300)
-    plt.xticks(rotation=45)
+
+    # Add count annotations to each bar
+    for index, value in enumerate(reason_counts):
+        plt.text(value, index, str(value))
+        
     plt.tight_layout()
     plt.show()
+
 
