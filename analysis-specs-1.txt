@@ -64,3 +64,20 @@ def showReasonDistribution(data, filename):
 
 
 show a bar chart of reason_level_1 vs count
+
+#=============================================
+# Plot distribution of reason level 1
+#=============================================
+import matplotlib.pyplot as plt
+
+def showReasonDistribution(data):
+    reason_counts = data['reason_level_1'].value_counts()
+
+    # Plotting
+    plt.figure(figsize=(10,6))
+    reason_counts.plot(kind='bar')
+    plt.xlabel('Reason Level 1')
+    plt.ylabel('Count')
+    plt.title('Distribution of Reason Level 1')
+    plt.savefig('distributionReasonLevel.png')
+    plt.show()
