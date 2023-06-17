@@ -129,3 +129,88 @@ def tabulateDistribution(data, filename):
 
     # Write the DataFrame to a TSV file
     df.to_csv(filename, sep='\t', index=False)
+
+------------------------ identify most common ngrams for a given category
+Given a dataframe with the following columns:
+conv_id
+complaint_disat
+segment_id
+call_duration
+reason_level_1
+reason_level_2
+plain_whisper
+language_code
+
+Write a function 
+ngramFrequencyInLevel1(data, ngramSize=2, topK=10, includedLevel1, excludedNgrams)
+
+to identify the most commonly occurring ngrams in plain_whisper column for the rows where "complaint_disat" column has the value "Complaint", reason_level_1 value must be present in "includedLevel1", ngrams in the list "excludedNgrams" must be excluded. Do all ngram checking in a case-insensitive way.
+Print "the ngram", count, reason_level_1, conv_id    for each of the most commonly occurring ngrams. The ngram should be printed in double quotes. Also append the printed results to the file "commonNgramsByReasonLevel.txt". Each row should be on a new line.
+
+Use the defauts. Please put one ngram on each line for ease of extending the list:
+excludedNgrams =["thank you", 
+                "bank of", 
+				"being a",
+				"to be",
+				"to do",
+				"to go"
+				"to you",
+				"want to"
+				"you for"
+				]  Note the formatting of one entry per line makes it easy to add new lines!
+includedLevel1 = ["Call Handling/Treatment",
+				  "Card Issues (Credit/Debit/ATM)"
+				 ] - again note one entry per line
+topK means the topK ngrams that appear the largest number of times in all specific reason_level_1 column is present in "includedLevel1" and column "complaint_disat" has the value "Complaint".
+
+ngram matching should be done at the token level, rather than at a character level. Therefore str.contains is not a valid way to check. By token is meant the individual words which can be separated by one or more spaces, and exclusive of periods, commas and other punctuation marks.
+
+import pandas as pd
+import re
+from sklearn.feature_extraction.text import CountVectorizer
+
+def ngramFrequencyInLevel1(data, ngramSize=2, topK=10, includedLevel1=None, excludedNgrams=None):
+    if includedLevel1 is None:
+        includedLevel1 = ["Call Handling/Treatment", "Card Issues (Credit/Debit/ATM)"]
+    
+    if excludedNgrams is None:
+        excludedNgrams = ["thank you", "bank of", "being a", "to be", "to do", "to go", "to you", "want to", "you for"]
+    
+    # Convert excludedNgrams to lower case as we're doing case-insensitive matching
+    excludedNgrams = [x.lower() for x in excludedNgrams]
+
+    # Filter DataFrame based on conditions
+    data = data[(data['complaint_disat'] == 'Complaint') & (data['reason_level_1'].isin(includedLevel1))]
+
+    # Initialize CountVectorizer
+    vec = CountVectorizer(ngram_range=(ngramSize, ngramSize), stop_words=excludedNgrams, lowercase=True)
+
+    # Fit and transform on 'plain_whisper' column
+    word_count_vec = vec.fit_transform(data['plain_whisper'])
+
+    # Summarize the word counts
+    sum_words = word_count_vec.sum(axis=0)
+    
+    # Get words and corresponding counts
+    words_freq = [(word, sum_words[0, idx]) for word, idx in vec.vocabulary_.items()]
+    words_freq = sorted(words_freq, key = lambda x: x[1], reverse=True)
+    
+    # Select top K n-grams
+    top_ngrams = words_freq[:topK]
+
+    # Tokenize text into words and construct list of n-grams for each row
+    data['plain_whisper_ngrams'] = data['plain_whisper'].apply(lambda x: [' '.join(re.findall(r'\b\w+\b', x.lower())[i:i+ngramSize]) for i in range(len(re.findall(r'\b\w+\b', x.lower()))-ngramSize+1)])
+
+    # Prepare output
+    output = []
+    for ngram, count in top_ngrams:
+        matching_rows = data[data['plain_whisper_ngrams'].apply(lambda x: ngram in x)]
+        for _, row in matching_rows.iterrows():
+            output.append((ngram, count, row['reason_level_1'], row['conv_id']))
+
+    # Print and append to file
+    with open('commonNgramsByReasonLevel.txt', 'a') as f:
+        for item in output:
+            f.write("ngram: \"{}\", count: {}, reason_level_1: \"{}\", conv_id: {}\n".format(*item))
+            
+    return output
