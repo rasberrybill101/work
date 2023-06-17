@@ -117,9 +117,7 @@ I want to make a compact "cheat sheet" that can be displayed on single printed p
 #=============================================
 # Tabulate reasons and counts
 #=============================================
-from tabulate import tabulate
-
-def showReasonDistribution(data, filename, omitFormatChars=False):
+def tabulateDistribution(data, filename):
     reason_counts = data['reason_level_1'].value_counts()
 
     # Convert the series to a DataFrame
@@ -129,24 +127,9 @@ def showReasonDistribution(data, filename, omitFormatChars=False):
     # Sort dataframe by count in descending order
     df.sort_values('count', ascending=False, inplace=True)
 
-    # Prepare the data for tabulate
-    rows = df.shape[0]
-    third = -(-rows // 3)  # Equivalent of ceiling division
+    # Prepare the LaTeX table
+    table = df.to_latex(index=False, escape=False, column_format='lp{1.5cm}')
 
-    # Split the dataframe into 3 equal parts
-    df1, df2, df3 = df.iloc[:third], df.iloc[third:2*third], df.iloc[2*third:]
-
-    # Create a single dataframe from the 3 parts
-    df = pd.concat([df1.reset_index(drop=True), df2.reset_index(drop=True), df3.reset_index(drop=True)], axis=1)
-
-    # Write the dataframe to a text file using tabulate
+    # Write the table to a .tex file
     with open(filename, 'w') as f:
-        if omitFormatChars:
-            f.write(tabulate(df, headers='keys', tablefmt='plain', showindex=False))
-        else:
-            f.write(tabulate(df, headers='keys', tablefmt='psql', showindex=False))
-
-    if omitFormatChars:
-        print(tabulate(df, headers='keys', tablefmt='plain', showindex=False))
-    else:
-        print(tabulate(df, headers='keys', tablefmt='psql', showindex=False))
+        f.write(table)
