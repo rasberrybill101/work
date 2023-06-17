@@ -52,12 +52,15 @@ def rejectReasonLevels(data, levels_list=["CTRL SQL Database", "tbd"]):
 #=============================================
 # Show distribution of reason level 1
 #=============================================
-def showReasonDistribution(data):
+def showReasonDistribution(data, filename):
     reason_counts = data['reason_level_1'].value_counts()
 
-    with open('category_biz_labels.txt', 'w') as f:
-        for reason, count in reason_counts.iteritems():
+    with open(filename, 'w') as f:
+        for reason, count in reason_counts.items():
             reason_cleaned = re.sub('\W+', ' ', reason)
             tokens = reason_cleaned.split()
             print(f'{reason}\t{count}\t{",".join(tokens)}')
             f.write(f'{reason}\t{count}\t{",".join(tokens)}\n')
+
+
+show a bar chart of reason_level_1 vs count
