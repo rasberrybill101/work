@@ -70,7 +70,11 @@ show a bar chart of reason_level_1 vs count
 #=============================================
 import matplotlib.pyplot as plt
 
-def plotReasonDistribution(data):
+def plotReasonDistribution(data, include_not_a_complaint=True):
+    # Filter out 'Not a Complaint' rows if include_not_a_complaint is False
+    if not include_not_a_complaint:
+        data = data[data['reason_level_1'] != 'Not a Complaint']
+        
     reason_counts = data['reason_level_1'].value_counts()
 
     # Plotting
@@ -78,8 +82,13 @@ def plotReasonDistribution(data):
     reason_counts.plot(kind='bar')
     plt.xlabel('Reason Level 1')
     plt.ylabel('Count')
-    plt.title('Distribution of Reason Level 1')
+    if include_not_a_complaint:
+        plt.title('Distribution of Reason Level 1')
+        plt.savefig('plotWithComplaint.png', dpi=300)
+    else:
+        plt.title('Distribution of Reason Level 1 excluding "Not a Complaint"')
+        plt.savefig('plotWithoutComplaint.png', dpi=300)
     plt.xticks(rotation=45)
     plt.tight_layout()
-    plt.savefig('distribution.png', dpi=300)
     plt.show()
+
