@@ -221,15 +221,15 @@ modify what is written to file as follows:
 Here "sentence" means the sentence that contains the ngram. For example for ngram "thank you" then the sentence could be something like "I would like to say thank you for doing that". Sentence has the usual meaning of a block of text terminating with a period.
 
 ----- updated to include sentence containing the ngram
-import pandas as pd
 import re
 from tqdm import tqdm
 from datetime import datetime
-import time
-import nltk
+
+def extract_sentences(text):
+    sentences = re.split(r'(?<!\w\.\w.)(?<![A-Z][a-z]\.)(?<=\.|\?)\s', text)
+    return sentences
 
 def ngramFrequencyInLevel1(data, ngramSize=2, topK=10, includedLevel1=None, excludedNgrams=None, filename='commonNgramsByReasonLevel.txt'):
-    nltk.download('punkt') # ensure the NLTK sentence tokenizer is available
     if includedLevel1 is None:
         includedLevel1 = ["Call Handling/Treatment", "Card Issues (Credit/Debit/ATM)"]
 
@@ -241,24 +241,29 @@ def ngramFrequencyInLevel1(data, ngramSize=2, topK=10, includedLevel1=None, excl
     # Create a new DataFrame based on conditions
     new_data = data[(data['complaint_disat'] == 'Complaint') & (data['reason_level_1'].isin(includedLevel1))].copy()
 
+    # Initialize sentences and n-grams list
+    sentences_ngrams = []
+
     # Tokenize text into sentences and n-grams, and store as a list of tuples (sentence, ngram)
-    new_data['plain_whisper_ngrams'] = new_data['plain_whisper'].apply(lambda x: [(sent, ' '.join(re.findall(r'\b\w+\b', sent.lower())[i:i+ngramSize])) for sent in nltk.sent_tokenize(x) for i in range(len(re.findall(r'\b\w+\b', sent.lower()))-ngramSize+1)])
+    for _, row in new_data.iterrows():
+        sentences = extract_sentences(row['plain_whisper'])
+        for sentence in sentences:
+            ngrams = [' '.join(re.findall(r'\b\w+\b', sentence.lower())[i:i+ngramSize]) for i in range(len(re.findall(r'\b\w+\b', sentence.lower()))-ngramSize+1)]
+            sentences_ngrams.append((sentence, ngrams))
 
     # Remove excluded n-grams
-    new_data['plain_whisper_ngrams'] = new_data['plain_whisper_ngrams'].apply(lambda ngram_tuples: [ngram_tuple for ngram_tuple in ngram_tuples if ngram_tuple[1] not in excludedNgrams])
+    sentences_ngrams = [(sentence, ngrams) for sentence, ngrams in sentences_ngrams if not any(ngram in excludedNgrams for ngram in ngrams)]
 
     # Count n-grams
-    ngram_tuples_list = [ngram_tuple for ngram_tuples in new_data['plain_whisper_ngrams'].tolist() for ngram_tuple in ngram_tuples]
-    ngrams_series = pd.Series([ngram_tuple[1] for ngram_tuple in ngram_tuples_list])
+    ngrams_series = pd.Series([ngram for _, ngrams in sentences_ngrams for ngram in ngrams])
     top_ngrams = ngrams_series.value_counts().head(topK).reset_index().values.tolist()
 
     # Prepare output
     output = []
 
     for ngram, count in tqdm(top_ngrams, desc="Processing ngrams", unit="ngram"):
-        matching_tuples = [ngram_tuple for ngram_tuple in ngram_tuples_list if ngram_tuple[1] == ngram]
-        for matching_tuple in matching_tuples:
-            sentence, _ = matching_tuple
+        matching_sentences = [sentence for sentence, ngrams in sentences_ngrams if ngram in ngrams]
+        for sentence in matching_sentences:
             row = new_data[new_data['plain_whisper'].str.contains(sentence)].iloc[0]
             output.append((ngram, sentence, count, row['reason_level_1'], row['conv_id']))
         
@@ -270,6 +275,7 @@ def ngramFrequencyInLevel1(data, ngramSize=2, topK=10, includedLevel1=None, excl
         timestamp = datetime.now().strftime('%Y-%m-%d:%H-%M')
         f.write("#================== batch {} ================\n".format(timestamp))
         for item in output:
-            f.write("ngram: \"{}\", sentence: \"{}\", count: {}, reason_level_1: \"{}\", conv_id: {}\n".format(*item))
+            f.write("ngram: \"{}\", sentence: \"{}\", count: {}, reason_level_1: \"{}\", conv_id: \"{}\"\n".format(*item))
     
     return output
+
