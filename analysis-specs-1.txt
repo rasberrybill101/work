@@ -50,7 +50,7 @@ def rejectReasonLevels(data, levels_list=["CTRL SQL Database", "tbd"]):
     return data
 
 #=============================================
-# Reject non-used reason-levels
+# Show distribution of reason level 1
 #=============================================
 def showReasonDistribution(data):
     reason_counts = data['reason_level_1'].value_counts()
