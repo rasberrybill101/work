@@ -239,60 +239,6 @@ def ngramFrequencyInLevel1(data, ngramSize=2, topK=10, includedLevel1=None, excl
     if includedLevel1 is None:
         includedLevel1 = ["Call Handling/Treatment", "Card Issues (Credit/Debit/ATM)"]
 
-    # If no excluded ngrams are provided, read from file
-    if excludedNgrams is None:
-        with open('excludeNgrams.txt', 'r') as f:
-            excludedNgrams = [line.strip().lower() for line in f]
-
-    # Create a new DataFrame based on conditions
-    new_data = data[(data['complaint_disat'] == 'Complaint') & (data['reason_level_1'].isin(includedLevel1))].copy()
-
-    # Initialize sentences and n-grams list
-    sentences_ngrams = []
-
-    # Extract sentences and store in a list
-    for _, row in new_data.iterrows():
-        sentences = extract_sentences(row['plain_whisper'])
-        for sentence in sentences:
-            ngrams = extract_ngrams(sentence, ngramSize)
-            sentences_ngrams.append((sentence, ngrams))
-
-    # Remove excluded n-grams
-    sentences_ngrams = [(sentence, ngrams) for sentence, ngrams in sentences_ngrams if not any(ngram in excludedNgrams for ngram in ngrams)]
-
-    # Count n-grams
-    ngrams_series = pd.Series([ngram for _, ngrams in sentences_ngrams for ngram in ngrams])
-    top_ngrams = ngrams_series.value_counts().head(topK).reset_index().values.tolist()
-
-    # Prepare output
-    output = []
-
-    for ngram, count in tqdm(top_ngrams, desc="Processing ngrams", unit="ngram"):
-        matching_sentences = [sentence for sentence, ngrams in sentences_ngrams if ngram in ngrams]
-        for sentence in matching_sentences:
-            matching_rows = new_data[new_data['plain_whisper'].str.contains(sentence)]
-            if not matching_rows.empty:
-                row = matching_rows.iloc[0]
-                output.append((ngram, sentence, count, row['reason_level_1'], row['conv_id']))
-
-        # Print each distinct n-gram to console
-        print(ngram)
-
-    # Print and append to file
-    with open(filename, 'a') as f:
-        timestamp = datetime.now().strftime('%Y-%m-%d:%H-%M')
-        f.write("#================== batch {} ================\n".format(timestamp))
-        for item in output:
-            f.write("ngram: \"{}\", sentence: \"{}\", count: {}, reason_level_1: \"{}\", conv_id: \"{}\"\n".format(*item))
-
-    return output
-	
-	================cleaned up to remove unnecessary processing and output duplication
-	
-def ngramFrequencyInLevel1(data, ngramSize=2, topK=10, includedLevel1=None, excludedNgrams=None, filename='commonNgramsByReasonLevel.txt'):
-    if includedLevel1 is None:
-        includedLevel1 = ["Call Handling/Treatment", "Card Issues (Credit/Debit/ATM)"]
-
     if excludedNgrams is None:
         with open('excludeNgrams.txt', 'r') as f:
             excludedNgrams = [line.strip().lower() for line in f]
@@ -336,3 +282,59 @@ def ngramFrequencyInLevel1(data, ngramSize=2, topK=10, includedLevel1=None, excl
             f.write("ngram: \"{}\", sentence: \"{}\", count: {}, reason_level_1: \"{}\", conv_id: \"{}\"\n".format(*item))
 
     return output
+
+===================== additional ...
+can you update the code so that only sentences that contain the ngrams in the file "allowedNgrams.txt" are included in the output. "allowedNgrams.txt" is a text file with one ngram per line, where each ngram is a string consisting of one or more tokens
+
+def ngramFrequencyInLevel1(data, ngramSize=2, topK=10, includedLevel1=None, excludedNgrams=None, filename='commonNgramsByReasonLevel.txt'):
+    if includedLevel1 is None:
+        includedLevel1 = ["Call Handling/Treatment", "Card Issues (Credit/Debit/ATM)"]
+
+    if excludedNgrams is None:
+        with open('excludeNgrams.txt', 'r') as f:
+            excludedNgrams = [line.strip().lower() for line in f]
+
+    # Load allowed ngrams, skipping lines that start with '#'
+    with open('allowedNgrams.txt', 'r') as f:
+        allowedNgrams = [line.strip().lower() for line in f if not line.startswith('#')]
+
+    new_data = data[(data['complaint_disat'] == 'Complaint') & (data['reason_level_1'].isin(includedLevel1))].copy()
+
+    sentences_ngrams = []
+    ngrams_sentence_map = {}
+    output_rows = set()
+
+    for index, row in new_data.iterrows():
+        sentences = extract_sentences(row['plain_whisper'])
+        for sentence in sentences:
+            ngrams = extract_ngrams(sentence, ngramSize)
+            ngrams = [ngram for ngram in ngrams if ngram not in excludedNgrams and ngram in allowedNgrams]
+            sentences_ngrams.extend(ngrams)
+            for ngram in ngrams:
+                if ngram not in ngrams_sentence_map:
+                    ngrams_sentence_map[ngram] = {(sentence, index)}
+                else:
+                    ngrams_sentence_map[ngram].add((sentence, index))
+
+    ngrams_series = pd.Series(sentences_ngrams)
+    top_ngrams = ngrams_series.value_counts().head(topK).reset_index().values.tolist()
+
+    output = []
+
+    for ngram, count in tqdm(top_ngrams, desc="Processing ngrams", unit="ngram"):
+        if ngram in ngrams_sentence_map:
+            for sentence, row_index in ngrams_sentence_map[ngram]:
+                if row_index not in output_rows:
+                    row = new_data.loc[row_index]
+                    output.append((ngram, sentence, count, row['reason_level_1'], row['conv_id']))
+                    output_rows.add(row_index)
+        print(ngram)
+
+    with open(filename, 'a') as f:
+        timestamp = datetime.now().strftime('%Y-%m-%d:%H-%M')
+        f.write("#================== batch {} ================\n".format(timestamp))
+        for item in output:
+            f.write("ngram: \"{}\", sentence: \"{}\", count: {}, reason_level_1: \"{}\", conv_id: \"{}\"\n".format(*item))
+
+    return output
+
