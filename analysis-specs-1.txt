@@ -165,6 +165,9 @@ topK means the topK ngrams that appear the largest number of times in all specif
 
 ngram matching should be done at the token level, rather than at a character level. Therefore str.contains is not a valid way to check. By token is meant the individual words which can be separated by one or more spaces, and exclusive of periods, commas and other punctuation marks.
 
+#=============================================
+# Find ngram frequency by level for complaints
+#=============================================
 import pandas as pd
 import re
 from sklearn.feature_extraction.text import CountVectorizer
