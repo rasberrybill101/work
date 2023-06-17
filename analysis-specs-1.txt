@@ -222,6 +222,7 @@ Here "sentence" means the sentence that contains the ngram. For example for ngra
 
 ----- updated to include sentence containing the ngram
 import re
+import pandas as pd
 from tqdm import tqdm
 from datetime import datetime
 
@@ -229,11 +230,16 @@ def extract_sentences(text):
     sentences = re.split(r'(?<!\w\.\w.)(?<![A-Z][a-z]\.)(?<=\.|\?)\s', text)
     return sentences
 
+def extract_ngrams(sentence, ngramSize):
+    tokens = re.findall(r'\b\w+\b', sentence.lower())
+    ngrams = [' '.join(tokens[i:i+ngramSize]) for i in range(len(tokens)-ngramSize+1)]
+    return ngrams
+
 def ngramFrequencyInLevel1(data, ngramSize=2, topK=10, includedLevel1=None, excludedNgrams=None, filename='commonNgramsByReasonLevel.txt'):
     if includedLevel1 is None:
         includedLevel1 = ["Call Handling/Treatment", "Card Issues (Credit/Debit/ATM)"]
 
-    # If no excluded ngrams are provided, read from file  
+    # If no excluded ngrams are provided, read from file
     if excludedNgrams is None:
         with open('excludeNgrams.txt', 'r') as f:
             excludedNgrams = [line.strip().lower() for line in f]
@@ -244,11 +250,11 @@ def ngramFrequencyInLevel1(data, ngramSize=2, topK=10, includedLevel1=None, excl
     # Initialize sentences and n-grams list
     sentences_ngrams = []
 
-    # Tokenize text into sentences and n-grams, and store as a list of tuples (sentence, ngram)
+    # Extract sentences and store in a list
     for _, row in new_data.iterrows():
         sentences = extract_sentences(row['plain_whisper'])
         for sentence in sentences:
-            ngrams = [' '.join(re.findall(r'\b\w+\b', sentence.lower())[i:i+ngramSize]) for i in range(len(re.findall(r'\b\w+\b', sentence.lower()))-ngramSize+1)]
+            ngrams = extract_ngrams(sentence, ngramSize)
             sentences_ngrams.append((sentence, ngrams))
 
     # Remove excluded n-grams
@@ -264,9 +270,11 @@ def ngramFrequencyInLevel1(data, ngramSize=2, topK=10, includedLevel1=None, excl
     for ngram, count in tqdm(top_ngrams, desc="Processing ngrams", unit="ngram"):
         matching_sentences = [sentence for sentence, ngrams in sentences_ngrams if ngram in ngrams]
         for sentence in matching_sentences:
-            row = new_data[new_data['plain_whisper'].str.contains(sentence)].iloc[0]
-            output.append((ngram, sentence, count, row['reason_level_1'], row['conv_id']))
-        
+            matching_rows = new_data[new_data['plain_whisper'].str.contains(sentence)]
+            if not matching_rows.empty:
+                row = matching_rows.iloc[0]
+                output.append((ngram, sentence, count, row['reason_level_1'], row['conv_id']))
+
         # Print each distinct n-gram to console
         print(ngram)
 
@@ -276,6 +284,5 @@ def ngramFrequencyInLevel1(data, ngramSize=2, topK=10, includedLevel1=None, excl
         f.write("#================== batch {} ================\n".format(timestamp))
         for item in output:
             f.write("ngram: \"{}\", sentence: \"{}\", count: {}, reason_level_1: \"{}\", conv_id: \"{}\"\n".format(*item))
-    
-    return output
 
+    return output
