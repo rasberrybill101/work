@@ -286,3 +286,53 @@ def ngramFrequencyInLevel1(data, ngramSize=2, topK=10, includedLevel1=None, excl
             f.write("ngram: \"{}\", sentence: \"{}\", count: {}, reason_level_1: \"{}\", conv_id: \"{}\"\n".format(*item))
 
     return output
+	
+	================cleaned up to remove unnecessary processing and output duplication
+	
+def ngramFrequencyInLevel1(data, ngramSize=2, topK=10, includedLevel1=None, excludedNgrams=None, filename='commonNgramsByReasonLevel.txt'):
+    if includedLevel1 is None:
+        includedLevel1 = ["Call Handling/Treatment", "Card Issues (Credit/Debit/ATM)"]
+
+    if excludedNgrams is None:
+        with open('excludeNgrams.txt', 'r') as f:
+            excludedNgrams = [line.strip().lower() for line in f]
+
+    new_data = data[(data['complaint_disat'] == 'Complaint') & (data['reason_level_1'].isin(includedLevel1))].copy()
+
+    sentences_ngrams = []
+    ngrams_sentence_map = {}
+    output_rows = set()
+
+    for index, row in new_data.iterrows():
+        sentences = extract_sentences(row['plain_whisper'])
+        for sentence in sentences:
+            ngrams = extract_ngrams(sentence, ngramSize)
+            ngrams = [ngram for ngram in ngrams if ngram not in excludedNgrams]
+            sentences_ngrams.extend(ngrams)
+            for ngram in ngrams:
+                if ngram not in ngrams_sentence_map:
+                    ngrams_sentence_map[ngram] = {(sentence, index)}
+                else:
+                    ngrams_sentence_map[ngram].add((sentence, index))
+
+    ngrams_series = pd.Series(sentences_ngrams)
+    top_ngrams = ngrams_series.value_counts().head(topK).reset_index().values.tolist()
+
+    output = []
+
+    for ngram, count in tqdm(top_ngrams, desc="Processing ngrams", unit="ngram"):
+        if ngram in ngrams_sentence_map:
+            for sentence, row_index in ngrams_sentence_map[ngram]:
+                if row_index not in output_rows:
+                    row = new_data.loc[row_index]
+                    output.append((ngram, sentence, count, row['reason_level_1'], row['conv_id']))
+                    output_rows.add(row_index)
+        print(ngram)
+
+    with open(filename, 'a') as f:
+        timestamp = datetime.now().strftime('%Y-%m-%d:%H-%M')
+        f.write("#================== batch {} ================\n".format(timestamp))
+        for item in output:
+            f.write("ngram: \"{}\", sentence: \"{}\", count: {}, reason_level_1: \"{}\", conv_id: \"{}\"\n".format(*item))
+
+    return output
