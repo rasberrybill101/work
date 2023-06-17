@@ -45,8 +45,12 @@ To print the individual tokens, treat non alphanumeric characters as spaces and 
 # Remove level-1 reasons not required
 #=============================================
 def rejectReasonLevels(data, levels_list=["CTRL SQL Database", "tbd"]):
+    # Convert the 'reason_level_1' column to strings
+    data['reason_level_1'] = data['reason_level_1'].astype(str)
+    
     for level in levels_list:
-        data = data[~data['reason_level_1'].str.contains(level)]
+        # Case insensitive search
+        data = data[~data['reason_level_1'].str.contains(level, case=False)]
     return data
 
 #=============================================
@@ -82,14 +86,14 @@ def plotReasonDistribution(data, include_not_a_complaint=True):
 
     # Increase the font size using plt.rc
     plt.rc('font', size=12) # controls default text size
-    plt.rc('axes', titlesize=15) # controls axis title size
-    plt.rc('axes', labelsize=13) # controls x and y labels size
+    plt.rc('axes', titlesize=20) # controls axis title size
+    plt.rc('axes', labelsize=20) # controls x and y labels size
     plt.rc('xtick', labelsize=12) # controls tick labels size
-    plt.rc('ytick', labelsize=12) # controls tick labels size
+    plt.rc('ytick', labelsize=20) # controls tick labels size
     plt.rc('legend', fontsize=12) # controls legend size
 
     # Plotting
-    plt.figure(figsize=(10,20))  # Adjust the size of the figure as per your needs
+    plt.figure(figsize=(20,10))  # Adjust the size of the figure as per your needs
     reason_counts.plot(kind='barh')  # Changed to 'barh' for horizontal bars
     plt.ylabel('Reason Level 1')
     plt.xlabel('Count')
@@ -102,7 +106,7 @@ def plotReasonDistribution(data, include_not_a_complaint=True):
 
     # Add count annotations to each bar
     for index, value in enumerate(reason_counts):
-        plt.text(value, index, str(value))
+        plt.text(value, index, str(value), fontsize=20)
         
     plt.tight_layout()
     plt.show()
