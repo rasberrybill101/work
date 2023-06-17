@@ -334,7 +334,7 @@ def ngramFrequencyInLevel1(data, ngramSize=2, topK=10, includedLevel1=None, excl
         timestamp = datetime.now().strftime('%Y-%m-%d:%H-%M')
         f.write("#================== batch {} ================\n".format(timestamp))
         for item in output:
-            f.write("ngram: \"{}\", sentence: \"{}\", count: {}, reason_level_1: \"{}\", conv_id: \"{}\"\n".format(*item))
+            f.write("\"{}\", \"{}\", {}, \"{}\", {}\n".format(*item))
 
     return output
 
