@@ -444,7 +444,7 @@ def getUniqueNgrams(data, ngramSize=1, toFilename='uniqueNgrams.txt'):
                             f2.write(f'"{ngram}",{rl1},"{sentence}"\n')  # write to ngram_reason.txt
                             line = f'"{ngram}",{rl1},"{sentence}",{conv_id},"{complaint_disat}"\n'
                             f.write(line)
-                            print(ngram, rl1, sentence, conv_id, complaint_disat)
+                            print(ngram, rl1, sentence)
 
     return unique_ngrams
 
@@ -453,7 +453,7 @@ def getUniqueNgrams(data, ngramSize=1, toFilename='uniqueNgrams.txt'):
 ------------------- additional convenience requirement
 
 additionally, and for convenience, for each ngram only write the following columns to another file named "ngram_reason.txt"
-ngram, reason_level_1. Use this code as the basis for doing this:
+ngram, reason_level_1, sentence. Use this code as the basis for doing this:
 	
 ----------------------------------------------- only include certain reason_level_1 values
 Given a dataframe with the following columns:
