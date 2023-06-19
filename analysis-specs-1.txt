@@ -345,9 +345,7 @@ complaint_disat
 segment_id
 call_duration
 reason_level_1
-reason_level_2
 plain_whisper
-language_code
 
 Write function getUniqueNgrams(data, ngramSize, toFilename) that returns a list comprising:
 ngram, reason_level_1, conv_id, complaint_disat
@@ -446,3 +444,28 @@ def getUniqueNgrams(data, ngramSize=1, toFilename='uniqueNgrams.txt'):
                         print(ngram, rl1, sentence, conv_id, 'Complaint')
 
     return unique_ngrams
+	
+----------------------------------------------- only include certain reason_level_1 values
+Given a dataframe with the following columns:
+conv_id
+complaint_disat
+segment_id
+call_duration
+reason_level_1
+plain_whisper
+
+Write a function "onlyIncludeReasons(includedLevel1)
+
+that returns a dataframe that only includes rows where reason_level_1 is in this list:
+includedLevel1 = ["Call Handling/Treatment", "Card Issues (Credit/Debit/ATM)", "Employee Misconduct Allegation"]
+
+If includedLevel1 is None, then the values above should be used
+
+#=============================================
+# Filter data to only include specific reason_level_1 values
+#=============================================
+def onlyIncludeReasons(data, includedLevel1=None):
+    if includedLevel1 is None:
+        includedLevel1 = ["Call Handling/Treatment", "Card Issues (Credit/Debit/ATM)", "Employee Misconduct Allegation"]
+    
+    return data[data.reason_level_1.isin(includedLevel1)]
