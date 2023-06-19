@@ -412,17 +412,9 @@ print(ngram, reason_level_1, sentence, conv_id, complaint_disat)
 import re
 import pandas as pd
 from collections import defaultdict
+from tqdm import tqdm
 
-def extract_sentences(text):
-    sentences = re.split(r'(?<!\w\.\w.)(?<![A-Z][a-z]\.)(?<=\.|\?)\s', text)
-    return sentences
-
-def extract_ngrams(sentence, ngramSize):
-    tokens = re.findall(r'\b\w+\b', sentence.lower())
-    ngrams = [' '.join(tokens[i:i+ngramSize]) for i in range(len(tokens)-ngramSize+1)]
-    return ngrams
-
-def getUniqueNgrams(data, ngramSize, toFilename='uniqueNgrams.txt'):
+def getUniqueNgrams(data, ngramSize=1, toFilename='uniqueNgrams.txt'):
     data_complaint = data[data.complaint_disat == 'Complaint']
     ngrams_dict = defaultdict(lambda: defaultdict(lambda: defaultdict(set)))
 
@@ -436,7 +428,7 @@ def getUniqueNgrams(data, ngramSize, toFilename='uniqueNgrams.txt'):
 
     # Step 2: Find unique ngrams for each 'reason_level_1'
     unique_ngrams = {}
-    for rl1, ngrams_rl1 in ngrams_dict.items():
+    for rl1, ngrams_rl1 in tqdm(ngrams_dict.items(), desc="Processing ngrams"):
         unique_ngrams_rl1 = ngrams_rl1.copy()
         for rl2, ngrams_rl2 in ngrams_dict.items():
             if rl1 != rl2:  # we don't want to compare the set with itself
