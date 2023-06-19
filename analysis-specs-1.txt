@@ -338,3 +338,112 @@ def ngramFrequencyInLevel1(data, ngramSize=2, topK=10, includedLevel1=None, excl
 
     return output
 
+-------------------------------- unique ngrams for reason_level_1
+Given an input dataframe with the following columns:
+conv_id
+complaint_disat
+segment_id
+call_duration
+reason_level_1
+reason_level_2
+plain_whisper
+language_code
+
+Write function getUniqueNgrams(data, ngramSize, toFilename) that returns a list comprising:
+ngram, reason_level_1, conv_id, complaint_disat
+
+Here are the steps to be taken by the function getUniqueNgrams 
+1) find the ngrams from 'plain_whisper' column of each row in the dataframe where 'complaint_disat' column has the value 'Complaint'. The ngrams can be found using the following pre-defined functions:
+
+def extract_sentences(text):
+    sentences = re.split(r'(?<!\w\.\w.)(?<![A-Z][a-z]\.)(?<=\.|\?)\s', text)
+    return sentences
+
+def extract_ngrams(sentence, ngramSize):
+    tokens = re.findall(r'\b\w+\b', sentence.lower())
+    ngrams = [' '.join(tokens[i:i+ngramSize]) for i in range(len(tokens)-ngramSize+1)]
+    return ngrams
+
+The ngrams obtained from this step belong to the corresponding 'reason_level_1', 'complaint_disat' pair
+	
+2) From the list of ngrams obtained in step 1, find the ngrams that are NOT present in any other 'reason_level_1', 'complaint_disat' pair.
+
+These are the unique ngrams for 'reason_level_1'
+
+For example, given the following:
+if ngram1, ngram2, ngram3, ngram8, ngram12 are the ngrams that belong to reason_level_1 == 'rl1', and complaint_disat == 'Complaint'
+and ngram2, ngram4, ngram8, ngram9 are the ngrams that belong to reason_level_1 == 'rl2', and complaint_disat == 'Complaint'
+
+then the unique ngrams for rl1 are ngram1, ngram3, ngram12
+and the unique ngrams for rl2 are ngram4, ngram9
+
+(assuming that these ngrams do not appear in any other rows where complaint_disat == 'Complaint')
+
+The outputs should be printed out:
+print(ngram, reason_level_1, conv_id, complaint_disat)
+and also written to the filename "toFilename" which has default value of "uniqueNgrams.txt" as a comma separated string where ngram is enclosed in quotes
+
+----------------------
+You have misunderstood what is required. Specifically what uniqueness means. Here is a restatement of the steps to be taken by the function getUniqueNgrams 
+
+1) Find the ngrams from 'plain_whisper' column of each row in the dataframe where 'complaint_disat' column has the value 'Complaint', using the pre-defined functions extract_sentences and extract_ngrams
+
+2) From the list of ngrams obtained in step 1, find the ngrams in each reason_level_1 that are NOT present in any other 'reason_level_1', 'complaint_disat' pair.
+
+For example, given if all ngrams from rows where reason_level_1 is 'rl1' are:
+ngram1, ngram2, ngram3, ngram8, ngram12 (reason_level_1 == 'rl1', and complaint_disat == 'Complaint')
+and all ngrams from rows where reason_level_1 is 'rl2'
+ngram2, ngram4, ngram8, ngram9 (reason_level_1 == 'rl2', and complaint_disat == 'Complaint')
+
+then the set of unique ngrams for rl1 are ngram1, ngram3, ngram12
+and the set of unique ngrams for rl2 are ngram4, ngram9
+
+What makes an ngram a member of the unique set of ngrams for a given reason_level_1 (for which the value of 'complaint_disat' column is 'Complaint') is the fact that any ngram in the set is not present in the set of unique ngrams that belong to other reason_level_1 ngram sets.
+
+#=============================================
+# Find unique ngrams for each reason_level_1
+#=============================================
+import re
+import pandas as pd
+from collections import defaultdict
+
+def extract_sentences(text):
+    sentences = re.split(r'(?<!\w\.\w.)(?<![A-Z][a-z]\.)(?<=\.|\?)\s', text)
+    return sentences
+
+def extract_ngrams(sentence, ngramSize):
+    tokens = re.findall(r'\b\w+\b', sentence.lower())
+    ngrams = [' '.join(tokens[i:i+ngramSize]) for i in range(len(tokens)-ngramSize+1)]
+    return ngrams
+
+def getUniqueNgrams(data, ngramSize, toFilename='uniqueNgrams.txt'):
+    data_complaint = data[data.complaint_disat == 'Complaint']
+    ngrams_dict = defaultdict(set)
+
+    # Step 1: Extract ngrams and associate them with their corresponding 'reason_level_1'
+    for _, row in data_complaint.iterrows():
+        sentences = extract_sentences(row.plain_whisper)
+        for sentence in sentences:
+            ngrams = extract_ngrams(sentence, ngramSize)
+            for ngram in ngrams:
+                ngrams_dict[row.reason_level_1].add(ngram)
+
+    # Step 2: Find unique ngrams for each 'reason_level_1'
+    unique_ngrams = {}
+    for rl1, ngrams_rl1 in ngrams_dict.items():
+        unique_ngrams_rl1 = ngrams_rl1.copy()
+        for rl2, ngrams_rl2 in ngrams_dict.items():
+            if rl1 != rl2:  # we don't want to compare the set with itself
+                unique_ngrams_rl1 = unique_ngrams_rl1 - ngrams_rl2
+        unique_ngrams[rl1] = unique_ngrams_rl1
+
+    # Step 3: Write to file and print to console
+    with open(toFilename, 'w') as f:
+        for rl1, unique_ngrams_rl1 in unique_ngrams.items():
+            for ngram in unique_ngrams_rl1:
+                conv_id = data_complaint[(data_complaint['reason_level_1'] == rl1) & (data_complaint['plain_whisper'].str.contains(ngram))]['conv_id'].values[0]
+                line = f'"{ngram}",{rl1},{conv_id},"Complaint"\n'
+                f.write(line)
+                print(ngram, rl1, conv_id, 'Complaint')
+
+    return unique_ngrams
