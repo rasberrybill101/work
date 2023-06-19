@@ -412,7 +412,7 @@ import pandas as pd
 from collections import defaultdict
 from tqdm import tqdm
 
-def getUniqueNgrams(data, ngramSize, toFilename='uniqueNgrams.txt'):
+def getUniqueNgrams(data, ngramSize=1, toFilename='uniqueNgrams.txt'):
     data_complaint = data[data.complaint_disat == 'Complaint']
     ngrams_dict = defaultdict(lambda: defaultdict(lambda: defaultdict(set)))
 
