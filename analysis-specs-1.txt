@@ -444,7 +444,7 @@ def getUniqueNgrams(data, ngramSize, toFilename='uniqueNgrams.txt'):
         unique_ngrams[rl1] = unique_ngrams_rl1
 
     # Step 3: Write to file and print to console
-    with open(toFilename, 'w') as f:
+    with open(toFilename, 'w', encoding='utf-8') as f:
         for rl1, unique_ngrams_rl1 in unique_ngrams.items():
             for ngram, conv_ids in unique_ngrams_rl1.items():
                 for conv_id, sentences in conv_ids.items():
