@@ -424,15 +424,15 @@ def extract_ngrams(sentence, ngramSize):
 
 def getUniqueNgrams(data, ngramSize, toFilename='uniqueNgrams.txt'):
     data_complaint = data[data.complaint_disat == 'Complaint']
-    ngrams_dict = defaultdict(lambda: defaultdict(set))
+    ngrams_dict = defaultdict(lambda: defaultdict(lambda: defaultdict(set)))
 
-    # Step 1: Extract ngrams and associate them with their corresponding 'reason_level_1' and sentence
+    # Step 1: Extract ngrams and associate them with their corresponding 'reason_level_1', sentence, and conv_id
     for _, row in data_complaint.iterrows():
         sentences = extract_sentences(row.plain_whisper)
         for sentence in sentences:
             ngrams = extract_ngrams(sentence, ngramSize)
             for ngram in ngrams:
-                ngrams_dict[row.reason_level_1][ngram].add(sentence)
+                ngrams_dict[row.reason_level_1][ngram][row.conv_id].add(sentence)
 
     # Step 2: Find unique ngrams for each 'reason_level_1'
     unique_ngrams = {}
@@ -440,17 +440,17 @@ def getUniqueNgrams(data, ngramSize, toFilename='uniqueNgrams.txt'):
         unique_ngrams_rl1 = ngrams_rl1.copy()
         for rl2, ngrams_rl2 in ngrams_dict.items():
             if rl1 != rl2:  # we don't want to compare the set with itself
-                unique_ngrams_rl1 = {ngram: sentences for ngram, sentences in unique_ngrams_rl1.items() if ngram not in ngrams_rl2}
+                unique_ngrams_rl1 = {ngram: conv_ids for ngram, conv_ids in unique_ngrams_rl1.items() if ngram not in ngrams_rl2}
         unique_ngrams[rl1] = unique_ngrams_rl1
 
     # Step 3: Write to file and print to console
     with open(toFilename, 'w') as f:
         for rl1, unique_ngrams_rl1 in unique_ngrams.items():
-            for ngram, sentences in unique_ngrams_rl1.items():
-                for sentence in sentences:
-                    conv_id = data_complaint[(data_complaint['reason_level_1'] == rl1) & (data_complaint['plain_whisper'].str.contains(ngram))]['conv_id'].values[0]
-                    line = f'"{ngram}",{rl1},"{sentence}",{conv_id},"Complaint"\n'
-                    f.write(line)
-                    print(ngram, rl1, sentence, conv_id, 'Complaint')
+            for ngram, conv_ids in unique_ngrams_rl1.items():
+                for conv_id, sentences in conv_ids.items():
+                    for sentence in sentences:
+                        line = f'"{ngram}",{rl1},"{sentence}",{conv_id},"Complaint"\n'
+                        f.write(line)
+                        print(ngram, rl1, sentence, conv_id, 'Complaint')
 
     return unique_ngrams
