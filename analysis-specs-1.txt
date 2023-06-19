@@ -400,6 +400,12 @@ and the set of unique ngrams for rl2 are ngram4, ngram9
 
 What makes an ngram a member of the unique set of ngrams for a given reason_level_1 (for which the value of 'complaint_disat' column is 'Complaint') is the fact that any ngram in the set is not present in the set of unique ngrams that belong to other reason_level_1 ngram sets.
 
+------- update
+update the output to include the sentence where each unique ngram was found. Therefore, each output line should look like this:
+ngram, reason_level_1, sentence, conv_id, complaint_disat
+and the corresponding print statement should look like:
+print(ngram, reason_level_1, sentence, conv_id, complaint_disat)
+
 #=============================================
 # Find unique ngrams for each reason_level_1
 #=============================================
@@ -418,15 +424,15 @@ def extract_ngrams(sentence, ngramSize):
 
 def getUniqueNgrams(data, ngramSize, toFilename='uniqueNgrams.txt'):
     data_complaint = data[data.complaint_disat == 'Complaint']
-    ngrams_dict = defaultdict(set)
+    ngrams_dict = defaultdict(lambda: defaultdict(set))
 
-    # Step 1: Extract ngrams and associate them with their corresponding 'reason_level_1'
+    # Step 1: Extract ngrams and associate them with their corresponding 'reason_level_1' and sentence
     for _, row in data_complaint.iterrows():
         sentences = extract_sentences(row.plain_whisper)
         for sentence in sentences:
             ngrams = extract_ngrams(sentence, ngramSize)
             for ngram in ngrams:
-                ngrams_dict[row.reason_level_1].add(ngram)
+                ngrams_dict[row.reason_level_1][ngram].add(sentence)
 
     # Step 2: Find unique ngrams for each 'reason_level_1'
     unique_ngrams = {}
@@ -434,16 +440,17 @@ def getUniqueNgrams(data, ngramSize, toFilename='uniqueNgrams.txt'):
         unique_ngrams_rl1 = ngrams_rl1.copy()
         for rl2, ngrams_rl2 in ngrams_dict.items():
             if rl1 != rl2:  # we don't want to compare the set with itself
-                unique_ngrams_rl1 = unique_ngrams_rl1 - ngrams_rl2
+                unique_ngrams_rl1 = {ngram: sentences for ngram, sentences in unique_ngrams_rl1.items() if ngram not in ngrams_rl2}
         unique_ngrams[rl1] = unique_ngrams_rl1
 
     # Step 3: Write to file and print to console
     with open(toFilename, 'w') as f:
         for rl1, unique_ngrams_rl1 in unique_ngrams.items():
-            for ngram in unique_ngrams_rl1:
-                conv_id = data_complaint[(data_complaint['reason_level_1'] == rl1) & (data_complaint['plain_whisper'].str.contains(ngram))]['conv_id'].values[0]
-                line = f'"{ngram}",{rl1},{conv_id},"Complaint"\n'
-                f.write(line)
-                print(ngram, rl1, conv_id, 'Complaint')
+            for ngram, sentences in unique_ngrams_rl1.items():
+                for sentence in sentences:
+                    conv_id = data_complaint[(data_complaint['reason_level_1'] == rl1) & (data_complaint['plain_whisper'].str.contains(ngram))]['conv_id'].values[0]
+                    line = f'"{ngram}",{rl1},"{sentence}",{conv_id},"Complaint"\n'
+                    f.write(line)
+                    print(ngram, rl1, sentence, conv_id, 'Complaint')
 
     return unique_ngrams
