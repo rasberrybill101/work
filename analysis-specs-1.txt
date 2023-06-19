@@ -412,12 +412,12 @@ import pandas as pd
 from collections import defaultdict
 from tqdm import tqdm
 
-def getUniqueNgrams(data, ngramSize=1, toFilename='uniqueNgrams.txt'):
+def getUniqueNgrams(data, ngramSize, toFilename='uniqueNgrams.txt'):
     data_complaint = data[data.complaint_disat == 'Complaint']
     ngrams_dict = defaultdict(lambda: defaultdict(lambda: defaultdict(set)))
 
     # Step 1: Extract ngrams and associate them with their corresponding 'reason_level_1', sentence, and conv_id
-    for _, row in data_complaint.iterrows():
+    for _, row in tqdm(data_complaint.iterrows(), desc="Extracting ngrams"):
         sentences = extract_sentences(row.plain_whisper)
         for sentence in sentences:
             ngrams = extract_ngrams(sentence, ngramSize)
@@ -435,15 +435,23 @@ def getUniqueNgrams(data, ngramSize=1, toFilename='uniqueNgrams.txt'):
 
     # Step 3: Write to file and print to console
     with open(toFilename, 'w', encoding='utf-8') as f:
-        for rl1, unique_ngrams_rl1 in unique_ngrams.items():
-            for ngram, conv_ids in unique_ngrams_rl1.items():
-                for conv_id, sentences in conv_ids.items():
-                    for sentence in sentences:
-                        line = f'"{ngram}",{rl1},"{sentence}",{conv_id},"Complaint"\n'
-                        f.write(line)
-                        print(ngram, rl1, sentence, conv_id, 'Complaint')
+        with open('ngram_reason.txt', 'w', encoding='utf-8') as f2:
+            for rl1, unique_ngrams_rl1 in unique_ngrams.items():
+                for ngram, conv_ids in unique_ngrams_rl1.items():
+                    for conv_id, sentences in conv_ids.items():
+                        f2.write(f'"{ngram}",{rl1},"{sentence}"\n')  # write to ngram_reason.txt
+                        for sentence in sentences:
+                            line = f'"{ngram}",{rl1},"{sentence}",{conv_id},"Complaint"\n'
+                            f.write(line)
+                            print(ngram, rl1, sentence, conv_id, 'Complaint')
 
     return unique_ngrams
+
+    
+------------------- additional convenience requirement
+
+additionally, and for convenience, for each ngram only write the following columns to another file named "ngram_reason.txt"
+ngram, reason_level_1. Use this code as the basis for doing this:
 	
 ----------------------------------------------- only include certain reason_level_1 values
 Given a dataframe with the following columns:
