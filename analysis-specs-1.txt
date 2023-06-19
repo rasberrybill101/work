@@ -413,16 +413,16 @@ from collections import defaultdict
 from tqdm import tqdm
 
 def getUniqueNgrams(data, ngramSize=1, toFilename='uniqueNgrams.txt'):
-    data_complaint = data[data.complaint_disat == 'Complaint']
     ngrams_dict = defaultdict(lambda: defaultdict(lambda: defaultdict(set)))
 
     # Step 1: Extract ngrams and associate them with their corresponding 'reason_level_1', sentence, and conv_id
-    for _, row in tqdm(data_complaint.iterrows(), desc="Extracting ngrams"):
-        sentences = extract_sentences(row.plain_whisper)
-        for sentence in sentences:
-            ngrams = extract_ngrams(sentence, ngramSize)
-            for ngram in ngrams:
-                ngrams_dict[row.reason_level_1][ngram][row.conv_id].add(sentence)
+    for _, row in tqdm(data.iterrows(), desc="Extracting ngrams"):
+        if row.complaint_disat:  # we only want to consider rows where complaint_disat is not None
+            sentences = extract_sentences(row.plain_whisper)
+            for sentence in sentences:
+                ngrams = extract_ngrams(sentence, ngramSize)
+                for ngram in ngrams:
+                    ngrams_dict[row.reason_level_1][ngram][row.conv_id].add(sentence)
 
     # Step 2: Find unique ngrams for each 'reason_level_1'
     unique_ngrams = {}
@@ -439,13 +439,15 @@ def getUniqueNgrams(data, ngramSize=1, toFilename='uniqueNgrams.txt'):
             for rl1, unique_ngrams_rl1 in unique_ngrams.items():
                 for ngram, conv_ids in unique_ngrams_rl1.items():
                     for conv_id, sentences in conv_ids.items():
-                        f2.write(f'"{ngram}",{rl1},"{sentence}"\n')  # write to ngram_reason.txt
                         for sentence in sentences:
-                            line = f'"{ngram}",{rl1},"{sentence}",{conv_id},"Complaint"\n'
+                            complaint_disat = data.loc[data['conv_id'] == conv_id, 'complaint_disat'].values[0]  # get complaint_disat value for the current conv_id
+                            f2.write(f'"{ngram}",{rl1},"{sentence}"\n')  # write to ngram_reason.txt
+                            line = f'"{ngram}",{rl1},"{sentence}",{conv_id},"{complaint_disat}"\n'
                             f.write(line)
-                            print(ngram, rl1, sentence, conv_id, 'Complaint')
+                            print(ngram, rl1, sentence, conv_id, complaint_disat)
 
     return unique_ngrams
+
 
     
 ------------------- additional convenience requirement
