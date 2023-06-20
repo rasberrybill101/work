@@ -118,5 +118,5 @@ call_duration
 reason_level_1
 plain_whisper
 
-Given a dataframe of rows with the columns as above, return 2 dataframes. testDataframe will contain 20 percent of rows for each unique type of reason_level_1 rows. For example if there are 4 types of 'reason_level_1' columns (eg. rl1 ... rl4), then the first dataframe will contain 20% of rl1 rows, 20% of rl2 rows, etc. The second dataframw will contain the remaining 80% of each 'row_leval_1 column. The purpose of this split is to create testing and training data. Therefore, the 20% split will be named "testDataFrame" and the 80% split will be named trainingDataFrame".
+Given a dataframe of rows with the columns as above, return 2 dataframes. testDataframe will contain 20 percent of rows for each unique type of reason_level_1 rows. For example if there are 4 types of 'reason_level_1' columns (eg. rl1 ... rl4), then the first dataframe will contain 20% of rl1 rows, 20% of rl2 rows, etc. The second dataframw will contain the remaining 80% of each 'row_leval_1 column. The purpose of this split is to create testing and training data. Therefore, the 20% split will be named "testDataFrame" and the 80% split will be named trainingDataFrame". 
 
