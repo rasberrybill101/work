@@ -276,3 +276,12 @@ Create a function "embedSignalInSentence(ngram, sentence)" that searches for the
 then the function will return:
 "Yesterday, when {sig-1:I tried to} use the card"
 
+
+def embedSignalInSentence(ngram, sentence):
+    return sentence.replace(ngram, "{{sig-1:{}}}".format(ngram))
+
+# Example usage
+ngram = "I tried to"
+sentence = "Yesterday, when I tried to use the card"
+result = embedSignalInSentence(ngram, sentence)
+print(result)
