@@ -269,4 +269,10 @@ if __name__ == "__main__":
     main()
 
 
+====================================================
+Create a function "embedSignalInSentence(ngram, sentence)" that searches for the occurrence of the ngram within the sentence and replaces the ngram with "{sig-1:<ngram>}". For example, given:
+"ngram" is "I tried to"
+"sentence" is "Yesterday, when I tried to use the card"
+then the function will return:
+"Yesterday, when {sig-1:I tried to} use the card"
 
