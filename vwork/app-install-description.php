@@ -54,8 +54,8 @@ fetch(apkUrl)
                 data: base64Data,
                 directory: 'DOCUMENTS'
             }).then(function(writeResult) {
-                // Trigger an install intent
-                app.openUrl({ url: writeResult.uri });
+				// Install the APK using the custom plugin
+				customPlugin.installApk({ path: writeResult.uri });
             }).catch(function(error) {
                 console.error('Error writing file:', error);
             });
@@ -80,6 +80,37 @@ This code is doing a few things sequentially, using a Promise-based pattern. Thi
 5. `.catch(function(error) {...})`: This function is called if an error is thrown at any point during the above operations. It logs the error to the console.
 
 In summary, this code is using Promise chaining to perform a series of asynchronous operations: download a file, read it as a data URL, write it to the local filesystem, and then open the file. If an error occurs during any of these operations, it is caught and logged to the console.
+
+............... also how to do it using arrow ( => ) functions:
+
+// Request necessary permissions (this code is platform-specific, not part of Capacitor's APIs)
+// ...
+
+// Download the APK
+fetch(apkUrl)
+  .then(response => response.blob())
+  .then(blob => {
+    // Write the APK to the filesystem
+    var reader = new FileReader();
+    reader.onload = function() {
+        var dataUrl = reader.result;
+        var base64Data = dataUrl.split(',')[1];
+
+        filesystem.writeFile({
+            path: 'update.apk',
+            data: base64Data,
+            directory: 'DOCUMENTS'
+        }).then(writeResult => {
+            // Install the APK using the custom plugin
+            customPlugin.installApk({ path: writeResult.uri });
+        });
+    };
+    reader.readAsDataURL(blob);
+  })
+  .catch(error => {
+    console.error('Error downloading and installing APK:', error);
+  });
+
 
  when a web application attempts to fetch resources from a different origin (a different domain, protocol, or port), the browser enforces the Same-Origin Policy, which restricts the web application from requesting resources from different origins. This is a security measure to prevent Cross-Site Request Forgery (CSRF) attacks.
 
