@@ -67,3 +67,206 @@ def getConversationVector(convText, signalDictionary, normalize=True):
 
     return convVector.tolist()  # Convert the numpy array back to a Python list before returning  
 
+----------------------- invocation
+signalDictionary = {
+    "s1": ["Phrase 1", "Another phrase 1"],
+    "s2": ["Phrase 2"],
+    "s3": ["Yet another phrase", "And one more"],
+    "s4": ["Last phrase"]
+}
+
+convText = """
+This conversation contains Phrase 1, but also Another phrase 1.
+Sometimes a conversation will contain Yet another phrase. 
+Last phrase is the end. 
+"""
+
+vector = getConversationVector(convText, signalDictionary)
+print(vector)
+
+----------------------- extract phrase from sentence
+I want to be able to create the signal dictionary from annotated sentences. Sentences are annotated by enclosing certain tokens within curly braces as follows:
+ "category 1", "this sentences contains {an annotated phrase}:sig-1"
+ "category 2", "here are two annotated phrases showing {the first one}:sig-1 and {also a second one}:sig-2"
+ "category 3", "and this is {another annotation}:sig-1 {on this sentence}:sig-3"
+ "category 4", "and this is another {annotation on this}:sig-4 sentence"
+ 
+ Given a file ("categorySignals.txt") comprising lines of annotated sentences as above, then write function "createSignalDictionary(filename='categorySignals.txt')" that returns a signalDictionary such as (based on the sample sentences above):
+ signalDictionary = {
+    "sig-1": ["an annotated phrase", "the first one", "another annotation"],
+    "sig-2": ["also a second one"],
+    "sig-3": ["on this sentence"],
+    "sig-4": ["annotation on this"]
+}
+
+Write another function that saves the dictionary ("signalDictionary.txt") to file in json format.
+Write another function that reads the signalDictionary file and returns a corresponding signalDictionary.
+
+Keep implementation modular, and show sample invocation of each of the functions.
+
+#==================================================
+# create signal dictionary from annotated sentences
+#==================================================
+import re
+import json
+
+def createSignalDictionary(filename='categorySignals.txt'):
+    # Dictionary to hold the signals
+    signalDictionary = defaultdict(list)
+
+    with open(filename, 'r') as f:
+        for line in f.readlines():
+            # Extract all annotations from the line
+            annotations = re.findall(r'{(.*?)}:(\w+)', line)
+            
+            # Add each phrase to its corresponding signal in the dictionary
+            for phrase, signal in annotations:
+                signalDictionary[signal].append(phrase)
+
+    return signalDictionary
+    
+def saveSignalDictionary(signalDictionary, filename='signalDictionary.txt'):
+    with open(filename, 'w') as f:
+        json.dump(signalDictionary, f)
+
+def loadSignalDictionary(filename='signalDictionary.txt'):
+    with open(filename, 'r') as f:
+        signalDictionary = json.load(f)
+    return signalDictionary
+
+--------------------------------- linear regression model training
+
+Given conversation vectors created using the following function:
+def getConversationVector(convText, signalDictionary, normalize=True):
+    convVector = np.zeros(len(signalDictionary))  # Initialize the conversation vector
+    sentences = extract_sentences(convText)  # Extract sentences from the conversation
+    for sentence in sentences:  # Go through each sentence
+        sentenceVector = getSentenceVector(sentence, signalDictionary)  # Get the vector for the sentence
+        convVector += sentenceVector  # Add the sentence vector to the conversation vector
+    
+    if normalize:  # If we want to normalize the conversation vector
+        max_value = np.max(convVector)  # Find the maximum value in the conversation vector
+        if max_value > 0:  # Avoid division by zero
+            convVector /= max_value  # Scale the conversation vector so that the maximum value is 1
+
+    return convVector.tolist()  # Convert the numpy array back to a Python list before returning 
+        
+        
+and with the following training data file "categoryTrainingData.txt" (where the first line is a header line):
+category_label, expectedConversationVector
+"category 1", [0.1, 0.3, 0.9, 1, 0, 0, 0.8]
+"category 2", [0.2, 0.7, 0, 0.1, 0, 0, 0.5]  
+...
+
+where "category X" represents the expected category, and the expectedConversationVector is a comma-separated list of the elements of the conversationVector for the given category.
+
+and a test data file "categoryTestData.txt" (where the first line is a header):
+conversation, predictedConversationVector
+"this is conversation 1", [0.3, 0.2, 1, 0, 0.3, 0.6, 0.4]
+
+Write the function that will use the training and test data to create and train a logistic regression model to predict category from a conversation vector. Modularize the code and show an example of how the logistic regression model can be used to make a prediction. From the soft max output, if none of the categories reach a threshold value, then return the category "No Category" which means that there is insufficient confidence to predict a category, given the input vector.
+
+Write the linear regression model to the file "categoryModel" with a suitable file extension. Also provide a function to load the model from the file.
+
+------------ additional data:
+You said that the code makes the following assumptions:    
+The vectors in the files are properly preprocessed.
+The labels in the training data are integer labels starting from 0.      
+However, I pointed out that the labels and vectors are in this form:   
+category_label, expectedConversationVector
+"category 1", [0.1, 0.3, 0.9, 1, 0, 0, 0.8]
+"category 2", [0.2, 0.7, 0, 0.1, 0, 0, 0.5] 
+
+So you will need to make required modifications to use label strings (for example encode the labels as integers, etc.), and note the way that the vectors have been provided. Please show entire code taking these facts into account. 
+
+
+#==================================================
+# train and use a logistic regression model for category prediction
+#==================================================
+import pandas as pd
+import numpy as np
+import json
+from sklearn import preprocessing
+from sklearn.linear_model import LogisticRegression
+from sklearn.metrics import precision_score, recall_score, f1_score, accuracy_score
+import pickle
+
+def load_data(filename, is_train):
+    # Load the data from a CSV file
+    df = pd.read_csv(filename)
+    
+    # The 'expectedConversationVector' column contains lists
+    X = np.array(df['expectedConversationVector'].tolist())
+    
+    if is_train:
+        # Convert the labels to integers
+        le = LabelEncoder()
+        y = le.fit_transform(df['category_label'])
+        return X, y, le
+    else:
+        return X, df['category_label']
+
+# Train the model
+def train_model(X, y):
+    model = LogisticRegression(max_iter=1000)
+    model.fit(X, y)
+    return model
+
+# Save the model and label encoder
+def save_model(model, le, model_filename='categoryModel.pkl', le_filename='labelEncoder.pkl'):
+    with open(model_filename, 'wb') as f:
+        pickle.dump(model, f)
+    with open(le_filename, 'wb') as f:
+        pickle.dump(le, f)
+
+# Load the model and label encoder
+def load_model(model_filename='categoryModel.pkl', le_filename='labelEncoder.pkl'):
+    with open(model_filename, 'rb') as f:
+        model = pickle.load(f)
+    with open(le_filename, 'rb') as f:
+        le = pickle.load(f)
+    return model, le
+
+# Make a prediction
+def predict_category(input_vector, model, le):
+    prediction = model.predict_proba([input_vector])
+    if prediction.max() < 0.5:  # if confidence is lower than 0.5, return 'No Category'
+        return 'No Category'
+    else:
+        # Otherwise, return the category with highest probability
+        return le.inverse_transform([prediction.argmax()])[0]
+
+# Evaluate the model
+def evaluate_model(model, X_test, y_test):
+    y_pred = model.predict(X_test)
+    precision = precision_score(y_test, y_pred, average='weighted')
+    recall = recall_score(y_test, y_pred, average='weighted')
+    f1 = f1_score(y_test, y_pred, average='weighted')
+    accuracy = accuracy_score(y_test, y_pred)
+    return accuracy, precision, recall, f1
+
+# Main function to run the code
+def main():
+    # Load and process the training data
+    X_train, y_train, le = load_data('categoryTrainingData.txt', is_train=True)
+    # Train the model
+    model = train_model(X_train, y_train)
+    # Save the model and label encoder
+    save_model(model, le)
+
+    # Load the test data
+    X_test, y_test = load_data('categoryTestData.txt', is_train=False)
+    # Evaluate the model
+    accuracy, precision, recall, f1 = evaluate_model(model, X_test, y_test)
+    print(f'Accuracy: {accuracy}\nPrecision: {precision}\nRecall: {recall}\nF1 Score: {f1}')
+
+    # Load the model and label encoder
+    model, le = load_model()
+    # Use the loaded model to make a prediction
+    print(predict_category(X_test[0], model, le))  # Predict the category of the first test example
+
+if __name__ == "__main__":
+    main()
+
+
+
