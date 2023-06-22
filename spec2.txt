@@ -10,3 +10,9 @@ Length of the first UP chunk should be equal to, or greater than the number of h
 Are there transition frames more significant than the first transition frame? What determines such significance.
 
 check if a word contains a character
+
+======================================================
+
+The goal is to convert a conversation into a vector representation through a function called "convToVector". A conversation is a list of sentences. A sentence is a list of tokens extracted using the function "getSentence" defined below. The vector representing a conversation is built up from the vectors representation of the individual sentences in the conversation as follows: 
+
+There is a dictionary of name-value pairs ("signalsDictionary") whose keys are "s1","s2","s3", ... "sN"  where s1 through sN are the keys (the "signals"). For instance, if there were 10 signals, then the keys would be s1 through s10. 
