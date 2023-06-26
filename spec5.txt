@@ -77,27 +77,34 @@ def calculateMetrics(filename):
         if (TP + FP) != 0:
             Precision = TP / (TP + FP)
         else:
-            Precision = 0
+            Precision = np.nan
         
         if (TP + FN) != 0:
             Recall = TP / (TP + FN)
         else:
-            Recall = 0
+            Recall = np.nan
         
         if (TP + TN + FP + FN) != 0:
             Accuracy = (TP + TN) / (TP + TN + FP + FN)
         else:
-            Accuracy = 0
+            Accuracy = np.nan
         
         if (Precision + Recall) != 0:
             F1 = 2 * (Precision * Recall) / (Precision + Recall)
         else:
-            F1 = 0
+            F1 = np.nan
         
         new_row = {'step':i, 'Accuracy':round(Accuracy, 3), 'Precision':round(Precision, 3), 'Recall':round(Recall, 3), 'F1':round(F1, 3)}
         metrics_df = pd.concat([metrics_df, pd.DataFrame(new_row, index=[0])], ignore_index=True)
-
-    metrics_df.to_csv('step_metrics.txt', index=False)
+		print(str(i) +  ==> TN: ' + str(TN) + ', TP: ' + str(TP) + ', FN: ' + str(FN) + ', FP: ' + str(FP))
+        
+        if (i == df.shape[1]-1):
+            print('F1        = ' + str(round(F1, 3)))
+            print('Precision = ' + str(round(Precision, 3)))
+            print('Recall    = ' + str(round(Recall, 3)))			
+            print('Accuracy  = ' + str(round(F1, 3)))
+			
+   metrics_df.to_csv('step_metrics.txt', index=False)
 
 
 #============================================================
@@ -121,7 +128,10 @@ def plotResults():
     plt.show()
 
 # Execute the functions
-calculateMetrics('your_file.csv')
+dir = 'chunk_test_data/'
+base_name = 'train_data_12_42_cumulative_bert'
+filename = dir + base_name + '_predicted_final_metrics.txt'
+calculateMetrics(filename)
 plotResults()
 
 =================================================================
