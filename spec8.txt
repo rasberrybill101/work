@@ -7,15 +7,15 @@ chunkStart is an integer
 chunkEnd is an integer
 voiceFilename is a string that acts as the primary key for the row
 
-for any given row (with primary key "voiceFilename"), columns:
+Each row in file1 (with primary key "voiceFilename")columns:
 "chunkStart" is the position of the first token in "frame" column  
 "chunkEnd" is the position of the last token in "frame" column
 
-There is one row per voiceFilename in file1. The value of the "voiceFilename" column is equal to the value of  the convID column in file2.
+The value of the "voiceFilename" column in the rows of file1 is equal to the value of the convID column in file2 rows.
 
 
 (2) Comma separated file2 (named "train_data_12_42_cumulative_bert_final_metrics.txt") with the following columns:
-convID, 1, 2, 3, 4, 5, 6, 7, ....., 4
+convID, 1, 2, 3, 4, 5, 6, 7, ....., 42
 convID is a string that acts as the primary key for the row
 The remaining columns in each row are integers 1 through 42, separated by commas.
 
@@ -32,7 +32,7 @@ For any row in file2 that contain "TP" in columns "1" through "42" :
 	but "TP", "TP", "FN", "TP" is not a contiguous chain since all the TPs are not right next to each other.
 	Rather, only first 2 TPs are contiguous. The position of the first one will be "firstTPLocation", and the position of the last TP in the contiguous chain will "lastTPLocation"
 	
-	Then, given "firstTPLocation", and "lastTPLocation", the task is to return the tokens between position 12*(firstTPLocation - 1) and 12*(lastTPLocation) in column "frame" of file1. 12 is the chunkSize.
+	Then, given "firstTPLocation", and "lastTPLocation", the task is to return the tokens between position 12*(firstTPLocation - 1) and 12*(lastTPLocation) in column "frame" of file1 for the last row whose voiceFilename is equal to convID of the current row in file2. This will be the row in file1 that has the most tokens present in "frame" column (the longest string). 12 is the chunkSize.
 	
 	The tokens (and therefore their positions) in the "frame" column of file1 are obtained by space separating the string of "frame". The first token will be at position 1, the second token at position 2, etc.
 	
@@ -90,9 +90,112 @@ def saveCandidatesToFile(candidates, filename):
     df = pd.DataFrame(candidates, columns=['convID', 'candidate'])
     df.to_csv(filename, sep='\t', index=False)
 
-dir = '/chunk-complaint/'
+dir = '/chunk-complaint/chunk_test_data/'
 filename1 = dir + 'train_data_12_42_cumulative.csv'
 filename2 = dir + 'train_data_12_42_cumulative_bert_predicted_final_metrics.txt'
 filename3 = dir + 'train_data_augmentation.txt'
 candidates = getCandidates(filename1, filename2)
 saveCandidatesToFile(candidates, filename3)
+
+--------------------------------------- need to fix:
+
+No. This is an incorrect interpretation. You are to use the existing order of rows in file1. The order of rows in file1 is already ordering the rows by length of the "frame" column (increasing order). If you want to re-order, then you should re-order by decreasing length of "frame" column so that the desired row for each filename becomes the first occurrence of that filename among the multiple occurrences of filename. Let me know if you need further clarification. Here is the entire specification again with the update :
+
+Given 2 data files:
+(1) Tab separated file1 (named "train_data_12_42_cumulative.csv") with the following columns:
+frame, label, chunkStart, chunkEnd, voiceFilename
+label is an integer
+expected in an integer
+chunkStart is an integer
+chunkEnd is an integer
+voiceFilename is a string that acts as the primary key for the row
+
+Each row in file1 (with primary key "voiceFilename")columns:
+"chunkStart" is the position of the first token in "frame" column  
+"chunkEnd" is the position of the last token in "frame" column
+
+The value of the "voiceFilename" column in the rows of file1 is equal to the value of the convID column in file2 rows.
+
+
+(2) Comma separated file2 (named "train_data_12_42_cumulative_bert_final_metrics.txt") with the following columns:
+convID, 1, 2, 3, 4, 5, 6, 7, ....., 42
+convID is a string that acts as the primary key for the row
+The remaining columns in each row are integers 1 through 42, separated by commas.
+
+Data in columns "1" through "42" can take one of the following five values:
+"TP", "TN", "FP", "FN", "--"
+
+The following functionality is required
+1. function getTokensFromRow(chunkSize = 12)
+For any row in file2 that contain "TP" in columns "1" through "42" :
+   set the location of the first TP in the row as "firstTPLocation"
+   set the location of the the last "TP" that is contiguous to the first TP in this row to "lastTPLocation"
+   Two TPs are contiguous (or form a contiguous chain) if there are only other "TP"s between them.For example:
+    "TP", "TP", "TP", "TP" is a contiguous chain
+	but "TP", "TP", "FN", "TP" is not a contiguous chain since all the TPs are not right next to each other.
+	Rather, only first 2 TPs are contiguous. The position of the first one will be "firstTPLocation", and the position of the last TP in the contiguous chain will "lastTPLocation"
+	
+	Then, given "firstTPLocation", and "lastTPLocation", the task is to return the tokens between position 12*(firstTPLocation - 1) and 12*(lastTPLocation) in column "frame" of file1 for the last row whose voiceFilename is equal to convID of the current row in file2. This will be the row in file1 that has the most tokens present in "frame" column (the longest string). 12 is the chunkSize.
+	
+	The tokens (and therefore their positions) in the "frame" column of file1 are obtained by space separating the string of "frame". The first token will be at position 1, the second token at position 2, etc.
+	
+	The function should return the string obtained by concatenation of the tokens (using space character separation) between "firstTPLocation" and "lastTPLocation" in "frame" column.
+
+
+2. function getCandidates(chunkSize = 12) 
+The function getCandidates() should return a list of strings for the eligible rows in file2, each string being the result of a call to getTokensFromRow(chunkSize=12) should be called for each row in file2, but only rows with "TP" in columns "1" through "42" of file2 should return tokens.
+
+The list of strings obtained from getCandidates() should be saved to file3 (named "train_data_augmentation.txt") that has the following columns (tab separated) for each string in the list:
+
+convID - the primary key of the row (same as in file2)
+candidate - string from the list
+
+
+#===================================================================
+# get candidate training utterances
+#===================================================================
+import pandas as pd
+
+def getTokensFromRow(row, df1, chunkSize=12):
+    firstTPLocation = -1
+    lastTPLocation = -1
+    for i in range(1, 43):
+        if row[str(i)] == 'TP':
+            if firstTPLocation == -1:
+                firstTPLocation = i
+            lastTPLocation = i
+        elif firstTPLocation != -1:
+            break
+
+    if firstTPLocation != -1:
+        voiceFilename = row['convID']
+        frame_row = df1[df1['voiceFilename'] == voiceFilename]
+        frame_row = frame_row.iloc[frame_row['frame'].str.split().str.len().idxmax()]
+        frame_str = frame_row['frame']
+        frame_tokens = frame_str.split(' ')
+        tokens_to_return = frame_tokens[chunkSize*(firstTPLocation - 1):chunkSize*lastTPLocation]
+        return ' '.join(tokens_to_return)
+    return ''
+
+def getCandidates(filename1, filename2, chunkSize=12):
+    df1 = pd.read_csv(filename1, sep='\t')
+    df2 = pd.read_csv(filename2)
+    
+    candidates = []
+    for index, row in df2.iterrows():
+        tokens = getTokensFromRow(row, df1, chunkSize)
+        if tokens:
+            candidates.append([row['convID'], tokens])
+    return candidates
+
+def saveCandidatesToFile(candidates, filename):
+    df = pd.DataFrame(candidates, columns=['convID', 'candidate'])
+    df.to_csv(filename, sep='\t', index=False)
+
+dir = '/chunk-complaint/chunk_test_data/'
+filename1 = dir + 'train_data_12_42_cumulative.csv'
+filename2 = dir + 'train_data_12_42_cumulative_bert_predicted_final_metrics.txt'
+filename3 = dir + 'train_data_augmentation.txt'
+candidates = getCandidates(filename1, filename2)
+saveCandidatesToFile(candidates, filename3)
+
