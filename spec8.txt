@@ -49,3 +49,46 @@ candidate - string from the list
 
 
 
+#===================================================================
+# get candidate training utterances
+#===================================================================
+
+import pandas as pd
+
+def getTokensFromRow(row, chunkSize, df1):
+    firstTPLocation = -1
+    lastTPLocation = -1
+    for i in range(1, 43):
+        if row[str(i)] == 'TP':
+            if firstTPLocation == -1:
+                firstTPLocation = i
+            lastTPLocation = i
+        elif firstTPLocation != -1:
+            break
+
+    if firstTPLocation != -1:
+        voiceFilename = row['convID']
+        frame_row = df1[df1['voiceFilename'] == voiceFilename]
+        frame_str = frame_row['frame'].values[0]
+        frame_tokens = frame_str.split(' ')
+        tokens_to_return = frame_tokens[chunkSize*(firstTPLocation - 1):chunkSize*lastTPLocation]
+        return ' '.join(tokens_to_return)
+    return ''
+
+def getCandidates(chunkSize=12):
+    df1 = pd.read_csv('train_data_12_42_cumulative.csv', sep='\t')
+    df2 = pd.read_csv('train_data_12_42_cumulative_bert_final_metrics.txt')
+    
+    candidates = []
+    for index, row in df2.iterrows():
+        tokens = getTokensFromRow(row, chunkSize, df1)
+        if tokens:
+            candidates.append([row['convID'], tokens])
+    return candidates
+
+def saveCandidatesToFile(candidates, filename='train_data_augmentation.txt'):
+    df = pd.DataFrame(candidates, columns=['convID', 'candidate'])
+    df.to_csv(filename, sep='\t', index=False)
+
+candidates = getCandidates()
+saveCandidatesToFile(candidates)
