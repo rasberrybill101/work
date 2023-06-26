@@ -170,8 +170,9 @@ def getTokensFromRow(row, df1, chunkSize=12):
     if firstTPLocation != -1:
         voiceFilename = row['convID']
         frame_row = df1[df1['voiceFilename'] == voiceFilename]
-        if len(frame_row) > 0:
-            frame_row = frame_row.iloc[frame_row['frame'].str.split().str.len().idxmax()]
+        if not frame_row.empty:
+            max_len_idx = frame_row['frame'].str.split().str.len().idxmax()
+            frame_row = frame_row.loc[max_len_idx]
             frame_str = frame_row['frame']
             frame_tokens = frame_str.split(' ')
             tokens_to_return = frame_tokens[chunkSize*(firstTPLocation - 1):chunkSize*lastTPLocation]
@@ -199,5 +200,3 @@ filename2 = dir + 'train_data_12_42_cumulative_bert_predicted_final_metrics.txt'
 filename3 = dir + 'train_data_augmentation.txt'
 candidates = getCandidates(filename1, filename2)
 saveCandidatesToFile(candidates, filename3)
-
-
