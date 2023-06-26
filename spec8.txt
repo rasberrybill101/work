@@ -1,0 +1,51 @@
+Given 2 data files:
+(1) Tab separated file1 (named "train_data_12_42_cumulative.csv") with the following columns:
+frame, label, chunkStart, chunkEnd, voiceFilename
+label is an integer
+expected in an integer
+chunkStart is an integer
+chunkEnd is an integer
+voiceFilename is a string that acts as the primary key for the row
+
+for any given row (with primary key "voiceFilename"), columns:
+"chunkStart" is the position of the first token in "frame" column  
+"chunkEnd" is the position of the last token in "frame" column
+
+There is one row per voiceFilename in file1. The value of the "voiceFilename" column is equal to the value of  the convID column in file2.
+
+
+(2) Comma separated file2 (named "train_data_12_42_cumulative_bert_final_metrics.txt") with the following columns:
+convID, 1, 2, 3, 4, 5, 6, 7, ....., 4
+convID is a string that acts as the primary key for the row
+The remaining columns in each row are integers 1 through 42, separated by commas.
+
+Data in columns "1" through "42" can take one of the following five values:
+"TP", "TN", "FP", "FN", "--"
+
+The following functionality is required
+1. function getTokensFromRow(chunkSize = 12)
+For any row in file2 that contain "TP" in columns "1" through "42" :
+   set the location of the first TP in the row as "firstTPLocation"
+   set the location of the the last "TP" that is contiguous to the first TP in this row to "lastTPLocation"
+   Two TPs are contiguous (or form a contiguous chain) if there are only other "TP"s between them.For example:
+    "TP", "TP", "TP", "TP" is a contiguous chain
+	but "TP", "TP", "FN", "TP" is not a contiguous chain since all the TPs are not right next to each other.
+	Rather, only first 2 TPs are contiguous. The position of the first one will be "firstTPLocation", and the position of the last TP in the contiguous chain will "lastTPLocation"
+	
+	Then, given "firstTPLocation", and "lastTPLocation", the task is to return the tokens between position 12*(firstTPLocation - 1) and 12*(lastTPLocation) in column "frame" of file1. 12 is the chunkSize.
+	
+	The tokens (and therefore their positions) in the "frame" column of file1 are obtained by space separating the string of "frame". The first token will be at position 1, the second token at position 2, etc.
+	
+	The function should return the string obtained by concatenation of the tokens (using space character separation) between "firstTPLocation" and "lastTPLocation" in "frame" column.
+
+
+2. function getCandidates(chunkSize = 12) 
+The function getCandidates() should return a list of strings for the eligible rows in file2, each string being the result of a call to getTokensFromRow(chunkSize=12) should be called for each row in file2, but only rows with "TP" in columns "1" through "42" of file2 should return tokens.
+
+The list of strings obtained from getCandidates() should be saved to file3 (named "train_data_augmentation.txt") that has the following columns (tab separated) for each string in the list:
+
+convID - the primary key of the row (same as in file2)
+candidate - string from the list
+
+
+
