@@ -2,21 +2,33 @@ apk installer plugin:
 
 package com.example.installapk;
 
+package com.verilert.apk;
+
+import android.Manifest;
 import android.content.Intent;
 import android.net.Uri;
-import android.os.Bundle;
+
 import androidx.core.content.FileProvider;
+
 import com.getcapacitor.JSObject;
-import com.getcapacitor.NativePlugin;
 import com.getcapacitor.Plugin;
 import com.getcapacitor.PluginCall;
 import com.getcapacitor.PluginMethod;
+import com.getcapacitor.annotation.CapacitorPlugin;
+import com.getcapacitor.annotation.Permission;
 
 import java.io.File;
 
-@NativePlugin()
+@CapacitorPlugin(
+        name = "ApkInstaller",
+        permissions = {
+                @Permission(
+                        strings = {Manifest.permission.REQUEST_INSTALL_PACKAGES},
+                        alias = "installPackages"
+                )
+        }
+)
 public class ApkInstaller extends Plugin {
-
     @PluginMethod()
     public void installApk(PluginCall call) {
         String path = call.getString("path");
@@ -24,9 +36,9 @@ public class ApkInstaller extends Plugin {
             File apkFile = new File(path);
             if(apkFile.exists()) {
                 Uri apkURI = FileProvider.getUriForFile(
-                    getContext(),
-                    getContext().getPackageName() + ".provider",
-                    apkFile
+                        getContext(),
+                        getContext().getPackageName() + ".provider",
+                        apkFile
                 );
 
                 Intent intent = new Intent(Intent.ACTION_VIEW);
@@ -34,14 +46,18 @@ public class ApkInstaller extends Plugin {
                 intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
                 intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
 
-                startActivity(intent);
+                // Use getBridge().getActivity() to get the Activity instance.
+                getBridge().getActivity().startActivity(intent);
 
-                call.success();
+                // use call.resolve() instead of call.success()
+                call.resolve();
             } else {
-                call.error("File does not exist");
+                // use call.reject() instead of call.error()
+                call.reject("File does not exist");
             }
         } else {
-            call.error("No path provided");
+            // use call.reject() instead of call.error()
+            call.reject("No path provided");
         }
     }
 }
@@ -69,4 +85,168 @@ $scope.installApk = function() {
     console.error('Failed to send APK installation intent:', error);
   });
 };
+
+--------- register the plugin thru the typescript bridge
+Given this Capacitor plugin code:
+package com.verilert.apk;
+
+import android.Manifest;
+import android.content.Intent;
+import android.net.Uri;
+
+import androidx.core.content.FileProvider;
+
+import com.getcapacitor.Plugin;
+import com.getcapacitor.PluginCall;
+import com.getcapacitor.PluginMethod;
+import com.getcapacitor.annotation.CapacitorPlugin;
+import com.getcapacitor.annotation.Permission;
+
+import java.io.File;
+
+@CapacitorPlugin(
+        name = "ApkInstaller",
+        permissions = {
+                @Permission(
+                        strings = {Manifest.permission.REQUEST_INSTALL_PACKAGES},
+                        alias = "installPackages"
+                )
+        }
+)
+public class ApkInstaller extends Plugin {
+
+    @PluginMethod()
+    public void installApk(PluginCall call) {
+        String path = call.getString("path");
+        if(path != null) {
+            File apkFile = new File(path);
+            if(apkFile.exists()) {
+                Uri apkURI = FileProvider.getUriForFile(
+                        getContext(),
+                        getContext().getPackageName() + ".provider",
+                        apkFile
+                );
+
+                Intent intent = new Intent(Intent.ACTION_VIEW);
+                intent.setDataAndType(apkURI, "application/vnd.android.package-archive");
+                intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
+                intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+
+                getBridge().getActivity().startActivity(intent);
+
+                call.resolve();
+            } else {
+                call.reject("File does not exist");
+            }
+        } else {
+            call.reject("No path provided");
+        }
+    }
+}
+
+-----
+Show how this plugin would be registered and suggest the location of the javascript code for the registered plugin
+
+In index.html :
+----
+    <script src="lib/apk-install/apk-install.js"></script>
+	
+in file apk-install.js
+----
+import { registerPlugin } from '@capacitor/core';
+const ApkInstaller = registerPlugin('ApkInstaller');
+export default ApkInstaller;
+
+question:
+--------
+instead of :
+import ApkInstaller from './apk-installer';
+
+can we do:
+const { ApkInstaller } = Capacitor.Plugins;
+
+---------------- Question
+Given this definition of the plugin:
+public class ApkInstaller extends Plugin {
+
+    @PluginMethod()
+    public void installApk(PluginCall call) {
+        String path = call.getString("path");
+        if(path != null) {
+            File apkFile = new File(path);
+            if(apkFile.exists()) {
+                Uri apkURI = FileProvider.getUriForFile(
+                        getContext(),
+                        getContext().getPackageName() + ".provider",
+                        apkFile
+                );
+
+                Intent intent = new Intent(Intent.ACTION_VIEW);
+                intent.setDataAndType(apkURI, "application/vnd.android.package-archive");
+                intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
+                intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+
+                getBridge().getActivity().startActivity(intent);
+
+                call.resolve();
+            } else {
+                call.reject("File does not exist");
+            }
+        } else {
+            call.reject("No path provided");
+        }
+    }
+}
+
+and this registration:
+import { registerPlugin } from '@capacitor/core';
+const ApkInstaller = registerPlugin('ApkInstaller');
+export default ApkInstaller;
+
+Is this the right way to invoke the apk installation?
+const { ApkInstaller } = Capacitor.Plugins;
+
+reloadApp = function(releaseApkPath = 'download-apk/install-apk.php') {
+  var Filesystem = Capacitor.Plugins.Filesystem;
+  var apkUrl = SITE_URL + releaseApkPath;
+
+  console.log('install0...................');
+  // Download the file
+  fetch(apkUrl)
+      .then(function(response) {
+          console.log('install1........................');
+          if (!response.ok) {
+              throw new Error('HTTP error, status = ' + response.status);
+          }
+          return response.blob();
+      })
+      .then(function(blob) {
+          console.log('install1........................');
+          console.log('Filesystem: ' + JSON.stringify(Filesystem));
+          var reader = new FileReader();
+          reader.onload = function() {
+              var dataUrl = reader.result;
+              var base64Data = dataUrl.split(',')[1];
+
+              // Write the file to the local filesystem
+              Filesystem.writeFile({
+                  path: 'update.apk',
+                  data: base64Data,
+                  directory: 'DOCUMENTS'
+              }).then(function(writeResult) {
+                  // Trigger an install intent
+                  ApkInstaller.installApk({ url: writeResult.uri });
+                  console.log('installB .... called app.openUrl');
+              }).catch(function(error) {
+                  console.error('Error writing file:', error);
+              });
+          };
+          reader.readAsDataURL(blob);
+      })
+      .catch(function(error) {
+          console.error('Error downloading file:', error);
+      });
+}
+
+
 

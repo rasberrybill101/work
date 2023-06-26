@@ -1,13 +1,20 @@
-Using Python, Given a csv file without a header, where each line consists of a String ID followed by 42 String values such as:
-convID,s1,s2,s3,....,s42
-Each of the 42 string values (s1..s42) can be one of the five strings:
+Using Python, Given a csv file the following header:
+convID,1,2,3,....,42
+for example:
+A13445_998,1,2,3,4,...,42
+
+where each line consists of a String ID followed by 42 values such as:
+A13445_998,TN,TN,TP,.........,FP
+
+Each of the 42 values after the first column (convID) can be one of the five strings:
 TP
 FP
 TN
 FN
 --
 
-The first column is an ID and each of the other 42 columns represents a metric for a single step.
+The first column is an ID and each of the other 42 columns represents a metric (TP, FP, TN, FN, --) for a single step. A value of '--' means that a metric does not exist for that step.
+
 The requirement is to find the following metrics for each time step:
 1) Accuracy = (TP + TN)/(TP + TN + FP + FN)
 2) Precision = TP/(TP + FP)
@@ -16,18 +23,24 @@ The requirement is to find the following metrics for each time step:
 Where TP, TN, FP, FN represent of the sum of the corresponding strings in a given column of the csv file.
 Any metrics with value "--" in the csv file are to be ignored.
 A single time step consists of all the values in a single column. For instance, given the following file:
-convID,s1,s2,s3,s4,...,s42
+convID,1,2,3,4,...,42
 000001,TP,TN,TP,FN,...,TN
-000002,TN,TP,FP,FP,...,TP
+000002,TN,TP,FP,--,...,--
+000003,TP,TN,FP,FP,...,TP
 ...
-The metrics for step 1 (s1) are found by summing the corresponding TP, TN, FP, FN values in column s1. Any "--" strings are ignored for the calculations.
+The metrics for step 1 are found by summing the corresponding TP, TN, FP, FN values in column 1. Any "--" strings are ignored for the calculations.
+For example, in the data above, the counts are
+Step 1 : the counts are TP=2, TN=1, FN=0, FP=0
+Step 2 : the counts are TP=1, TN=2, FN=0, FP=0
+Step 3 : the counts are TP=1, TN=0, FN=0, FP=2
+Step 4 : the counts are TP=0, TN=0, FN=1, FP=1 # -- is ignored
 
-At the end of the calculations, each time step (s1,s2,....,s41) will have 4 metrics calculated (Accuracy, Precision, Recall, F1). A new csv file with the following structure will be created from the results:
+At the end of the calculations, each time step (1,2,....,41) will have 4 metrics calculated (Accuracy, Precision, Recall, F1). A new csv file with the following structure will be created from the results:
 
 step,Accuracy,Precision,Recall,F1
 
 Thus each line in the output file will consist of:
-step - the step identifier, eg. s1, s2, ...
+step - the step identifier, eg. s1, s2, ... corresponding to each step
 Accuracy - the calculated accuracy value for the step, displayed to 3 decimal places
 Precision - calculated precision for the step, displayed to 3 decimal places
 Recall - calculated recall for the step, displayed to 3 decimal places
@@ -36,6 +49,80 @@ F1 - calculated F1 for the step, displayed to 3 decimal places
 The name of the output file should be "step_metrics.txt"
 
 Draw a line graph of each metric (Accuracy, precision, recall, F1) on the y axis vs step number on the x axis
+
+Implement the code using two functions:
+calculateMetrics(filename)  does the count and metrics calculations
+plotResults draws the final graph and saves an image of the plot to the file "metrics.png"
+
+
+================================ IMPLEMENTATION
+
+#============================================================
+# calculate metrics
+#============================================================
+import pandas as pd
+import matplotlib.pyplot as plt
+import numpy as np
+
+def calculateMetrics(filename):
+    df = pd.read_csv(filename)
+    metrics_df = pd.DataFrame(columns=['step', 'Accuracy', 'Precision', 'Recall', 'F1'])
+
+    for i in range(1, df.shape[1]):
+        TP = len(df[df[str(i)] == "TP"])
+        FP = len(df[df[str(i)] == "FP"])
+        TN = len(df[df[str(i)] == "TN"])
+        FN = len(df[df[str(i)] == "FN"])
+        
+        if (TP + FP) != 0:
+            Precision = TP / (TP + FP)
+        else:
+            Precision = 0
+        
+        if (TP + FN) != 0:
+            Recall = TP / (TP + FN)
+        else:
+            Recall = 0
+        
+        if (TP + TN + FP + FN) != 0:
+            Accuracy = (TP + TN) / (TP + TN + FP + FN)
+        else:
+            Accuracy = 0
+        
+        if (Precision + Recall) != 0:
+            F1 = 2 * (Precision * Recall) / (Precision + Recall)
+        else:
+            F1 = 0
+        
+        metrics_df = metrics_df.append({'step':i, 'Accuracy':round(Accuracy, 3), 'Precision':round(Precision, 3), 'Recall':round(Recall, 3), 'F1':round(F1, 3)}, ignore_index=True)
+
+    metrics_df.to_csv('step_metrics.txt', index=False)
+
+#============================================================
+# plot metrics
+#============================================================
+def plotResults():
+    df = pd.read_csv('step_metrics.txt')
+    plt.figure(figsize=(10,6))
+    
+    plt.plot(df['step'], df['Accuracy'], label='Accuracy')
+    plt.plot(df['step'], df['Precision'], label='Precision')
+    plt.plot(df['step'], df['Recall'], label='Recall')
+    plt.plot(df['step'], df['F1'], label='F1')
+    
+    plt.xlabel('Step')
+    plt.ylabel('Metric Value')
+    plt.title('Step Metrics')
+    plt.legend()
+    
+    plt.savefig('metrics.png')
+    plt.show()
+
+# Execute the functions
+calculateMetrics('your_file.csv')
+plotResults()
+
+=================================================================
 
 -----------------
 
