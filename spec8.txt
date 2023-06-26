@@ -55,7 +55,7 @@ candidate - string from the list
 
 import pandas as pd
 
-def getTokensFromRow(row, chunkSize, df1):
+def getTokensFromRow(row, df1, chunkSize=12):
     firstTPLocation = -1
     lastTPLocation = -1
     for i in range(1, 43):
@@ -75,9 +75,9 @@ def getTokensFromRow(row, chunkSize, df1):
         return ' '.join(tokens_to_return)
     return ''
 
-def getCandidates(chunkSize=12):
-    df1 = pd.read_csv('train_data_12_42_cumulative.csv', sep='\t')
-    df2 = pd.read_csv('train_data_12_42_cumulative_bert_final_metrics.txt')
+def getCandidates(filename1, filename2, chunkSize=12):
+    df1 = pd.read_csv(filename1, sep='\t')
+    df2 = pd.read_csv(filename2)
     
     candidates = []
     for index, row in df2.iterrows():
@@ -86,9 +86,13 @@ def getCandidates(chunkSize=12):
             candidates.append([row['convID'], tokens])
     return candidates
 
-def saveCandidatesToFile(candidates, filename='train_data_augmentation.txt'):
+def saveCandidatesToFile(candidates, filename):
     df = pd.DataFrame(candidates, columns=['convID', 'candidate'])
     df.to_csv(filename, sep='\t', index=False)
 
-candidates = getCandidates()
-saveCandidatesToFile(candidates)
+dir = '/chunk-complaint/'
+filename1 = dir + 'train_data_12_42_cumulative.csv'
+filename2 = dir + 'train_data_12_42_cumulative_bert_predicted_final_metrics.txt'
+filename3 = dir + 'train_data_augmentation.txt'
+candidates = getCandidates(filename1, filename2)
+saveCandidatesToFile(candidates, filename3)
