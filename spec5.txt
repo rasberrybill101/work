@@ -94,9 +94,11 @@ def calculateMetrics(filename):
         else:
             F1 = 0
         
-        metrics_df = metrics_df.append({'step':i, 'Accuracy':round(Accuracy, 3), 'Precision':round(Precision, 3), 'Recall':round(Recall, 3), 'F1':round(F1, 3)}, ignore_index=True)
+        new_row = {'step':i, 'Accuracy':round(Accuracy, 3), 'Precision':round(Precision, 3), 'Recall':round(Recall, 3), 'F1':round(F1, 3)}
+        metrics_df = pd.concat([metrics_df, pd.DataFrame(new_row, index=[0])], ignore_index=True)
 
     metrics_df.to_csv('step_metrics.txt', index=False)
+
 
 #============================================================
 # plot metrics
