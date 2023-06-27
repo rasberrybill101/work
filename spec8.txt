@@ -202,20 +202,17 @@ saveCandidatesToFile(candidates, filename3)
 
 ============================================= modification:
 
-Include the column 'label' from file1 to the final candidates that will be written in "saveCandidatesToFile"
+Include the column 'label' from file1 to the final candidates that will be written in "saveCandidatesToFile".
+Also include the length of each list of tokens,
 
-Is the following a valid change to make?
-        if tokens:
-            candidates.append([row['convID'], tokens])
-			candidates.append([row['label'], tokens])
-    return candidates
-	
-I see a KeyError: 'label' when I do this
+============================================= Additional requirement
+Supposing we want to limit the number of returned tokens such that no more than a certain number "tokenLimit" is returned from     tokens_to_return = frame_tokens[chunkSize*(firstTPLocation - 1):chunkSize*lastTPLocation]
+rewrite  getTokensFromRow(row, df1, chunkSize=12) by adding an arg "tokenLimit" with an initial value of -1 (which means no limit). Any positive integer value for tokenLimit means return no more than tokenLimit tokens. If total number of tokens is less, then return the lower number.
 
 =============================================
 import pandas as pd
 
-def getTokensFromRow(row, df1, chunkSize=12):
+def getTokensFromRow(row, df1, chunkSize=12, tokenLimit=-1):
     firstTPLocation = -1
     lastTPLocation = -1
     for i in range(1, 43):
@@ -234,9 +231,14 @@ def getTokensFromRow(row, df1, chunkSize=12):
         frame_str = frame_row['frame']
         frame_tokens = frame_str.split(' ')
         tokens_to_return = frame_tokens[chunkSize*(firstTPLocation - 1):chunkSize*lastTPLocation]
-        label = frame_row['label']
+
+        # Apply token limit if applicable
+        if tokenLimit > 0 and len(tokens_to_return) > tokenLimit:
+            tokens_to_return = tokens_to_return[:tokenLimit]
+        
         numTokens = len(tokens_to_return)
-        return numTokens, label, ' '.join(tokens_to_return)
+
+        return numTokens, frame_row['label'], ' '.join(tokens_to_return)
     return 0, '', ''
 
 def getCandidates(filename1, filename2, chunkSize=12):
@@ -260,3 +262,34 @@ filename2 = dir + 'train_data_12_42_cumulative_bert_predicted_final_metrics.txt'
 filename3 = dir + 'train_data_augmentation.txt'
 candidates = getCandidates(filename1, filename2)
 saveCandidatesToFile(candidates, filename3)
+
+================================================ plot histogram of string lengths
+
+Define the function showCandidateLengths() which will plot a barchart or histogram of the numTokens in each candidate (x-axis) vs how many candidates have such a length (y-axis). Basically, show a frequency distribution of the number of tokens in each candidate.
+
+================================================ Implementation:
+
+import matplotlib.pyplot as plt
+
+def showCandidateLengths(candidates):
+    numTokens = [candidate[2] for candidate in candidates]
+    plt.hist(numTokens, bins=range(min(numTokens), max(numTokens) + 1), alpha=0.7, edgecolor='black')
+    plt.title('Number of tokens in each candidate')
+    plt.xlabel('Number of tokens')
+    plt.ylabel('Number of candidates')
+    plt.show()
+
+================================================= usage:
+dir = '/chunk-complaint/chunk_test_data/'
+filename1 = dir + 'train_data_12_42_cumulative.csv'
+filename2 = dir + 'train_data_12_42_cumulative_bert_predicted_final_metrics.txt'
+filename3 = dir + 'train_data_augmentation.txt'
+candidates = getCandidates(filename1, filename2)
+saveCandidatesToFile(candidates, filename3)
+showCandidateLengths(candidates)
+
+
+------------------------------- implementation (update the function getTokensFromRow:
+
+
+
