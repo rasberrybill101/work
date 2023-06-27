@@ -229,15 +229,15 @@ def getTokensFromRow(row, df1, chunkSize=12):
     if firstTPLocation != -1:
         voiceFilename = row['convID']
         frame_row = df1[df1['voiceFilename'] == voiceFilename]
-        if not frame_row.empty:
-            max_len_idx = frame_row['frame'].str.split().str.len().idxmax()
-            frame_row = frame_row.loc[max_len_idx]
-            frame_str = frame_row['frame']
-            label = frame_row['label']
-            frame_tokens = frame_str.split(' ')
-            tokens_to_return = frame_tokens[chunkSize*(firstTPLocation - 1):chunkSize*lastTPLocation]
-            return label, ' '.join(tokens_to_return)
-    return None, ''
+        max_len_idx = frame_row['frame'].str.split().str.len().idxmax()
+        frame_row = frame_row.loc[max_len_idx]
+        frame_str = frame_row['frame']
+        frame_tokens = frame_str.split(' ')
+        tokens_to_return = frame_tokens[chunkSize*(firstTPLocation - 1):chunkSize*lastTPLocation]
+        label = frame_row['label']
+        numTokens = len(tokens_to_return)
+        return numTokens, label, ' '.join(tokens_to_return)
+    return 0, '', ''
 
 def getCandidates(filename1, filename2, chunkSize=12):
     df1 = pd.read_csv(filename1, sep='\t')
@@ -245,13 +245,13 @@ def getCandidates(filename1, filename2, chunkSize=12):
     
     candidates = []
     for index, row in df2.iterrows():
-        label, tokens = getTokensFromRow(row, df1, chunkSize)
+        numTokens, label, tokens = getTokensFromRow(row, df1, chunkSize)
         if tokens:
-            candidates.append([row['convID'], label, tokens])
+            candidates.append([row['convID'], label, numTokens, tokens])
     return candidates
 
 def saveCandidatesToFile(candidates, filename):
-    df = pd.DataFrame(candidates, columns=['convID', 'label', 'candidate'])
+    df = pd.DataFrame(candidates, columns=['convID', 'label', 'numTokens', 'candidate'])
     df.to_csv(filename, sep='\t', index=False)
 
 dir = '/chunk-complaint/chunk_test_data/'
@@ -260,5 +260,3 @@ filename2 = dir + 'train_data_12_42_cumulative_bert_predicted_final_metrics.txt'
 filename3 = dir + 'train_data_augmentation.txt'
 candidates = getCandidates(filename1, filename2)
 saveCandidatesToFile(candidates, filename3)
-
-
