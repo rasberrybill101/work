@@ -1,0 +1,195 @@
+Find the max , min, mean, and standard deviation of a glove word vector based on java INDArray. Use a method that takes as input an INDArray vector. The output of the method is an object of class "VectorStats" that has fields: min, max, mean, standardDeviation, minIndex, maxIndex, vectorSize. VectorStats has getter access methods for each field. minIndex is the vector column index of the min value. maxIndex is the vector column index of the max value.
+ VectorStats also has a method called "getDelimitedStats" that takes a delimiter string (such as ",") as input and returns the stats as a delimited string in the order mean, min, max, sd, minIndex, maxIndex, and vectorSize. VectorStats also has a method "getHeader()" that returns a delimiter separated string "mean, min, max, sd, minIndex, maxIndex, and vectorSize".  Code in java. SKIP imports for brevity. Show example usage with a sample main method. Keep all processing in thhe methods of the classes.
+ 
+ =========================================
+ 
+ public class VectorStats {
+    private double min;
+    private double max;
+    private double mean;
+    private double standardDeviation;
+    private int minIndex;
+    private int maxIndex;
+    private int vectorSize;
+
+    public VectorStats(INDArray vector) {
+        this.vectorSize = vector.size(1);
+        double[] values = vector.data().asDouble();
+        double sum = 0;
+        double sumSquares = 0;
+        double currentMax = Double.MIN_VALUE;
+        double currentMin = Double.MAX_VALUE;
+
+        for (int i = 0; i < vectorSize; i++) {
+            double value = values[i];
+            sum += value;
+            sumSquares += value * value;
+            if (value > currentMax) {
+                currentMax = value;
+                maxIndex = i;
+            }
+            if (value < currentMin) {
+                currentMin = value;
+                minIndex = i;
+            }
+        }
+
+        this.mean = sum / vectorSize;
+        this.standardDeviation = Math.sqrt((sumSquares / vectorSize) - (mean * mean));
+        this.min = currentMin;
+        this.max = currentMax;
+    }
+
+    public double getMin() {
+        return min;
+    }
+
+    public double getMax() {
+        return max;
+    }
+
+    public double getMean() {
+        return mean;
+    }
+
+    public double getStandardDeviation() {
+        return standardDeviation;
+    }
+
+    public int getMinIndex() {
+        return minIndex;
+    }
+
+    public int getMaxIndex() {
+        return maxIndex;
+    }
+
+    public int getVectorSize() {
+        return vectorSize;
+    }
+
+    public String getHeader(String delimiter) {
+        return "mean" + delimiter + "min" + delimiter + "max" + delimiter + "sd" + delimiter + "minIndex" + delimiter + "maxIndex" + delimiter + "vectorSize";
+    }
+
+	public String getDelimitedStats(String delimiter) {
+		return String.format("%.2f", mean) + delimiter
+				+ String.format("%.2f", min) + delimiter
+				+ String.format("%.2f", max) + delimiter
+				+ String.format("%.2f", standardDeviation) + delimiter
+				+ minIndex + delimiter
+				+ maxIndex + delimiter
+				+ vectorSize;
+	}
+	
+	public static void main(String[] args) {
+		double[] vectorValues = {-0.11317, -0.31675, 0.01857, 0.21048, -0.03088, -0.03851, 0.10131, -0.19497, -0.2963, -0.079273, 0.089834, -0.043603, 0.13691, -0.19657, 0.041277, -0.21444, 0.10297, 0.26818, 0.023813, -0.089056, 0.027508, -0.36672, -0.27363, -0.2239, -0.28054, -0.20783, 0.013362, -0.015302, 0.052895, -0.2208, 0.22762, -0.051444, 0.11008, 0.16147, -0.086431, -0.1621, 0.30115, -0.0038953, 0.070065, 0.20553, -0.013549, 0.24873, -0.065234, 0.0046016, 0.075725, -0.14955, -0.094948, -0.036849, -0.13645, -0.018081};
+		INDArray vector = Nd4j.create(vectorValues, new int[]{1, 50});
+		VectorStats stats = new VectorStats(vector);
+
+		System.out.println(stats.getDelimitedStats(","));
+	}
+}
+
+==================================================
+How can glove vectors be effectively visualized - PCA implementation
+==================================================
+import org.deeplearning4j.models.embeddings.loader.WordVectorSerializer;
+import org.deeplearning4j.models.word2vec.Word2Vec;
+import org.nd4j.linalg.api.ndarray.INDArray;
+import org.nd4j.linalg.factory.Nd4j;
+import org.nd4j.linalg.indexing.NDArrayIndex;
+import org.nd4j.linalg.indexing.SpecifiedIndex;
+import org.nd4j.linalg.ops.transforms.Transforms;
+import org.nd4j.linalg.util.NDArrayUtil;
+import org.nd4j.linalg.util.Shape;
+
+import java.awt.Color;
+import java.awt.Font;
+import java.awt.Shape;
+import java.io.File;
+import java.io.IOException;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
+import java.util.stream.IntStream;
+
+import javax.swing.JFrame;
+
+import org.apache.commons.lang3.ArrayUtils;
+import org.apache.commons.math3.util.Pair;
+import org.deeplearning4j.plot.BarnesHutTsne;
+import org.deeplearning4j.plot.Tsne;
+import org.jfree.chart.ChartFactory;
+import org.jfree.chart.ChartPanel;
+import org.jfree.chart.JFreeChart;
+import org.jfree.chart.annotations.XYAnnotation;
+import org.jfree.chart.annotations.XYTextAnnotation;
+import org.jfree.chart.plot.PlotOrientation;
+import org.jfree.data.xy.XYSeries;
+import org.jfree.data.xy.XYSeriesCollection;
+
+public class GloVeVisualizer {
+    public static void main(String[] args) throws IOException {
+        // Load the GloVe embeddings
+        Word2Vec word2Vec = WordVectorSerializer.loadTxtVectors(new File("glove.6B.50d.txt"));
+        
+        // Choose a subset of words to visualize
+        List<String> words = Arrays.asList("cat", "dog", "mouse", "lion", "tiger", "elephant", "apple", "orange", "banana", "grape");
+        
+        // Get the vectors for the selected words
+        List<INDArray> vectors = words.stream()
+                                      .map(word -> word2Vec.getWordVectors(word))
+                                      .collect(Collectors.toList());
+        
+        // Use PCA to reduce the dimensionality of the vectors to 2 dimensions
+        INDArray vectors_2d = getPCA(Nd4j.vstack(vectors), 2);
+        
+        // Create a scatter plot with JFreeChart
+        XYSeriesCollection dataset = new XYSeriesCollection();
+        XYSeries series = new XYSeries("GloVe Vectors");
+        
+        for (int i = 0; i < vectors_2d.size(0); i++) {
+            double x = vectors_2d.getDouble(i, 0);
+            double y = vectors_2d.getDouble(i, 1);
+            series.add(x, y);
+        }
+        
+        dataset.addSeries(series);
+        
+        JFreeChart chart = ChartFactory.createScatterPlot("GloVe Vectors Visualized with PCA",
+                                                           "PCA Component 1",
+                                                           "PCA Component 2",
+                                                           dataset,
+                                                           PlotOrientation.VERTICAL,
+                                                           true,
+                                                           true,
+                                                           false);
+        
+        ChartPanel chartPanel = new ChartPanel(chart);
+        JFrame frame = new JFrame("GloVe Vectors Visualized with PCA");
+        frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        frame.add(chartPanel);
+        frame.pack();
+        frame.setVisible(true);
+    }
+    
+	private static INDArray getPCA(INDArray vectors, int nComponents) {
+		INDArray centered = vectors.sub(vectors.mean(0));
+		INDArray cov = centered.transpose().mmul(centered).div(centered.size(0) - 1);
+		Pair<INDArray, INDArray> eig = Nd4j.createRealEigenVectors(cov);
+		INDArray eigenvectors = eig.getFirst().get(NDArrayIndex.all(), new SpecifiedIndex(0, nComponents - 1));
+		INDArray pcaVectors = centered.mmul(eigenvectors);
+		return pcaVectors;
+	}
+
+        // Use t-SNE to reduce the dimensionality of the vectors to 2 dimensions
+        BarnesHutTsne tsne = new BarnesHutTsne.Builder()
+                                            .theta(0.5)
+                                            .learningRate(500)
+                                            .useAdaGrad(false)
+                                            .build();
+        INDArray vectors_2d = tsne.fitTransform(Nd4j.vstack(vectors));
+
+

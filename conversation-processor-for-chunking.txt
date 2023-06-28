@@ -1,0 +1,412 @@
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileReader;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Paths;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.stream.Collectors;
+
+public class ConversationProcessor {
+
+    private static final String RESOURCES_PATH = "src/main/resources/conversations/";
+
+    public static void main(String[] args) throws IOException {
+        List<Chunk> chunks = generateChunks(3);
+        chunks.forEach(System.out::println);
+    }
+
+	public static List<Chunk> generateChunks(int chunkSize) throws IOException {
+		List<Chunk> chunks = new ArrayList<>();
+		List<String> orderOfConversations = Files.readAllLines(Paths.get(RESOURCES_PATH + "order—of—conversations.txt"));
+//fix start
+
+    URL orderOfConversationsURL = ConversationProcessor.class.getClassLoader().getResource("conversations/order—of—conversations.txt");
+    if (orderOfConversationsURL == null) {
+        throw new FileNotFoundException("Cannot find order—of—conversations.txt");
+    }
+    Path orderOfConversationsPath = Paths.get(orderOfConversationsURL.toURI());
+    List<String> orderOfConversations = Files.readAllLines(orderOfConversationsPath);
+
+
+//fix end
+		boolean processingDone;
+		do {
+			processingDone = true;
+			for (String convStream : orderOfConversations) {
+				int convID = Integer.parseInt(convStream.replaceAll("\\D+", ""));
+				Path convFilePath = Paths.get(RESOURCES_PATH + convStream);
+				List<String> lines = Files.readAllLines(convFilePath);
+				List<String> tokens = new ArrayList<>();
+				lines.forEach(line -> tokens.addAll(List.of(line.split(" "))));
+
+				if (!tokens.isEmpty()) {
+					processingDone = false;
+					Chunk chunk = buildNextChunk(convID, chunkSize, tokens);
+					if (chunk != null) {
+						chunks.add(chunk);
+					}
+				}
+			}
+		} while (!processingDone);
+
+		return chunks;
+	}
+
+
+    public static Chunk buildNextChunk(int convID, int k, List<String> tokens) {
+        if (tokens.isEmpty()) {
+            return null;
+        }
+
+        List<String> chunkTokens = new ArrayList<>();
+        for (int i = 0; i < k && !tokens.isEmpty(); i++) {
+            chunkTokens.add(tokens.remove(0));
+        }
+
+        boolean isEndOfConversation = tokens.isEmpty();
+        return new Chunk(convID, chunkTokens, isEndOfConversation);
+    }
+
+    public static class Chunk {
+        int convID;
+        List<String> tokens;
+        boolean isEndOfConversation;
+
+        public Chunk(int convID, List<String> tokens, boolean isEndOfConversation) {
+            this.convID = convID;
+            this.tokens = tokens;
+            this.isEndOfConversation = isEndOfConversation;
+        }
+
+        @Override
+        public String toString() {
+            return "(" + convID + ", \"" + String.join(" ", tokens) + "\", " + isEndOfConversation + ")";
+        }
+    }
+}
+
+FIX:
+    Map<String, Integer> lastTokenIndexes = new HashMap<>();
+    for (String convFilename : orderOfConversations) {
+        lastTokenIndexes.put(convFilename, 0);
+    }
+	
+	int lastTokenIndex = lastTokenIndexes.get(convFilename);
+	if (lastTokenIndex < tokens.size()) {
+		processingDone = false;
+		Chunk chunk = buildNextChunk(convID, chunkSize, tokens.subList(lastTokenIndex, tokens.size()));
+		if (chunk != null) {
+			chunks.add(chunk);
+			lastTokenIndexes.put(convFilename, lc
+	}
+			
+====================================
+unit test
+====================================
+
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+
+import java.io.IOException;
+import java.util.List;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+
+public class ConversationProcessorTest {
+
+    private ConversationProcessor conversationProcessor;
+
+    @BeforeEach
+    public void setUp() {
+        conversationProcessor = new ConversationProcessor();
+    }
+
+    @Test
+    public void testGenerateChunks() throws IOException {
+        List<ConversationProcessor.Chunk> chunks = conversationProcessor.generateChunks(3);
+        assertEquals(12, chunks.size());
+        assertEquals("(1, \"the quick brown\", false)", chunks.get(0).toString());
+        assertEquals("(2, \"there was a\", false)", chunks.get(1).toString());
+        assertEquals("(1, \"fox jumps quickly\", false)", chunks.get(2).toString());
+        assertEquals("(2, \"longer road ahead\", false)", chunks.get(3).toString());
+        assertEquals("(1, \"over the lazy\", false)", chunks.get(4).toString());
+        assertEquals("(2, \"of us as\", false)", chunks.get(5).toString());
+        assertEquals("(1, \"dog before running\", true)", chunks.get(6).toString());
+        assertEquals("(2, \"we edged closer\", false)", chunks.get(7).toString());
+        assertEquals("(1, \"off\", true)", chunks.get(8).toString());
+        assertEquals("(2, \"to resolution that\", false)", chunks.get(9).toString());
+        assertEquals("(2, \"had to be\", false)", chunks.get(10).toString());
+        assertEquals("(2, \"reached\", true)", chunks.get(11).toString());
+    }
+}
+
+@startuml
+boundary AAO
+participant "TranscriptionInputManager\n(Class)" as TIM
+participant "generateChunks()\n(Method)" as generateChunks
+participant "buildNextChunk()\n(Method)" as buildNextChunk
+database "order-of-conversations.txt" as OOCFile
+database "conv1.txt, conv2.txt, ...\n(Conversation Files)" as ConvFiles
+participant Chunk
+
+AAO -> TIM : main()
+activate TIM
+TIM -> generateChunks : call()
+activate generateChunks
+generateChunks -> OOCFile : read order of conversations
+OOCFile -> generateChunks : orderOfConversations
+generateChunks -> ConvFiles : read conversation files
+ConvFiles -> generateChunks : lines of conversation files
+generateChunks -> buildNextChunk : call()
+activate buildNextChunk
+buildNextChunk -> Chunk : create()
+activate Chunk
+Chunk --> buildNextChunk : return chunk instance
+deactivate Chunk
+buildNextChunk --> generateChunks : return chunk instance
+deactivate buildNextChunk
+generateChunks -> TIM : return chunks
+deactivate generateChunks
+TIM -> AAO : send chunks
+deactivate TIM
+@enduml
+
+activity diagram for generateChunks
+
+@startuml
+|generateChunks|
+start
+
+partition "Initialize variables" {
+  :Create empty list `chunks`;
+  :Load orderOfConversations;
+  :Create empty map `lastTokenIndexes`;
+  :Set okToContinue to true;
+}
+
+while (okToContinue) is (true)
+  partition "Process conversation files" {
+    partition "Process each conversation" {
+      :foreach conversation file:;
+      :Get convID from file name;
+      :Read lines from file;
+      :Convert lines to tokens;
+      :Get lastTokenIndex from map;
+      :Process remaining tokens;
+      :Update lastTokenIndexes;
+      :Build and add chunk to list;
+      :Check if processing is done;
+      :end foreach;
+    }
+  }
+endwhile (false)
+
+stop
+@enduml
+
+For this task, NO NEED to show the java imports.
+Just focus on the code.
+Given a list of Chunk objects created as above, call a pre-existing method "sendChunk" defined as:
+void receiveChunk(String convID, String text, boolean isEndOfConversation)
+where convID, text, and isEndOfConversation are obtained from the Chunk object.
+
+The method to do this task should be named "sendChunk", and it will take 3 parameters:
+List<Chunk> chunksToSend
+int minInterval  
+int maxInterval
+
+where minInterval, maxInterval are respectively the minimum and maximum time intervals (in milliseconds) to wait before the next chunk is sent.
+
+sendChunk should wait for a random duration between minInterval and maxInterval before sending a chunk. Chunks should be sent in the order in which they appear in the list of chunks.
+
+import java.util.List;
+import java.util.Random;
+
+public class ChunkProcessor {
+    public void sendChunks(List<Chunk> chunksToSend, int minInterval, int maxInterval) {
+        Random random = new Random();
+        for (Chunk chunk : chunksToSend) {
+            int waitDuration = minInterval + random.nextInt(maxInterval - minInterval + 1);
+            try {
+                Thread.sleep(waitDuration);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+            receiveChunk(chunk.getConvID(), chunk.toString(), chunk.isEndOfConversation());
+        }
+    }
+
+    public void receiveChunk(String convID, String text, boolean isEndOfConversation) {
+        // Process the chunk here
+    }
+}
+
+    private static boolean isRunningInTestMode() {
+        StackTraceElement[] stackTrace = Thread.currentThread().getStackTrace();
+        return Arrays.stream(stackTrace)
+                .anyMatch(element -> element.getClassName().startsWith("org.junit."));
+    }
+
+sequence:
+@startuml
+actor User
+boundary "ChunkProcessor\n(Class)" as CP
+
+User -> CP : sendChunks(chunksToSend, minInterval, maxInterval)
+loop for each chunk in chunksToSend
+  activate CP
+  CP -> CP : wait(random duration)
+  CP -> CP : receiveChunk(chunk.getConvID(), chunk.toString(), chunk.isEndOfConversation())
+  deactivate CP
+end
+@enduml
+
+
+activity:
+
+============================================================
+
+create a web application using java spring boot and freemarker.
+The web app will expose on service as a REST endpoint through
+a controller. The exposed service will serve out the next chunk
+in a list of Chunk objects, where the Chunk class has previously
+been defined. The list of Chunk objects will be the ones created from
+the call to 
+When a Chunk object is served from the controller, the text of the
+chunk will be printed to an output window one character at a time
+so that the text looks like it is being printed from a teletype.
+The output window on which the text is printed should have a black
+background and the text color should be green.
+When the spring web app is started, it should display a banner
+created using ascii text. The banner is the string "Agent Assist TIM".
+Generate a plantuml sequence diagram for the implementation
+
+controller:
+===========
+package com.example.demo.controller;
+
+import com.example.demo.model.Chunk;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RestController;
+
+@RestController
+public class ChunkController {
+    private List<Chunk> chunks;
+    private int currentIndex = 0;
+
+    public ChunkController() {
+        // Load and generate the list of Chunk objects
+    }
+
+    @GetMapping("/nextChunk")
+    public Chunk getNextChunk() {
+        if (currentIndex >= chunks.size()) {
+            currentIndex = 0;
+        }
+        return chunks.get(currentIndex++);
+    }
+	
+	@GetMapping("/output")
+	public String output(Model model) {
+		Chunk chunk = getNextChunk();
+		model.addAttribute("chunkText", chunk.toString());
+		return "output";
+	}
+
+}
+
+Banner:
+=======
+Create a banner.txt file in the src/main/resources folder with the ASCII text "Agent Assist TIM":
+
+     _                    _        _            _     _     _____ ___ __  __ 
+    / \   __ _  ___ _ __ | |_     / \   ___ ___(_)___| |_  |_   _|_ _|  \/  |
+   / _ \ / _` |/ _ \ '_ \| __|   / _ \ / __/ __| / __| __|   | |  | || |\/| |
+  / ___ \ (_| |  __/ | | | |_   / ___ \\__ \__ \ \__ \ |_    | |  | || |  | |
+ /_/   \_\__, |\___|_| |_|\__| /_/   \_\___/___/_|___/\__|   |_| |___|_|  |_|
+         |___/     
+
+FreeMarker:
+==========
+Create a FreeMarker template output.ftlh in the src/main/resources/templates folder:
+
+<!DOCTYPE html>
+<html>
+<head>
+    <style>
+        body {
+            background-color: black;
+            color: green;
+            font-family: "Courier New", monospace;
+            white-space: pre;
+        }
+    </style>
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            const output = document.getElementById("output");
+            const text = "${chunkText}";
+            let index = 0;
+
+            function printNextChar() {
+                if (index < text.length) {
+                    output.textContent += text[index++];
+                    setTimeout(printNextChar, 100);
+                }
+            }
+
+            printNextChar();
+        });
+    </script>
+</head>
+<body>
+    <div id="output"></div>
+</body>
+</html>
+
+
+In the ChunkProcessor class, change the way the chunks are sent in the sendChunk method as follows:
+send a batch of chunks immediately such that all chunks in the set have different ids.
+Wait for a random interval then send the next batch. For example
+send chunk with id 1, chunk with id 2, chunk with id 3 ... chunk with id n
+wait a random interval
+repeat the process for n distinct ids at a time
+
+private void sendBatch(List<Chunk> chunksToSend, Set<Integer> sentIds) {
+    for (Chunk chunk : chunksToSend) {
+        if (!sentIds.contains(chunk.getConvID())) {
+            receiveChunk(chunk.getConvID(), chunk.getText(), chunk.isEndOfConversation());
+            sentIds.add(chunk.getConvID());
+        }
+    }
+}
+
+public void sendChunks(List<Chunk> chunksToSend, int minInterval, int maxInterval) {
+    int batchSize = (int) chunksToSend.stream().map(Chunk::getConvID).distinct().count();
+
+    List<Chunk> remainingChunks = new ArrayList<>(chunksToSend);
+
+    while (!remainingChunks.isEmpty()) {
+        Set<Integer> sentIds = new HashSet<>();
+
+        Iterator<Chunk> iterator = remainingChunks.iterator();
+        while (iterator.hasNext() && sentIds.size() < batchSize) {
+            Chunk chunk = iterator.next();
+            if (!sentIds.contains(chunk.getConvID())) {
+                receiveChunk(chunk.getConvID(), chunk.getText(), chunk.isEndOfConversation());
+                sentIds.add(chunk.getConvID());
+                iterator.remove();
+            }
+        }
+
+        int interval = ThreadLocalRandom.current().nextInt(minInterval, maxInterval + 1);
+        try {
+            Thread.sleep(interval);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+    }
+}
+
+		 

@@ -1,18 +1,49 @@
-Given a conv. id, check if a given substring is present in any of the chunks associated with the conversation.
-Confirm that what is reported as "chunk" and "history" actually match what is expected.
-Compare the prediction from the batch model to the labeled ground truth.
-Use a heat map to highlight the differences.
-Use a confusion matrix to provide numerical metrics from the heat map.
-For the heat map, compare (chunk conv id label) to (conv id label)
-Number of UP chunks in a conversation
-Number of tokens before the first UP chunk
-Length of the first UP chunk should be equal to, or greater than the number of history chunks (this is the "effective sustained" length of the traveling chunk.
-Are there transition frames more significant than the first transition frame? What determines such significance.
+Spec 1: reformat the initial signal annotation
+----------------------------------------------
+Given a tab separated file1 named "initial-category-signals.txt", create a new file2 named "all-category-signals.txt"
+file1 has the following columns
+category - a string
+text - a string
+replacement - a string
 
-check if a word contains a character
+column "text" is a string that has the following format:
+this is a sentence that has two signals, here is the {sig-1:first signal found} and {sig-1:here is the second signal}
 
-======================================================
+column "replacement" is a comma separated list of strings that contains the same number of strings as there are occurrences of "sig-1:" in the "text" column. For example:
+signal-1, the-second-signal
 
+The goal is to write each "text" string to the output file2, by replacing each occurrence of "sig-1" in "text" with the corresponding positioned string in "replacement". Thus, given the examples of "text" and "replacement" columns above, then the following line would be written to file2:
+
+this is a sentence that has two signals, here is the {signal-1:first signal found} and {the-second-signal:here is the second signal}
+
+Thus file2 will have the same number of lines as file1, but will contain each string in file1 "text" where "sig-1" is replaced by the corresponding signal value in the "replacement" column.
+
+Spec 2: create a signals dictionary
+-----------------------------------
+A signals dictionary is defined as a dictionary of key-value pairs, where each key is a string and each value is a list of strings (phrases). For example:
+signalsDictionary = {
+    "signal-1": ["Phrase 1", "Another phrase 1"],
+    "signal-2": ["Phrase 2"],
+    "signal-3": ["Yet another phrase", "And one more"],
+    "signal-4": ["Last phrase"]
+}
+
+Given a list of strings from a text file named "all-category-signals.txt", where each string is on a single line that contains one or more signals. Here is a sample file with 3 lines:
+this is a sentence that has two signals, here is the {signal-1:first signal found} and {signal-2:here is the second signal}
+for this sentence {signal-1:there is another occurrence of a signal} and {signal-3:another one}
+this one has {signal-4:a different signal} and then {signal-3:yet another signal}
+
+Write a python function "getCategorySignals(filename="all-category-signals.txt") that will return the signalsDictionary for this file:
+
+{
+    "signal-1": ["first signal found", "there is another occurrence of a signal"],
+    "signal-2": ["here is the second signal"],
+    "signal-3": ["another one", "yet another signal"],
+    "signal-4": ["a different signal"]
+}
+
+Spec 3: use the signalsDictionary to encode sentence and conversation vectors
+-----------------------------------------------------------------------------
 The goal is to convert a conversation into a vector representation using a function called "encodeConversation". A conversation is a list of sentences extracted using the function "extract_sentences" when given the entire text of a conversation as follows:
 def extract_sentences(text):
 	sentences = re.split(r'(?<!\w\.\w.)(?<![A-Z][a-z]\.)(?<=\.(?!\d)|\?|!)\s', text)
@@ -20,13 +51,22 @@ def extract_sentences(text):
 
 The vector represention of a conversation is built up from the vector representation of the individual sentences in the conversation as follows: 
 
-There is a dictionary of key-value pairs ("signalsDictionary") whose keys are "s1","s2","s3", ... "sN"  where s1 through sN are the dictionary keys (the "signals"). For instance, if there are 10 signals, then the keys would be "s1" through "s10". For each key, the value is a list of strings (phrases that comprise one or more space-separated tokens). A vector of length N is a list of N real numbers initialized to zero as follows:
-convVector = [0, 0, 0, 0, ... 0] - there are N zeros in convVector
-After the convVector has been initialized, it is then built up using the vectors of the individual sentences of the conversation.
-For each sentence, a vector:
-sentenceVector is initialized to [0, 0, 0, 0, ... 0] - (of size N - same size as convVector)
-The sentence is checked for the occurrence of one or more phrases associated with each key. If a phrase is found (sentence contains the entire phrase), then the value in sentenceVector that corresponds to the position of the key is incremented by 1. For example, if phrase matches are found at positions 1, 4, and 6 (keys "s1", "s4", and "s6") then the sentenceVector will be:
-[1, 0, 0, 1, 0, 1, 0, 0, 0, 0]
+There is a dictionary of key-value pairs ("signalsDictionary") whose keys represent signals (each signal is a string), and whose values are lists of strings. Here is an example of the "signalsDictionary":
+signalsDictionary = {
+    "s1": ["Phrase 1", "Another phrase 1"],
+    "s2": ["Phrase 2"],
+    "s3": ["Yet another phrase", "And one more"],
+    "s4": ["Last phrase"]
+}
+which has 4 signals ("s1" through "s4"), and for each key a value which is a list of strings (phrases that comprise one or more space-separated tokens).
+Using the signalsDictionary, a vector of the same length as the number of keys in the signalsDictionary will be used to encode the individual sentences of a conversation as vectors in the following way:
+A vector of length N (the number of signals) representing the conversation is a list of N real numbers initialized to zero:
+	convVector = [0, 0, 0, 0, ... 0] - there are N zeros in convVector
+After initialization, convVector is  built up using the vectors of the individual sentences of the conversation.
+For each sentence in the conversation, a vector:
+	sentenceVector is initialized to [0, 0, 0, 0, ... 0] - (of size N - same size as convVector)
+The sentence is checked for the occurrence of one or more phrases associated with each key. If a phrase is found (sentence contains the entire phrase), then the value in sentenceVector that corresponds to the position of the key is incremented by 1. For example, if phrase matches are found at positions 1, 2, and 4 (keys "s1", "s2", and "s4") then the sentenceVector will be:
+[1, 1, 0, 1]
 Thus, the values in each sentence of the conversation is used to update the convVector simply by updating convVector by adding each sentenceVector to it.
 To keep the implementation flexible so that we can easily change how the vector is updated, then write a function "encodeSentence" that takes a sentence and the signalsDictionary, then returns a single sentence vector.
 The function "encodeSentence(sentence, signalsDictionary)" can then be called from within "encodeConversation(convText, signalsDictionary, normalize=True)" where the vector of the conversation is obtained by summing the vectors of all individual sentences in the conversation. If normalize is True, then the values in the conversation vector are scaled such that the max. value of any entry in the vector is 1. For example the vector:

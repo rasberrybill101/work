@@ -1,0 +1,75 @@
+Write this code in java. Intellij IDE java resources has a directory named "conversations". In this directory, there exists a numher of files. Some files are named using the convention 'convX.txt' where X is an integer. 
+For example, if there are five such files in the directory, their names would be: 
+convl.txt 
+conv2.txt 
+conv3.txt
+conv4.txt 
+conv5.txt
+
+Each of these conv files consist of a list of lines. Each line is a string of space-separated tokens.
+In the same directory there is also a file called 'order—of—conversations.txt'. This file consists of a 
+list of strings which refer to conv filenames. The order of appearance of these filenames specifies the order of processing that will he described below.
+For example if 'order—of—conversations.txt' contains the lines: 
+convl.txt 
+conv2.txt 
+conv3.txt 
+conv4.txt 
+conv5.txt 
+Then convl.txt will be processed first, then conv2.txt, ... until conv5.txt and then the process repeats again 
+beginning with convl.txt until processing is complete. 
+The processing of a file is considered complete when there are no tokens left to process within the file.
+ 
+The processing to he done each time a file is accessed is as follows: 
+Define a method 'buildNextChunk' with the following signature: 
+public Chunk buildNextChunk()
+This method creates an instance of a Chunk object specified in skeletal form as follows: 
+
+public Chunk buildNextChunk(int k) // where k is the number of tokens in a chunk, for example 3
+
+buildNextChunk creates an instance of a Chunk object specified as follows: 
+public class Chunk { 
+  int convID; // the conversation id which is the X suffix of the conv file
+  List<String> tokens; // the tokens in this chunk
+  boolean isEndOfConversation; // is this the last chunk in the file? 
+  
+  // also create a toString() object which is equal to a space-separated string of the tokens in this chunk
+} 
+
+Beginning with the first filename listed in 'order—of—conyersations.txt', the first k tokens are 
+extracted into a Chunk object which is placed in a List<Chunk> array.
+The Chunk is created with convID equal to the X in convX.txt. For example the convID for 
+conv4.txt will be 4. 
+If there are no more tokens to be processed from the conv file, then 
+the flag isEndOfConversation becomes true for the conv file, and no more chunks from this file will be added to the list of Chunk objects.
+For example of processing, suppose we have 2 files "conv1.txt", and "conv2.txt" :
+conv1.txt is: 
+"the quick brown fox"
+"jumps quickly over the lazy"
+"dog before running off" 
+
+conv2.txt is: 
+"there was a longer road"
+"ahead of us as we"
+"edged closer to resolution"
+"that had to be reached"
+
+In this case, the following list of chunk objects would be created:
+
+(l, "the quick brown", false) 
+(2, "there was a", false)
+(1, "fox jumps quickly", false)
+(2, "longer road ahead", false)
+(1, "over the lazy", false) 
+(2, "of us as", false)
+(1, "dog before running", true)
+(2, "we edged closer", false)
+(1, "off", true)
+(2, "to resolution that", false)
+(2, "had to be", false)
+(2, "reached", true)
+
+Note that the string passed to buildNextChunk is the space—separated list of tckens in the Chunk cbject. 
+
+The method generateChunks should return a list of Chunk objects in the correct order as illustrated in the example above, using the parameter chunkSize to set the number of tokens in each chunk.
+
+Write unit tests that read from resource files to illustrate the java implementation.

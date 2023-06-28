@@ -1,0 +1,27 @@
+Given that this functionality is only for Kiosk mode.
+These are feasible:
+
+1. Additionally there is a 5th network hard-coded into the app that is the factory default. 
+2. Hard coding will include both the name and definition of the network to be cached on the tablet. (Together with a way to view the currently active network and it's configuration/definition)
+
+3. It needs to receive a list of Wi-Fi networks from the server.
+It can receive 4 networks from the server, but not all slots will be populated.
+Each network definition will include a ssid, password, ip/subnet/mask (for static ip configuration), and flags to indicate if the connection is metered (cellular) and/or "required".
+These connections should be stored on the tablet.
+
+4. The app will report status of all networks to the server. Status includes:
+Ability to connect, availability of internet, currently connected, last attempt utc, last known working utc, signal strength.
+
+5. The app will request the Wi-Fi networks from the server:
+[ Upon connection to the factory network. ] **** will check on this
+Upon receipt of a push notification instructing it to update its wi-fi networks.
+
+6. The app will first try to connect to unmetered networks.
+If not successful, it will try the metered networks.
+If not successful, it will try the factory network.
+To be successful, the app must connect to the network and have internet access to our servers. [ Need a health check endpoint on Verilert.com to test internet access ]
+
+7. The app will monitor its internet connectivity to our servers and will change Wi-Fi networks as needed.
+[ I assume that any (or the first) "required" network that is available will be the one selected in place of the factory or metered networks ]
+The app will periodically try to get off of the factory and metered networks.
+The app will periodically check that the "required" networks are available.

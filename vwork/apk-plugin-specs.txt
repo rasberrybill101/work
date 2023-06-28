@@ -248,5 +248,16 @@ reloadApp = function(releaseApkPath = 'download-apk/install-apk.php') {
       });
 }
 
+======================== error
+This code:
+import { registerPlugin } from '@capacitor/core';
+const ApkInstaller = registerPlugin('ApkInstaller');
+export default ApkInstaller;
+which is defined in the file lib/apk-install.js, and included in the file "index.html" as follows:
+    <script src="lib/apk-install/apk-install.js"></script>
+has this error upon startup of the android app:
+E/Capacitor: JavaScript Error: {"type":"js.error","error":{"message":"Uncaught SyntaxError: Cannot use import statement outside a module","url":"http://localhost/lib/apk-install/apk-install.js","line":1,"col":1,"errorObject":"{}"}}
+E/Capacitor/Console: File: http://localhost/lib/capacitor/capacitor.js - Line 2 - Msg: SyntaxError: Cannot use import statement outside a module
+E/Capacitor/Console: File: http://localhost/lib/apk-install/apk-install.js - Line 1 - Msg: Uncaught SyntaxError: Cannot use import statement outside a module
 
 
