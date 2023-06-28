@@ -18,6 +18,35 @@ this is an example that has two signals, here is the {signal-1:first signal foun
 
 Thus file2 will have the same number of lines as file1, but will contain each string in file1 "sentence" where "sig-1" is replaced by the corresponding signal value in the "signal" column.
 
+#=================================================================
+# reformat signals
+#=================================================================
+import csv
+
+# Open the input and output files
+with open("initial-category-signals.txt", 'r') as infile, open("all-category-signals.txt", 'w') as outfile:
+    
+    # Create a CSV reader for a tab-separated file
+    reader = csv.reader(infile, delimiter='\t')
+    
+    # Create a CSV writer for a tab-separated file
+    writer = csv.writer(outfile, delimiter='\t')
+    
+    # Iterate over rows in the input file
+    for row in reader:
+        category, sentence, signal = row
+        
+        # Split the signal column into a list
+        signals = signal.split(',')
+        
+        # Replace "sig-1" with each signal in turn
+        for s in signals:
+            sentence = sentence.replace("{sig-1:", "{" + s + ":", 1)
+        
+        # Write the modified row to the output file
+        writer.writerow([category, sentence, signal])
+
+
 Spec 2: create a signals dictionary
 -----------------------------------
 A signals dictionary is defined as a dictionary of key-value pairs, where each key is a string and each value is a list of strings (phrases). For example:
@@ -41,6 +70,30 @@ Write a python function "getCategorySignals(filename="all-category-signals.txt")
     "signal-3": ["another one", "yet another signal"],
     "signal-4": ["a different signal"]
 }
+
+#=================================================================
+# create dictionary
+#=================================================================
+import re
+
+def getCategorySignals(filename):
+    signalsDictionary = {}
+
+    with open(filename, 'r') as f:
+        for line in f:
+            # Extract all signals and phrases
+            matches = re.findall(r'\{(.*?):(.*?)\}', line)
+            for signal, phrase in matches:
+                if signal not in signalsDictionary:
+                    signalsDictionary[signal] = [phrase.strip()]
+                else:
+                    signalsDictionary[signal].append(phrase.strip())
+
+    return signalsDictionary
+
+filename = "all-category-signals.txt"
+print(getCategorySignals(filename))
+
 
 Spec 3: use the signalsDictionary to encode sentence and conversation vectors
 -----------------------------------------------------------------------------
@@ -73,6 +126,39 @@ The function "encodeSentence(sentence, signalsDictionary)" can then be called fr
 [8, 2, 0, 4] would become [1, 0.25, 0, 0.5]
 Note that the reason for having a separate "encodeSentence" function is because want to have a flexible way of defining how a vector is obtained from a sentence given the phrase dictionary.
 
+#=================================================================
+# encode sentence and conversation vectors using the dictionary
+#=================================================================
+import numpy as np
+
+def encodeSentence(sentence, signalsDictionary):
+    # Create a sentence vector initialized with zeros
+    sentenceVector = [0] * len(signalsDictionary)
+    # Loop over each signal in the dictionary
+    for i, signal in enumerate(signalsDictionary):
+        # Loop over each phrase associated with the signal
+        for phrase in signalsDictionary[signal]:
+            # If the phrase is in the sentence, increment the count in the vector
+            if phrase in sentence:
+                sentenceVector[i] += 1
+    return sentenceVector
+
+def encodeConversation(convText, signalsDictionary, normalize=True):
+    # Extract sentences from the conversation text
+    sentences = extract_sentences(convText)
+    # Initialize the conversation vector with zeros
+    convVector = np.zeros(len(signalsDictionary))
+    # Loop over each sentence in the conversation
+    for sentence in sentences:
+        # Encode the sentence into a vector and add it to the conversation vector
+        sentenceVector = encodeSentence(sentence, signalsDictionary)
+        convVector += sentenceVector
+    # Normalize the conversation vector if requested
+    if normalize:
+        convVector /= np.max(convVector)
+    return convVector
+
+
 Spec 4 : Update the defintion of encodeSentence
 -----------------------------------------------
 In the function "encodeSentence", Instead of just trying to do an exact match on one of the phrases of a signal:
@@ -97,6 +183,64 @@ However, if the phrase is: "Today is a Fine but cloudy day, and i will walk to t
 then the longest common sequence of tokens is "fine day". The length is 2.
 
 The length (number of tokens) of the longest common sequence is then used to set the value of the sentenceVector.
+
+#=================================================================
+# encode sentence and conversation vectors using the longest common sequence
+#=================================================================
+import numpy as np
+import string
+
+def tokenize_and_clean(sentence):
+    translator = str.maketrans(string.punctuation, ' '*len(string.punctuation))  # translator to replace punctuation with spaces
+    tokens = sentence.translate(translator).lower().split()
+    return tokens
+
+def findLongestCommonSequence(sentence, phrase):
+    sentence_tokens = tokenize_and_clean(sentence)
+    phrase_tokens = tokenize_and_clean(phrase)
+    
+    # Construct a dynamic programming table
+    dp = [[0 for _ in range(len(phrase_tokens) + 1)] for _ in range(len(sentence_tokens) + 1)]
+    for i in range(1, len(sentence_tokens) + 1):
+        for j in range(1, len(phrase_tokens) + 1):
+            if sentence_tokens[i - 1] == phrase_tokens[j - 1]:
+                dp[i][j] = dp[i - 1][j - 1] + 1
+            else:
+                dp[i][j] = max(dp[i - 1][j], dp[i][j - 1])
+    
+    return dp[-1][-1]  # The bottom right corner contains the length of the longest common subsequence
+
+def encodeSentence(sentence, signalsDictionary):
+    # Create a sentence vector initialized with zeros
+    sentenceVector = [0] * len(signalsDictionary)
+    # Loop over each signal in the dictionary
+    for i, signal in enumerate(signalsDictionary):
+        # Loop over each phrase associated with the signal
+        for phrase in signalsDictionary[signal]:
+            # Find the longest common sequence of tokens in the sentence and the phrase
+            lcs_length = findLongestCommonSequence(sentence, phrase)
+            sentenceVector[i] = max(sentenceVector[i], lcs_length)
+    return sentenceVector
+
+def encodeConversation(convText, signalsDictionary, normalize=True):
+    # Extract sentences from the conversation text
+    sentences = extract_sentences(convText)
+    # Initialize the conversation vector with zeros
+    convVector = np.zeros(len(signalsDictionary))
+    # Loop over each sentence in the conversation
+    for sentence in sentences:
+        # Encode the sentence into a vector and add it to the conversation vector
+        sentenceVector = encodeSentence(sentence, signalsDictionary)
+        convVector += sentenceVector
+    # Normalize the conversation vector if requested
+    if normalize:
+        convVector /= np.max(convVector)
+    return convVector
+
+
+
+
+
 
 
 ------------------------------ implementation
