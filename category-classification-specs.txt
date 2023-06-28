@@ -3,20 +3,20 @@ Spec 1: reformat the initial signal annotation
 Given a tab separated file1 named "initial-category-signals.txt", create a new file2 named "all-category-signals.txt"
 file1 has the following columns
 category - a string
-text - a string
-replacement - a string
+sentence - a string
+signal - a string
 
 column "text" is a string that has the following format:
 this is a sentence that has two signals, here is the {sig-1:first signal found} and {sig-1:here is the second signal}
 
-column "replacement" is a comma separated list of strings that contains the same number of strings as there are occurrences of "sig-1:" in the "text" column. For example:
+column "signal" is a comma separated list of strings that contains the same number of strings as there are occurrences of "sig-1:" in the "sentence" column. For example:
 signal-1, the-second-signal
 
-The goal is to write each "text" string to the output file2, by replacing each occurrence of "sig-1" in "text" with the corresponding positioned string in "replacement". Thus, given the examples of "text" and "replacement" columns above, then the following line would be written to file2:
+The goal is to write each "sentence" string to the output file2, by replacing each occurrence of "sig-1" in "sentence" with the corresponding positioned string in "signal". Thus, given the examples of "sentence" and "signal" columns above, then the following line would be written to file2:
 
-this is a sentence that has two signals, here is the {signal-1:first signal found} and {the-second-signal:here is the second signal}
+this is an example that has two signals, here is the {signal-1:first signal found} and {the-second-signal:here is the second signal}
 
-Thus file2 will have the same number of lines as file1, but will contain each string in file1 "text" where "sig-1" is replaced by the corresponding signal value in the "replacement" column.
+Thus file2 will have the same number of lines as file1, but will contain each string in file1 "sentence" where "sig-1" is replaced by the corresponding signal value in the "signal" column.
 
 Spec 2: create a signals dictionary
 -----------------------------------
@@ -72,6 +72,32 @@ To keep the implementation flexible so that we can easily change how the vector 
 The function "encodeSentence(sentence, signalsDictionary)" can then be called from within "encodeConversation(convText, signalsDictionary, normalize=True)" where the vector of the conversation is obtained by summing the vectors of all individual sentences in the conversation. If normalize is True, then the values in the conversation vector are scaled such that the max. value of any entry in the vector is 1. For example the vector:
 [8, 2, 0, 4] would become [1, 0.25, 0, 0.5]
 Note that the reason for having a separate "encodeSentence" function is because want to have a flexible way of defining how a vector is obtained from a sentence given the phrase dictionary.
+
+Spec 4 : Update the defintion of encodeSentence
+-----------------------------------------------
+In the function "encodeSentence", Instead of just trying to do an exact match on one of the phrases of a signal:
+
+            if phrase in sentence:  # If the phrase is in the sentence
+                sentenceVector[i] += 1  # Increment the corresponding position in the sentence vector
+
+Use the longest common sequence of tokens between the phrase and the sentence. Where "findLongestCommonSequence(text, phrase)" is defined as follows:
+1) express both the text and the phrase as a list of tokens. Treat the text and phrase as space-separated tokens, and ignore any punctuation marks in the list of tokens and convert everything to lowercase. Therefore:
+text: "I'm going for a walk, since it is a fine day."
+tokens: i'm going for a walk since it is a fine day  (all lowercase and all punctuations removed)
+punctuations are: commas, periods, exclamation marks, question marks, semi-colons, colons
+
+2) find the number of tokens in the phrase that are present in the sentence (in the same order)
+3) the tokens in the sentence do not have to be consecutive. they just need to be present in the same order as in the phrase.
+For example, if:
+sentence is: "I am going for a walk since it is a really fine day today"
+phrase is: "walk to the road since it has a Fine box"
+
+The longest common sequence is "walk since a fine". The length is 4 (count of tokens in the longest common sequence)
+However, if the phrase is: "Today is a Fine but cloudy day, and i will walk to the road"
+then the longest common sequence of tokens is "fine day". The length is 2.
+
+The length (number of tokens) of the longest common sequence is then used to set the value of the sentenceVector.
+
 
 ------------------------------ implementation
 #==================================================
