@@ -303,5 +303,32 @@ Calling getCompleteSentences(text, keepStart='True') will return:
 Thus, any partial final sentence is removed if "keepStart='True'", but everything at the beginning of
 Both the initial and final partial sentences are removed if "keepStart='False'".
 
+The only exception to removal of the final portion of text is if it terminates with a period.
+
+#=============================================================================
+# return complete sentences for augmentation
+#=============================================================================
+
+def getCompleteSentences(inputText, keepStart=True):
+    # Remove leading and trailing spaces
+    inputText = inputText.strip()
+
+    # Split the input text into sentences based on the period
+    sentences = inputText.split('.')
+    
+    # Remove the first sentence if it is not complete and keepStart is False
+    if len(sentences) > 1 and not keepStart:
+        sentences.pop(0)
+    
+    # Remove the last sentence if it is not complete (i.e., inputText does not end with a period)
+    if len(sentences) > 1 and inputText[-1] != '.':
+        sentences.pop(-1)
+
+    # Combine the sentences back into a single string
+    outputText = '.'.join(sentences)
+
+    return outputText
+
+
 
 
