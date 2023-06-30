@@ -289,7 +289,7 @@ saveCandidatesToFile(candidates, filename3)
 showCandidateLengths(candidates)
 
 
-------------------------------- implementation (update the function getTokensFromRow: stop at sentence boundaries
+------------------------------- Extract sentences from TP chunks
 
 write a function "getCompleteSentences(inputText, keepStart='True')" that takes as input a piece of text, and returns only complete complete sentences from one or both ends of the input text. That means that the very first token should now be the one that follows the first period and the very last token should be the one that has the last period. For example, if the inputText  is:
  inputText = "end part of prev sentence. this becomes the first selected sentence. here is the second. partial part of next"
@@ -306,7 +306,7 @@ Both the initial and final partial sentences are removed if "keepStart='False'".
 The only exception to removal of the final portion of text is if it terminates with a period.
 
 #=============================================================================
-# return complete sentences for augmentation
+# return complete sentences for augmentation (complaints identified with TP)
 #=============================================================================
 
 def getCompleteSentences(inputText, keepStart=True):
@@ -337,3 +337,44 @@ def getCompleteSentences(inputText, keepStart=True):
     outputText = outputText.strip()
 
     return outputText
+	
+---------------------------------------- get first N sentences of No-Complaint chunking
+Given an input comma-separated file named "train_data_binary_complaint_v3.csv" consisting of the columns"
+conversation - string
+labels - an integer, 0 or 1
+filename - string
+
+Write a function getInitialNCText(filename = "train_data_binary_complaint_v3.csv", firstN = 10) that for each row in the input file:
+get the first 10 sentences of the "conversation" column
+write a csv line in these columns to output file named "non-complaint-training-sentence-augmentation.csv"
+conversation - the first 10 sentences
+labels - from file 1
+filename - from file 1
+
+A sentence is a sequence of tokens that ends in (and is inclusive of) a period, question mark, or exclamation mark as specified in this regex:
+from text sentences are obtained from: re.split(r'(?<!\w\.\w.)(?<![A-Z][a-z]\.)(?<=\.(?!\d)|\?|!)\s', text)
+
+
+#=============================================================================
+# return top N complete sentences for augmentation (non-complaints)
+#=============================================================================
+import pandas as pd
+import re
+
+def getInitialNCText(filename="train_data_binary_complaint_v3.csv", firstN=10):
+    # Read the input csv file
+    df = pd.read_csv(filename)
+
+    # Define a function to extract the first n sentences from a text
+    def getFirstNSentences(text, n):
+        sentences = re.split(r'(?<!\w\.\w.)(?<![A-Z][a-z]\.)(?<=\.(?!\d)|\?|!)\s', text)
+        return ' '.join(sentences[:n])
+
+    # Apply this function to the conversation column
+    df['conversation'] = df['conversation'].apply(getFirstNSentences, n=firstN)
+
+    # Write the modified dataframe to a new csv file
+    df.to_csv("non-complaint-training-sentence-augmentation.csv", index=False)
+
+getInitialNCText(firstN=10)
+
