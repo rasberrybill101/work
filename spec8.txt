@@ -330,9 +330,11 @@ def getCompleteSentences(inputText, keepStart=True):
     # Combine the sentences back into a single string
     outputText = '.'.join(sentences)
 
+    # Add the period at the end if the input text had it
+    if endsWithPeriod and outputText:
+        outputText += '.'
+
+    # Remove leading and trailing spaces
+    outputText = outputText.strip()
+
     return outputText
-
-
-
-
-
