@@ -354,16 +354,23 @@ filename - from file 1
 A sentence is a sequence of tokens that ends in (and is inclusive of) a period, question mark, or exclamation mark as specified in this regex:
 from text sentences are obtained from: re.split(r'(?<!\w\.\w.)(?<![A-Z][a-z]\.)(?<=\.(?!\d)|\?|!)\s', text)
 
+Only process the rows of the input file where the value of "labels" column is 0
+
+Write another function "plotNCTokenCount" that will plot a histogram of the number of tokens returned by getInitialNCText (on the x-axis) against the frequency of occurrence of that count (on the y-axis). A token is an individual word based on space separating the tokens returned by getInitialNCText.
 
 #=============================================================================
 # return top N complete sentences for augmentation (non-complaints)
 #=============================================================================
 import pandas as pd
 import re
+import matplotlib.pyplot as plt
 
 def getInitialNCText(filename="train_data_binary_complaint_v3.csv", firstN=10):
     # Read the input csv file
     df = pd.read_csv(filename)
+
+    # Process only rows where 'labels' is 0
+    df = df[df['labels'] == 0]
 
     # Define a function to extract the first n sentences from a text
     def getFirstNSentences(text, n):
@@ -376,5 +383,22 @@ def getInitialNCText(filename="train_data_binary_complaint_v3.csv", firstN=10):
     # Write the modified dataframe to a new csv file
     df.to_csv("non-complaint-training-sentence-augmentation.csv", index=False)
 
-getInitialNCText(firstN=10)
+    # Return the dataframe for further processing
+    return df
+
+def plotNCTokenCount(df):
+    # Count the number of tokens in each conversation
+    token_counts = df['conversation'].str.split().str.len()
+
+    # Plot a histogram of the token counts
+    plt.hist(token_counts, bins='auto', alpha=0.7)
+    plt.title('Frequency distribution of token counts')
+    plt.xlabel('Number of tokens')
+    plt.ylabel('Frequency')
+    plt.show()
+
+
+# Call the functions
+df = getInitialNCText(firstN=10)
+plotNCTokenCount(df)
 
