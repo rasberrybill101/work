@@ -289,7 +289,54 @@ saveCandidatesToFile(candidates, filename3)
 showCandidateLengths(candidates)
 
 
-------------------------------- implementation (update the function getTokensFromRow:
+------------------------------- implementation (update the function getTokensFromRow: stop at sentence boundaries
+Given this requirement:
+1. function getTokensFromRow(chunkSize = 12)
+For any row in file2 that contain "TP" in columns "1" through "42" :
+   set the location of the first TP in the row as "firstTPLocation"
+   set the location of the the last "TP" that is contiguous to the first TP in this row to "lastTPLocation"
+   Two TPs are contiguous (or form a contiguous chain) if there are only other "TP"s between them.For example:
+    "TP", "TP", "TP", "TP" is a contiguous chain
+	but "TP", "TP", "FN", "TP" is not a contiguous chain since all the TPs are not right next to each other.
+	Rather, only first 2 TPs are contiguous. The position of the first one will be "firstTPLocation", and the position of the last TP in the contiguous chain will "lastTPLocation"
+	
+	Then, given "firstTPLocation", and "lastTPLocation", the task is to return the tokens between position 12*(firstTPLocation - 1) and 12*(lastTPLocation) in column "frame" of file1 for the last row whose voiceFilename is equal to convID of the current row in file2. This will be the row in file1 that has the most tokens present in "frame" column (the longest string). 12 is the chunkSize.
+	
+	The tokens (and therefore their positions) in the "frame" column of file1 are obtained by space separating the string of "frame". The first token will be at position 1, the second token at position 2, etc.
+	
+	The function should return the string obtained by concatenation of the tokens (using space character separation) between "firstTPLocation" and "lastTPLocation" in "frame" column.
+	
+And the following correct implementation for this requirement:
+
+def getTokensFromRow(row, df1, chunkSize=12):
+    firstTPLocation = -1
+    lastTPLocation = -1
+    for i in range(1, 43):
+        if row[str(i)] == 'TP':
+            if firstTPLocation == -1:
+                firstTPLocation = i
+            lastTPLocation = i
+        elif firstTPLocation != -1:
+            break
+
+    if firstTPLocation != -1:
+        voiceFilename = row['convID']
+        frame_row = df1[df1['voiceFilename'] == voiceFilename]
+        frame_str = frame_row['frame'].values[0]
+        frame_tokens = frame_str.split(' ')
+        tokens_to_return = frame_tokens[chunkSize*(firstTPLocation - 1):chunkSize*lastTPLocation]
+        return ' '.join(tokens_to_return)
+    return ''
+
+write the function "getCompleteSentences(text, keepStart='True')" that takes as input the output of getTokensFromRow such that it returns complete sentences. That means that the very first token should now be the one that follows the first period and the very last token should be the one that has the last period. For example, if the text returned by "getTokensFromRow(...)" is:
+ text = "end part of prev sentence. this becomes the first selected sentence. here is the second. partial part of next"
+Calling getCompleteSentences(text, keepStart='False') will return:
+"this becomes the selected sentence. here is the second."
+Calling getCompleteSentences(text, keepStart='True') will return:
+"end part of prev sentence. this becomes the first selected sentence. here is the second.
+
+Thus, any partial final sentence is removed if "keepStart='True'"
+Both the initial and final partial sentences are removed if "keepStart='False'".
 
 
 
