@@ -313,6 +313,9 @@ def getCompleteSentences(inputText, keepStart=True):
     # Remove leading and trailing spaces
     inputText = inputText.strip()
 
+    # Save the information whether the text ends with a period
+    endsWithPeriod = inputText.endswith('.')
+    
     # Split the input text into sentences based on the period
     sentences = inputText.split('.')
     
@@ -321,13 +324,14 @@ def getCompleteSentences(inputText, keepStart=True):
         sentences.pop(0)
     
     # Remove the last sentence if it is not complete (i.e., inputText does not end with a period)
-    if len(sentences) > 1 and inputText[-1] != '.':
+    if len(sentences) > 1 and not endsWithPeriod:
         sentences.pop(-1)
 
     # Combine the sentences back into a single string
     outputText = '.'.join(sentences)
 
     return outputText
+
 
 
 
