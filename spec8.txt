@@ -47,56 +47,6 @@ The list of strings obtained from getCandidates() should be saved to file3 (name
 convID - the primary key of the row (same as in file2)
 candidate - string from the list
 
-
-
-#===================================================================
-# get candidate training utterances
-#===================================================================
-
-import pandas as pd
-
-def getTokensFromRow(row, df1, chunkSize=12):
-    firstTPLocation = -1
-    lastTPLocation = -1
-    for i in range(1, 43):
-        if row[str(i)] == 'TP':
-            if firstTPLocation == -1:
-                firstTPLocation = i
-            lastTPLocation = i
-        elif firstTPLocation != -1:
-            break
-
-    if firstTPLocation != -1:
-        voiceFilename = row['convID']
-        frame_row = df1[df1['voiceFilename'] == voiceFilename]
-        frame_str = frame_row['frame'].values[0]
-        frame_tokens = frame_str.split(' ')
-        tokens_to_return = frame_tokens[chunkSize*(firstTPLocation - 1):chunkSize*lastTPLocation]
-        return ' '.join(tokens_to_return)
-    return ''
-
-def getCandidates(filename1, filename2, chunkSize=12):
-    df1 = pd.read_csv(filename1, sep='\t')
-    df2 = pd.read_csv(filename2)
-    
-    candidates = []
-    for index, row in df2.iterrows():
-        tokens = getTokensFromRow(row, chunkSize, df1)
-        if tokens:
-            candidates.append([row['convID'], tokens])
-    return candidates
-
-def saveCandidatesToFile(candidates, filename):
-    df = pd.DataFrame(candidates, columns=['convID', 'candidate'])
-    df.to_csv(filename, sep='\t', index=False)
-
-dir = '/chunk-complaint/chunk_test_data/'
-filename1 = dir + 'train_data_12_42_cumulative.csv'
-filename2 = dir + 'train_data_12_42_cumulative_bert_predicted_final_metrics.txt'
-filename3 = dir + 'train_data_augmentation.txt'
-candidates = getCandidates(filename1, filename2)
-saveCandidatesToFile(candidates, filename3)
-
 --------------------------------------- need to fix:
 
 No. This is an incorrect interpretation. You are to use the existing order of rows in file1. The order of rows in file1 is already ordering the rows by length of the "frame" column (increasing order). If you want to re-order, then you should re-order by decreasing length of "frame" column so that the desired row for each filename becomes the first occurrence of that filename among the multiple occurrences of filename. Let me know if you need further clarification. Here is the entire specification again with the update :
@@ -149,57 +99,6 @@ The list of strings obtained from getCandidates() should be saved to file3 (name
 convID - the primary key of the row (same as in file2)
 candidate - string from the list
 
-
-#===================================================================
-# get candidate training utterances
-#===================================================================
-import pandas as pd
-
-def getTokensFromRow(row, df1, chunkSize=12):
-    firstTPLocation = -1
-    lastTPLocation = -1
-    for i in range(1, 43):
-        if row[str(i)] == 'TP':
-            if firstTPLocation == -1:
-                firstTPLocation = i
-            lastTPLocation = i
-        elif firstTPLocation != -1:
-            break
-
-    if firstTPLocation != -1:
-        voiceFilename = row['convID']
-        frame_row = df1[df1['voiceFilename'] == voiceFilename]
-        if not frame_row.empty:
-            max_len_idx = frame_row['frame'].str.split().str.len().idxmax()
-            frame_row = frame_row.loc[max_len_idx]
-            frame_str = frame_row['frame']
-            frame_tokens = frame_str.split(' ')
-            tokens_to_return = frame_tokens[chunkSize*(firstTPLocation - 1):chunkSize*lastTPLocation]
-            return ' '.join(tokens_to_return)
-    return ''
-
-def getCandidates(filename1, filename2, chunkSize=12):
-    df1 = pd.read_csv(filename1, sep='\t')
-    df2 = pd.read_csv(filename2)
-    
-    candidates = []
-    for index, row in df2.iterrows():
-        tokens = getTokensFromRow(row, df1, chunkSize)
-        if tokens:
-            candidates.append([row['convID'], tokens])
-    return candidates
-
-def saveCandidatesToFile(candidates, filename):
-    df = pd.DataFrame(candidates, columns=['convID', 'candidate'])
-    df.to_csv(filename, sep='\t', index=False)
-
-dir = '/chunk-complaint/chunk_test_data/'
-filename1 = dir + 'train_data_12_42_cumulative.csv'
-filename2 = dir + 'train_data_12_42_cumulative_bert_predicted_final_metrics.txt'
-filename3 = dir + 'train_data_augmentation.txt'
-candidates = getCandidates(filename1, filename2)
-saveCandidatesToFile(candidates, filename3)
-
 ============================================= modification:
 
 Include the column 'label' from file1 to the final candidates that will be written in "saveCandidatesToFile".
@@ -209,7 +108,10 @@ Also include the length of each list of tokens,
 Supposing we want to limit the number of returned tokens such that no more than a certain number "tokenLimit" is returned from     tokens_to_return = frame_tokens[chunkSize*(firstTPLocation - 1):chunkSize*lastTPLocation]
 rewrite  getTokensFromRow(row, df1, chunkSize=12) by adding an arg "tokenLimit" with an initial value of -1 (which means no limit). Any positive integer value for tokenLimit means return no more than tokenLimit tokens. If total number of tokens is less, then return the lower number.
 
-=============================================
+#===================================================================
+# get candidate training utterances
+#===================================================================
+
 import pandas as pd
 
 def getTokensFromRow(row, df1, chunkSize=12, tokenLimit=-1):
@@ -238,8 +140,8 @@ def getTokensFromRow(row, df1, chunkSize=12, tokenLimit=-1):
         
         numTokens = len(tokens_to_return)
 
-        return numTokens, frame_row['label'], ' '.join(tokens_to_return)
-    return 0, '', ''
+        return numTokens, chunkSize*(firstTPLocation - 1), chunkSize*lastTPLocation, frame_row['label'], ' '.join(tokens_to_return)
+    return 0, '', '', '', ''
 
 def getCandidates(filename1, filename2, chunkSize=12):
     df1 = pd.read_csv(filename1, sep='\t')
@@ -247,13 +149,13 @@ def getCandidates(filename1, filename2, chunkSize=12):
     
     candidates = []
     for index, row in df2.iterrows():
-        numTokens, label, tokens = getTokensFromRow(row, df1, chunkSize)
-        if tokens:
-            candidates.append([row['convID'], label, numTokens, tokens])
+        numTokens, firstTPLocation, lastTPLocation, label, tokens = getTokensFromRow(row, df1, chunkSize)
+        if numTokens > 0:
+            candidates.append([row['convID'], label, numTokens, firstTPLocation, lastTPLocation, tokens])
     return candidates
 
 def saveCandidatesToFile(candidates, filename):
-    df = pd.DataFrame(candidates, columns=['convID', 'label', 'numTokens', 'candidate'])
+    df = pd.DataFrame(candidates, columns=['convID', 'label', 'numTokens', 'firstTPLocation', 'lastTPLocation', 'candidate'])
     df.to_csv(filename, sep='\t', index=False)
 
 dir = '/chunk-complaint/chunk_test_data/'
@@ -330,8 +232,9 @@ def getCompleteSentences(inputText, keepStart=True):
     # Combine the sentences back into a single string
     outputText = '.'.join(sentences)
 
-    # Add the period at the end
-    outputText += '.'
+    # Add the period at the end if it's not already there
+    if not outputText.endswith('.'):
+        outputText += '.'
 
     # Remove leading and trailing spaces
     outputText = outputText.strip()
@@ -365,7 +268,7 @@ import pandas as pd
 import re
 import matplotlib.pyplot as plt
 
-def getInitialNCText(filename="train_data_binary_complaint_v3.csv", firstN=10):
+def getInitialNCText(filename="train_data_binary_complaint_v3.csv", outFilename="non-complaint-training-sentence-augmentation.csv",firstN=10):
     # Read the input csv file
     df = pd.read_csv(filename)
 
@@ -381,7 +284,7 @@ def getInitialNCText(filename="train_data_binary_complaint_v3.csv", firstN=10):
     df['conversation'] = df['conversation'].apply(getFirstNSentences, n=firstN)
 
     # Write the modified dataframe to a new csv file
-    df.to_csv("non-complaint-training-sentence-augmentation.csv", index=False)
+    df.to_csv(outFilename, index=False)
 
     # Return the dataframe for further processing
     return df
@@ -399,6 +302,9 @@ def plotNCTokenCount(df):
 
 
 # Call the functions
-df = getInitialNCText(firstN=10)
+dir = '/chunk-complaint/chunk_test_data/"
+inFilename = "train_data_binary_complaint_v3.csv"
+outFilename = "non-complaint-training-sentence-augmentation.csv"
+df = getInitialNCText(inFilename, outFilename, firstN=10)
 plotNCTokenCount(df)
 

@@ -1,0 +1,54 @@
+verilert 'mainOptions.html' update.
+Here is the html for the current page:
+<ion-view view-title="Home" hide-nav-bar="true">
+	<ion-content class="padding">
+		<div style="text-align:center;">
+			<image src="img/verilert_logo.png" style="width:80%;"></image>
+		</div>
+		<button class="button button-block button-positive icon-left ion-log-in" ng-click="login()">Log In</button>
+		<button class="button button-block button-positive icon-left vicon-qrc-2" ng-click="scanVtag()">Scan vTag</button>
+		<button class="button button-block button-energized icon-left ion-android-download"
+				style="color: black;" ng-if='upgradeAvailable !== null && upgradeAvailable === true'
+				ng-click='reloadApp()'>
+			Upgrade Available (Tap here)
+		</button>
+		<div style="text-align:right; margin-top: 0px; font-style: italic; font-family: 'Times New Roman'">
+			<p>Version: {{ verilertVersion }}</p>
+		</div>
+	</ion-content>
+</ion-view>
+
+I would like to put up spinner to the right of the image 'verilert_logo.png' in such a way that the spinner is visible but not obscuring the logo when it is spinning (when the upgrade is happening). The key thing is where to locate the spinner and its size. Here is the spinner:
+
+<div id="spinner" class="spinner"></div>
+
+The css and js for the spinner are:
+
+.spinner {
+  border: 16px solid #f3f3f3;
+  border-radius: 50%;
+  border-top: 16px solid #3498db;
+  width: 120px;
+  height: 120px;
+  animation: spin 2s linear infinite;
+  display: none;  /* Hide by default */
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+function showSpinner() {
+  document.getElementById('spinner').style.display = 'block';
+}
+
+function hideSpinner() {
+  document.getElementById('spinner').style.display = 'none';
+}
+
+// Usage
+showSpinner();
+// Do some long operation here...
+// Then
+hideSpinner();
