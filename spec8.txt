@@ -330,15 +330,22 @@ where the extra columns:
 reason_level_1 is a column from metaFilename
 reason_level_2 is a column from metaFilename
 
+Also the column 'conv_id' in metaFilename is the same as column 'convID' in df
+
 #=============================================================================
 # Include level1 and level2 reasons in the augmentation data
 #=============================================================================
 
 def saveCandidatesWithReasons(candidates, metaFilename='train_data_v3_metadata.tsv', outputFilename='output.tsv'):
-    df = pd.DataFrame(candidates, columns=['convID', 'label', 'numTokens', 'firstTPLocation', 'lastTPLocation', 'candidate'])
+    df_candidates = pd.DataFrame(candidates, columns=['convID', 'label', 'numTokens', 'firstTPLocation', 'lastTPLocation', 'candidate'])
+
     df_meta = pd.read_csv(metaFilename, sep='\t')
 
-    df = pd.merge(df, df_meta[['convID', 'reason_level_1', 'reason_level_2']], on='convID', how='left') # merge on convID  
-    df = df[['convID', 'label', 'numTokens', 'firstTPLocation', 'lastTPLocation', 'reason_level_1', 'reason_level_2', 'candidate']]  # Rearrange columns
+    # Merge df_candidates with df_meta on the 'convID'/'conv_id' column
+    merged_df = pd.merge(df_candidates, df_meta[['conv_id', 'reason_level_1', 'reason_level_2']], left_on='convID', right_on='conv_id', how='left')
 
-    df.to_csv(outputFilename, sep='\t', index=False)
+    # Drop the 'conv_id' column as it's duplicate
+    merged_df.drop('conv_id', axis=1, inplace=True)
+
+    # Save merged DataFrame to file
+    merged_df.to_csv(outputFilename, sep='\t', index=False)
