@@ -154,16 +154,17 @@ def getCandidates(filename1, filename2, chunkSize=12):
             candidates.append([row['convID'], label, numTokens, firstTPLocation, lastTPLocation, tokens])
     return candidates
 
-def saveCandidatesToFile(candidates, filename):
+def saveCandidatesToFile(candidates, outputfilename):
     df = pd.DataFrame(candidates, columns=['convID', 'label', 'numTokens', 'firstTPLocation', 'lastTPLocation', 'candidate'])
-    df.to_csv(filename, sep='\t', index=False)
+    df.to_csv(outputFilename, sep='\t', index=False)
 
 dir = '/chunk-complaint/chunk_test_data/'
 filename1 = dir + 'train_data_12_42_cumulative.csv'
 filename2 = dir + 'train_data_12_42_cumulative_bert_predicted_final_metrics.txt'
-filename3 = dir + 'train_data_augmentation.txt'
+outputFilename = dir + 'train_data_augmentation.txt'
 candidates = getCandidates(filename1, filename2)
-saveCandidatesToFile(candidates, filename3)
+saveCandidatesToFile(candidates, outputFilename)
+print('Augmented results written to: ' + outputFilename)
 
 ================================================ plot histogram of string lengths
 
@@ -308,3 +309,36 @@ outFilename = "non-complaint-training-sentence-augmentation.csv"
 df = getInitialNCText(inFilename, outFilename, firstN=10)
 plotNCTokenCount(df)
 
+===================================== add columns from another csv to a dataframe
+
+Given this function:
+def saveCandidatesToFile(candidates, outputfilename):
+    df = pd.DataFrame(candidates, columns=['convID', 'label', 'numTokens', 'firstTPLocation', 'lastTPLocation', 'candidate'])
+    df.to_csv(outputFilename, sep='\t', index=False)
+	
+write another version of the function "saveCandidatesWithReasons(candidates, metaFilename='train_data_v3_metadata.tsv', outputFilename)" that will write the following columns to the outputFilename:
+'convID'
+'label'
+'numTokens'
+'firstTPLocation'
+'lastTPLocation'
+'reason_level_1',
+'reason_level_2',
+'candidate'
+
+where the extra columns:
+reason_level_1 is a column from metaFilename
+reason_level_2 is a column from metaFilename
+
+#=============================================================================
+# Include level1 and level2 reasons in the augmentation data
+#=============================================================================
+
+def saveCandidatesWithReasons(candidates, metaFilename='train_data_v3_metadata.tsv', outputFilename='output.tsv'):
+    df = pd.DataFrame(candidates, columns=['convID', 'label', 'numTokens', 'firstTPLocation', 'lastTPLocation', 'candidate'])
+    df_meta = pd.read_csv(metaFilename, sep='\t')
+
+    df = pd.merge(df, df_meta[['convID', 'reason_level_1', 'reason_level_2']], on='convID', how='left') # merge on convID  
+    df = df[['convID', 'label', 'numTokens', 'firstTPLocation', 'lastTPLocation', 'reason_level_1', 'reason_level_2', 'candidate']]  # Rearrange columns
+
+    df.to_csv(outputFilename, sep='\t', index=False)
