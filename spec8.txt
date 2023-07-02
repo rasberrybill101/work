@@ -336,7 +336,7 @@ Also the column 'conv_id' in metaFilename is the same as column 'convID' in df
 # Include level1 and level2 reasons in the augmentation data
 #=============================================================================
 
-def saveCandidatesWithReasons(candidates, metaFilename='train_data_v3_metadata.tsv', outputFilename='output.tsv'):
+def saveCandidatesWithReasons(candidates, metaFilename, outputFilename='output.tsv'):
     df_candidates = pd.DataFrame(candidates, columns=['convID', 'label', 'numTokens', 'firstTPLocation', 'lastTPLocation', 'candidate'])
 
     df_meta = pd.read_csv(metaFilename, sep='\t')
@@ -346,6 +346,10 @@ def saveCandidatesWithReasons(candidates, metaFilename='train_data_v3_metadata.t
 
     # Drop the 'conv_id' column as it's duplicate
     merged_df.drop('conv_id', axis=1, inplace=True)
+	
+	 # Rearrange columns to maintain order
+    df = df[['convID', 'label', 'numTokens', 'firstTPLocation', 'lastTPLocation', 'reason_level_1', 'reason_level_2', 'candidate']]
+
 
     # Save merged DataFrame to file
     merged_df.to_csv(outputFilename, sep='\t', index=False)
