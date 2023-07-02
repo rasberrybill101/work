@@ -346,10 +346,9 @@ def saveCandidatesWithReasons(candidates, metaFilename, outputFilename='output.t
 
     # Drop the 'conv_id' column as it's duplicate
     merged_df.drop('conv_id', axis=1, inplace=True)
-	
-	 # Rearrange columns to maintain order
-    df = df[['convID', 'label', 'numTokens', 'firstTPLocation', 'lastTPLocation', 'reason_level_1', 'reason_level_2', 'candidate']]
 
+    # Rearrange columns
+    merged_df = merged_df[['convID', 'label', 'numTokens', 'firstTPLocation', 'lastTPLocation', 'reason_level_1', 'reason_level_2', 'candidate']]
 
     # Save merged DataFrame to file
     merged_df.to_csv(outputFilename, sep='\t', index=False)
