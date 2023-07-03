@@ -352,3 +352,33 @@ def saveCandidatesWithReasons(candidates, metaFilename, outputFilename='output.t
 
     # Save merged DataFrame to file
     merged_df.to_csv(outputFilename, sep='\t', index=False)
+	
+=================================================================================
+
+Given the following definition of a sentence:
+
+def extract_sentences(text): # Split on period, ?, and !
+    sentences = re.split(r'(?<!\w\.\w.)(?<![A-Z][a-z]\.)(?<=\.(?!\d)|\?|!)\s', text)
+    return sentences  # list of sentences
+	
+define a function "discardIncompleteSentence(sentences)" that takes a list of sentences extracted using "extract_sentences" and discard the very last sentence that does not end with period, ?, or !. Basically, return only all the complete sentences.
+
+For example, given the text "first is complete. Second is also complete! but the third"
+should return ""first is complete. Second is also complete!"
+
+#=============================================================================
+# Remove last sentence if it is incomplete
+#=============================================================================
+def extract_sentences(text): # Split on period, ?, and !
+    sentences = re.split(r'(?<!\w\.\w.)(?<![A-Z][a-z]\.)(?<=\.(?!\d)|\?|!)\s', text)
+    return sentences  # list of sentences
+
+def discardIncompleteSentence(sentences):
+    if len(sentences) == 0:  # if there are no sentences, return the empty list
+        return sentences
+    last_sentence = sentences[-1]
+    if last_sentence and last_sentence[-1] not in '.!?':
+        sentences = sentences[:-1]  # remove last sentence if it does not end with ., ? or !
+
+    # Join sentences into a single string with space as separator
+    return ' '.join(sentences)
