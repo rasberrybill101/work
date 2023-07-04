@@ -18,8 +18,9 @@ trainingDict = {
 #================================================================
 
 import csv
+from typing import Dict, List
 
-def create_training_dict(filename, delimiter='\t'):
+def create_training_dict(filename: str, delimiter: str = '\t') -> Dict[str, List[str]]:
     trainingDict = {}
 
     with open(filename, 'r') as f:
@@ -34,3 +35,63 @@ def create_training_dict(filename, delimiter='\t'):
                 trainingDict[category] = [utterance]
 
     return trainingDict
+
+
+===================================================================
+Find sentences that contain keywords or key phrases for a specific category
+
+Given that a string can be decomposed into sentences based on the following definition:
+def extract_sentences(text):
+	sentences = re.split(r'(?<!\w\.\w.)(?<![A-Z][a-z]\.)(?<=\.(?!\d)|\?|!)\s', text)
+    return sentences
+	
+Write a function "getNSentences(text: str, category: str, phrase: str, n: int = 2) -> category, List[str]"
+that returns the first n (for instance 2 - which is the default) sentences from text that contain the given 'phrase'.
+Basically the first n sentences that contain the phrase will be returned in the list.
+
+The function "getNSentences(...)" will be used in the following way:
+Write a function "categoryUtteranceData(inputFilename: str, outputFilename: str, delimiter: str = '\t')" that writes a list of tab-separated lines to an output file ("outputFilename"), with each line being generated as follows from a file "inputFilename" that has the following structure:
+#any line that starts with "#" is a comment and should be ignored when processing "inputFilename"
+# category1 and its values are specified here. each value is a string
+:category 1  - a category name (a string) immediately prefixed by a leading colon ":"
+value1
+value2
+...
+valuek  - the kth value of category1
+# start of category 2
+:category 2
+val. 1
+val. 2
+...
+val. m - the mth value of category 2. Again all values are strings
+
+...
+
+# start of another category
+:another category
+val 1
+val 2
+...
+last value
+
+"categoryUtteranceData(...)" will skip all comments and blank lines until it reaches a category name. Category names are on lines that begin with a colon (:) character followed by a string that can contain any character including spaces
+Each line after the category name represents a phrase that has to be associated with the category.
+If a category name is repeated, then all the strings found for all instances of the category are assembled into a single large list that will be associated with the category name.
+The output from "categoryUtteranceData" is a list of lines, where each line begins with the category name (exclusive of the leading colon), a tab (or the delimiter character), and a single value. The number of lines for each category will be equal to the total number of distinct values associated with each category. For example, given the category names and values above, then the outputFilename will consist of lines each with 2 columns as follow (here the delimiter is a comma instead of a tab):
+category, utterance - the header line
+category 1, value1
+category 1, value2
+...
+category k, valuek
+category 2, val. 1
+category 2, val. 2
+...
+category 2, val. m
+another category, val 1
+another category, val 2
+...
+another category, last value
+
+
+
+
