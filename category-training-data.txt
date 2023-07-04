@@ -1,0 +1,36 @@
+Given a tab-separated file with columns "category" and "utterance", where category can occur any number of times (multiple lines in the file), create a dictionary whose keys are the distinct values of category. For each key, the value will be the list of utterances associated with the key. For example, if the lines in the file are:
+card-issues, "my card does not work"
+call-handling, "I waited a long time"
+card-issues, "my card arrived late"
+employee, "the agent cashed my check"
+
+Then the dictionary should look like:
+trainingDict = {
+    "card-issues": ["my card does not work", "my card arrived late"],
+    "call-handling": ["I waited a long time"],
+    "employee": ["the agent cashed my check"]
+}
+
+
+#%%
+#================================================================
+# Create dictionary from training data
+#================================================================
+
+import csv
+
+def create_training_dict(filename, delimiter='\t'):
+    trainingDict = {}
+
+    with open(filename, 'r') as f:
+        reader = csv.reader(f, delimiter=delimiter)
+        for row in reader:
+            category = row[0]
+            utterance = row[1]
+
+            if category in trainingDict:
+                trainingDict[category].append(utterance)
+            else:
+                trainingDict[category] = [utterance]
+
+    return trainingDict
