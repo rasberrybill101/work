@@ -11,49 +11,14 @@ trainingDict = {
     "employee": ["the agent cashed my check"]
 }
 
-
-#%%
-#================================================================
-# Create dictionary from training data
-#================================================================
-
-import csv
-from typing import Dict, List
-
-def create_training_dict(filename: str, delimiter: str = '\t') -> Dict[str, List[str]]:
-    trainingDict = {}
-
-    with open(filename, 'r') as f:
-        reader = csv.reader(f, delimiter=delimiter)
-        for row in reader:
-            category = row[0]
-            utterance = row[1]
-
-            if category in trainingDict:
-                trainingDict[category].append(utterance)
-            else:
-                trainingDict[category] = [utterance]
-
-    return trainingDict
-
-
-===================================================================
+=========================== START OF SPECIFICATION 
 Find sentences that contain keywords or key phrases for a specific category
 
-Given that a string can be decomposed into sentences based on the following definition:
-def extract_sentences(text):
-	sentences = re.split(r'(?<!\w\.\w.)(?<![A-Z][a-z]\.)(?<=\.(?!\d)|\?|!)\s', text)
-    return sentences
-	
-Write a function "getNSentences(text: str, category: str, phrase: str, n: int = 2) -> category, List[str]"
-that returns the first n (for instance 2 - which is the default) sentences from text that contain the given 'phrase'.
-Basically the first n sentences that contain the phrase will be returned in the list.
+Write a function "assembleCategoryPhraseDictionary(inputFilename: str = "categoryPhraseData.txt") -> Dict[str, List[str]]:" that returns a dictionary
 
-The function "getNSentences(...)" will be used in the following way:
-Write a function "categoryUtteranceData(inputFilename: str, outputFilename: str, delimiter: str = '\t')" that writes a list of tab-separated lines to an output file ("outputFilename"), with each line being generated as follows from a file "inputFilename" that has the following structure:
-#any line that starts with "#" is a comment and should be ignored when processing "inputFilename"
-# category1 and its values are specified here. each value is a string
-:category 1  - a category name (a string) immediately prefixed by a leading colon ":"
+The input data is from a file named by default "categoryPhraseData.txt" that has the following format and rules:
+any line that starts with "#" is a comment and should be ignored when processing "categoryPhraseData.txt"
+:category 1 - a category name ("category 1") immediately preceded by a leading colon ":"
 value1
 value2
 ...
@@ -74,15 +39,25 @@ val 2
 ...
 last value
 
-"categoryUtteranceData(...)" will skip all comments and blank lines until it reaches a category name. Category names are on lines that begin with a colon (:) character followed by a string that can contain any character including spaces
-Each line after the category name represents a phrase that has to be associated with the category.
-If a category name is repeated, then all the strings found for all instances of the category are assembled into a single large list that will be associated with the category name.
-The output from "categoryUtteranceData" is a list of lines, where each line begins with the category name (exclusive of the leading colon), a tab (or the delimiter character), and a single value. The number of lines for each category will be equal to the total number of distinct values associated with each category. For example, given the category names and values above, then the outputFilename will consist of lines each with 2 columns as follow (here the delimiter is a comma instead of a tab):
-category, utterance - the header line
-category 1, value1
+"assembleCategoryPhraseDictionary(...)" will skip all comments and blank lines until it reaches a category name - lines that begin with a colon (:) character followed by a string that can contain any character including spaces. This string is the category name.
+Each line after the category name represents a phrase that has to be associated with that category.
+If a category name is repeated (found in another line), then all the phrases found for all instances of the category are assembled into a single large list that will be associated with the category name.
+The output from "assembleCategoryPhraseDictionary" is a dictionary of category phrases. For the example above, this dictionary  is as follows:
+
+{
+  "category 1" : ["value1", "value2", ... "valuek"],
+  "category 2" : ["val. 1", "val. 2", ... "val. m"],
+  ...
+  "another category" : ["val 1", "val 2", ... "last value"]
+}
+
+Write a function "serializeCategoryPhraseDictionary(dict: Dict[str, list[str]], delimiter: str = '\t', outputFilename: str = "serializedCategoryPhraseDict.tsv") that could be called from "assembleCategoryPhraseDictionary(...) that serializes the dictionary to a 2 column tab-delimited file as follows:
+
+category, phrase is the header line
+category 1, value1 (delimiter is specified in the function)
 category 1, value2
 ...
-category k, valuek
+category 1, valuek
 category 2, val. 1
 category 2, val. 2
 ...
@@ -92,6 +67,138 @@ another category, val 2
 ...
 another category, last value
 
+Write a function "deserializeCategoryPhraseDictionary(filename: str, delimiter: str = '\t') -> Dict[str, List[str]] that returns a category phrase dictionary from a serialized file such as "serializedCategoryPhraseDict.tsv".
+
+#%%
+#================================================================
+# assemble category phrases from raw phrase file of category names and likely phrases
+#================================================================
+import os
+from typing import Dict, List
+
+def assembleCategoryPhraseDictionary(inputFilename: str = "categoryPhraseData.txt") -> Dict[str, List[str]]:
+    cat_phrase_dict = {}
+    current_cat = None
+
+    with open(inputFilename, 'r') as f:
+        for line in f:
+            line = line.strip()
+            if not line or line.startswith('#'):  # skip blank lines and comments
+                continue
+            if line.startswith(':'):  # new category
+                current_cat = line[1:]
+                if current_cat not in cat_phrase_dict:
+                    cat_phrase_dict[current_cat] = []
+            else:  # a phrase in the current category
+                if current_cat is not None:
+                    cat_phrase_dict[current_cat].append(line)
+        
+    return cat_phrase_dict
+	
+def serializeCategoryPhraseDictionary(dict: Dict[str, List[str]], delimiter: str = '\t', outputFilename: str = "serializedCategoryPhraseDict.tsv"):
+    with open(outputFilename, 'w') as f:
+        f.write(f'category{delimiter}phrase\n')  # write the header line
+        for cat, phrases in dict.items():
+            for phrase in phrases:
+                f.write(f'{cat}{delimiter}{phrase}\n')  # write each phrase on a new line
+
+#%%
+#================================================================
+# invoke assembly of category phrases
+#================================================================
+dir = "/chunk-complaint/category/"
+catPhraseDataPath = dir + "categoryPhraseData.txt"
+cat_phrase_dict = assembleCategoryPhraseDictionary(catPhraseDataPath)
+serializeCategoryPhraseDictionary(cat_phrase_dict)
+
+#%%
+#================================================================
+# Deserialize category phrase dictionary file
+#================================================================
+import csv
+from typing import Dict, List
+
+def deserializeCategoryPhraseDictionary(filename: str = "serializedCategoryPhraseDict.tsv", delimiter: str = '\t') -> Dict[str, List[str]]:
+    cat_phrase_dict = {}
+
+    with open(filename, 'r') as f:
+        reader = csv.reader(f, delimiter=delimiter)
+        next(reader)  # Skip the header
+        for row in reader:
+            cat, phrase = row
+            if cat in cat_phrase_dict:
+                cat_phrase_dict[cat].append(phrase)
+            else:
+                cat_phrase_dict[cat] = [phrase]
+                
+    return cat_phrase_dict
+
+--------------------------------------------------------------------------------------------------------------------
+
+Given that a string can be decomposed into sentences based on the following definition:
+def extract_sentences(text):
+	sentences = re.split(r'(?<!\w\.\w.)(?<![A-Z][a-z]\.)(?<=\.(?!\d)|\?|!)\s', text)
+    return sentences
+	
+Write a function "sentencesForPhrase(text: str, phrase: str, n: int = 2) -> List[str]"
+that returns up to n (zero, one, or more) sentences where "text" contains "phrase". The list will be empty if the phrase is not found in text. For generality, the check for whether "phrase" is in "text" should be separately defined in a function "phraseBelongsToText(text: str, phrase: str) -> bool" because different algorithms may be tried in order to check if a phrase can be related to a sentence in the text.
+
+#%%
+#================================================================
+# Given some text, return a list of sentences associated with a phrase
+#================================================================
+
+import re
+import string
+from typing import List
+
+def phraseBelongsToText(text: str, phrase: str) -> bool:
+    # remove punctuation
+    translator = str.maketrans('', '', string.punctuation)
+    text = text.translate(translator)
+    phrase = phrase.translate(translator)
+
+    # convert to lower case
+    text = text.lower()
+    phrase = phrase.lower()
+
+    # check for the phrase in the text
+    return phrase in text
+
+def extract_sentences(text: str) -> List[str]:
+    sentences = re.split(r'(?<!\w\.\w.)(?<![A-Z][a-z]\.)(?<=\.(?!\d)|\?|!)\s', text)
+    return sentences
+
+def sentencesForPhrase(text: str, phrase: str, n: int = 2) -> List[str]:
+    sentences = extract_sentences(text)
+    relevant_sentences = [sentence for sentence in sentences if phraseBelongsToText(sentence, phrase)]
+    return relevant_sentences[:n]
 
 
+--------------------------------------------------------------------------------------------------------------------
 
+Write a function "getTrainingSentences(inputFile: str = "train_data_v3_metadata.txt", delimiter: str = '\t', categoryPhraseDictionary: Dict[category: str, phrases: List[str]]) -> Dict[str, List[str]]:", where:
+inputFile has columns (with delimiter specified in the function) :
+conv_id
+label
+call_duration
+reason_level_1
+reason_level_2
+plain_whisper
+
+For each row in inputFile, a list of phrases will be obtained from categoryPhraseDictionary where the category key for the dictionary is the value of "reason_level_1" column. This list of phrases for the category is then used to assemble a list of sentences using "sentencesForPhrase(text, phrase, 3)" for each phrase, where:
+"text" is the value of "plain_whisper" column. The result of the function call will be a dictionary of categories, each with a list of sentences:
+{
+  "category 1": ["sentence 1", "sentence 2", ....],
+  ...
+  "category k": ["first sentence", "second sentence", ...]
+}
+
+Write a function "serializeCategorySentences(outputFilename: str = "categoryTrainingSentences.tsv", delimiter: str = '\t', Dict[str, List[str]])" that writes the category sentences to a named output file in 2 columns as follows (given the example dictionary above):
+category, training_sentence is the header line
+category 1, "sentence 1"
+category 1, "sentence 2"
+...
+category k, "first sentence"
+category k, "second sentence"
+...
