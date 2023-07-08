@@ -180,13 +180,13 @@ For each row in inputFile, a list of phrases will be obtained from categoryPhras
   "category k": ["first sentence", "second sentence", ...]
 }
 
-Write a function "serializeCategorySentences(outputFilename: str = "categoryTrainingSentences.tsv", delimiter: str = '\t', Dict[str, List[str]])" that writes the category sentences to a named output file in 2 columns as follows (given the example dictionary above):
-category, training_sentence is the header line
-category 1, "sentence 1"
-category 1, "sentence 2"
+Write a function "serializeCategorySentences(outputFilename: str = "categoryTrainingSentences.tsv", delimiter: str = '\t', Dict[str, List[str]])" such that it writes the category sentences to a named output file in 3 columns as follows (given the example dictionary above):
+category, training_sentence, conv_id is the header line
+category 1, "sentence 1", id1
+category 1, "sentence 2", id2
 ...
-category k, "first sentence"
-category k, "second sentence"
+category k, "first sentence", id3
+category k, "second sentence", id4
 ...
 
 #%%
