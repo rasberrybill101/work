@@ -94,9 +94,10 @@ def serializeCategoryPhraseDictionary(dict: Dict[str, List[str]], delimiter: str
 # invoke assembly of category phrases
 #================================================================
 dir = "/chunk-complaint/category/"
-catPhraseDataPath = dir + "categoryPhraseData.txt"
+catPhraseDataPath = dir + "category_phrase_data.txt"
 cat_phrase_dict = assembleCategoryPhraseDictionary(catPhraseDataPath)
-serializeCategoryPhraseDictionary(cat_phrase_dict)
+outputFilename = "serialized_category_phrase_dict.tsv"
+serializeCategoryPhraseDictionary(dict=cat_phrase_dict, delimiter='\t', outputFilename=outputFilename)
 
 #%%
 #================================================================
