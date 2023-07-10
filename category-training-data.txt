@@ -161,6 +161,21 @@ def sentencesForPhrase(text: str, phrase: str, n: int = 2) -> List[str]:
     sentences = extract_sentences(text)
     relevant_sentences = [sentence for sentence in sentences if phraseBelongsToText(sentence, phrase)]
     return relevant_sentences[:n]
+	
+--------------------------------------------------------------------------------------------------------------------
+Modification of specs
+Given the previously defined function
+def sentencesForPhrase(text: str, phrase: str, n: int = 2) -> List[str]:
+
+Modify the data returned from the function so that the position of each sentence is also returned. For example if the 1st, 3rd, and 6th sentences were returned, then the function should return the these positions together with each sentence at the position. Currently the function only returns the list of sentences, but does not return their position in the original list of sentences used to select sentences for phrase.
+
+#================================================================
+# REPLACEMENT/UPDATE
+#================================================================
+def sentencesForPhrase(text: str, phrase: str, n: int = 2) -> List[Tuple[int, str]]:
+    sentences = extract_sentences(text)
+    relevant_sentences = [(i, sentence) for i, sentence in enumerate(sentences) if phraseBelongsToText(sentence, phrase)]
+    return relevant_sentences[:n]
 
 --------------------------------------------------------------------------------------------------------------------
 
@@ -237,6 +252,47 @@ raw_training_filename = dir + "train_data_v3_metadata.txt"
 training_sentences = getTrainingSentences(inputFile=raw_training_filename, delimiter='\t', sentenceCount=3, categoryPhraseDictionary=cat_phrase_dict)
 outFilename = dir + "category_training_sentences.tsv"
 serializeCategorySentences(outputFilename=outFilename, delimiter='\t', training_sentences)
+
+--------------------------------------------------------------------------------------------------------------------
+Based on this modification of sentencesForPhrase, modify:
+getTrainingSentences - to accomodate the change in sentencesForPhrase
+serializeCategorySentences - to accomodate change and to now return these columns (in the stated order):
+category
+position - new column - position of the sentence obtained from the change to sentencesForPhrase
+sentence
+conv_id
+
+#================================================================
+# REPLACEMENT/UPDATE
+#================================================================
+def getTrainingSentences(inputFile: str = "train_data_v3_metadata.txt", delimiter: str = '\t', categoryPhraseDictionary: Dict[str, List[str]], sentenceCount: int = 3) -> Dict[str, List[Tuple[int, str, str]]]:
+    training_sentences = {}
+
+    with open(inputFile, 'r', encoding='utf-8') as f:
+        reader = csv.DictReader(f, delimiter=delimiter)
+        for row in reader:
+            category = row['reason_level_1']
+            text = row['plain_whisper']
+            conv_id = row['conv_id']
+
+            if category in categoryPhraseDictionary:
+                for phrase in categoryPhraseDictionary[category]:
+                    indexed_sentences = sentencesForPhrase(text, phrase, sentenceCount)
+                    sentences_with_id = [(pos, sentence, conv_id) for pos, sentence in indexed_sentences]
+                    if category not in training_sentences:
+                        training_sentences[category] = sentences_with_id
+                    else:
+                        training_sentences[category].extend(sentences_with_id)
+                        
+    return training_sentences
+
+def serializeCategorySentences(outputFilename: str = "categoryTrainingSentences.tsv", delimiter: str = '\t', data: Dict[str, List[Tuple[int, str, str]]]):
+    with open(outputFilename, 'w') as f:
+        writer = csv.writer(f, delimiter='\t')
+        writer.writerow(['category', 'position', 'training_sentence', 'conv_id'])  # write the header line
+        for category, sentences in data.items():
+            for position, sentence, conv_id in sentences:
+                writer.writerow([category, position, sentence, conv_id])  # write each sentence on a new line
 
 --------------------------------------------------------------------------------------------------------------------
 Given two files "train_data_v3_metadata.txt" (file1), and "category_training_sentences.tsv" (file2).
