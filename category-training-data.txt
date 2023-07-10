@@ -336,28 +336,25 @@ import csv
 import re
 from typing import List, Tuple
 
-def extract_sentences(text):
-    sentences = re.split(r'(?<!\w\.\w.)(?<![A-Z][a-z]\.)(?<=\.(?!\d)|\?|!)\s', text)
-    return sentences
-
-def missingTrainingData(file1: str, file2: str, n=10) -> List[Tuple[str, str, List[str]]]:
+def missingTrainingData(file1: str, file2: str, n=10, k=5) -> List[Tuple[str, str, List[str]]]:
     missing_data = []
 
-    # Read categories from file2
+    # Read conv_ids and categories from file2
     with open(file2, 'r') as f:
         reader = csv.DictReader(f, delimiter='\t')
-        file2_categories = {row['category'] for row in reader}
+        file2_data = {row['conv_id']: row['category'] for row in reader}
 
-    # Read rows from file1 and check category
+    file2_categories = set(file2_data.values())  # unique categories from file2
+
+    # Read rows from file1 and check conv_id and category
     with open(file1, 'r') as f:
         reader = csv.DictReader(f, delimiter='\t')
         for row in reader:
-            category = row['reason_level_1']
-            if category not in file2_categories:
-                continue
             conv_id = row['conv_id']
-            sentences = extract_sentences(row['plain_whisper'])[:n]
-            missing_data.append((category, conv_id, sentences))
+            category = row['reason_level_1']
+            if conv_id not in file2_data and category in file2_categories:
+                sentences = extract_sentences(row['plain_whisper'])[k:n]
+                missing_data.append((category, conv_id, sentences))
 
     return missing_data
 
