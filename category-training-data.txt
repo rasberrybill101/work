@@ -200,7 +200,7 @@ from typing import Dict, List
 def getTrainingSentences(inputFile: str = "train_data_v3_metadata.txt", delimiter: str = '\t',  sentenceCount: int = 3, categoryPhraseDictionary: Dict[str, List[str]]) -> Dict[str, List[tuple]]:
     training_sentences = {}
 
-    with open(inputFile, 'r') as f:
+    with open(inputFile, 'r', encoding='utf-8') as f:
         reader = csv.DictReader(f, delimiter=delimiter)
         for row in reader:
             category = row['reason_level_1']
@@ -235,5 +235,39 @@ def serializeCategorySentences(outputFilename: str = "categoryTrainingSentences.
 dir = "/chunk-complaint/category/"
 raw_training_filename = dir + "train_data_v3_metadata.txt"
 training_sentences = getTrainingSentences(inputFile=raw_training_filename, delimiter='\t', sentenceCount=3, categoryPhraseDictionary=cat_phrase_dict)
-outFilename = dir + "categoryTrainingSentences.tsv"
+outFilename = dir + "category_training_sentences.tsv"
 serializeCategorySentences(outputFilename=outFilename, delimiter='\t', training_sentences)
+
+--------------------------------------------------------------------------------------------------------------------
+Given two files "train_data_v3_metadata.txt" (file1), and "category_training_sentences.tsv" (file2).
+Where file1 has the following colums:
+conv_id
+label
+call_duration
+reason_level_1
+reason_level_2
+plain_whisper
+
+and file2 has the following columns:
+category (same as reason_level_1 of file1)
+sentence
+conv_id (same as conv_id of file1)
+
+Write a function "missingTrainingData(file1: str, file2: str, n=10) -> List[tuple]" that has the following columns:
+category
+sentences
+conv_id
+
+where each column in the list of rows returned by "missingTrainingData" is created as follows:
+category is the same as the file2 category
+conv_id only conv_ids present in file1 but not in file2 should be present in the returned rows
+sentences is the first N sentences of plain_whisper column of file 1
+and N is the arg n in the function.
+
+Please use the following definition of sentences to fetch the first N sentences from plain_whisper column of file1:
+def extract_sentences(text):
+	sentences = re.split(r'(?<!\w\.\w.)(?<![A-Z][a-z]\.)(?<=\.(?!\d)|\?|!)\s', text)
+    return sentences
+
+Write a function "serializeMissingTraining(outputFilename)" to write the results of "missingTrainingData" to the file "missing_training_data.txt" with columns in the following order:
+category, conv_id, sentences
