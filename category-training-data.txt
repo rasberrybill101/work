@@ -271,3 +271,52 @@ def extract_sentences(text):
 
 Write a function "serializeMissingTraining(outputFilename)" to write the results of "missingTrainingData" to the file "missing_training_data.txt" with columns in the following order:
 category, conv_id, sentences
+
+#%%
+#================================================================
+# Identify and return first N sentences from missing training IDs
+#================================================================
+import csv
+import re
+from typing import List, Tuple
+
+def extract_sentences(text):
+    sentences = re.split(r'(?<!\w\.\w.)(?<![A-Z][a-z]\.)(?<=\.(?!\d)|\?|!)\s', text)
+    return sentences
+
+def missingTrainingData(file1: str, file2: str, n=10) -> List[Tuple[str, str, List[str]]]:
+    missing_data = []
+
+    # Read conv_ids from file2
+    with open(file2, 'r') as f:
+        reader = csv.DictReader(f, delimiter='\t')
+        file2_conv_ids = {row['conv_id'] for row in reader}
+
+    # Read rows from file1 and check conv_id
+    with open(file1, 'r') as f:
+        reader = csv.DictReader(f, delimiter='\t')
+        for row in reader:
+            if row['conv_id'] not in file2_conv_ids:
+                category = row['reason_level_1']
+                conv_id = row['conv_id']
+                sentences = extract_sentences(row['plain_whisper'])[:n]
+                missing_data.append((category, conv_id, sentences))
+
+    return missing_data
+
+
+#%%
+#================================================================
+# Serialize the missing training topN
+#================================================================
+def serializeMissingTraining(outputFilename: str, data: List[Tuple[str, str, List[str]]]):
+    with open(outputFilename, 'w') as f:
+        writer = csv.writer(f, delimiter='\t')
+        writer.writerow(['category', 'conv_id', 'sentences'])  # write the header
+        for category, conv_id, sentences in data:
+            writer.writerow([category, conv_id, ' '.join(sentences)])
+
+#%%
+dir = "/chunk-complaint/category/"
+data = missingTrainingData(dir + "train_data_v3_metadata.txt", dir + "category_training_sentences.tsv")
+serializeMissingTraining(dir + "missing_training_data.txt", data)
