@@ -366,7 +366,9 @@ def serializeMissingTraining(outputFilename: str, data: List[Tuple[str, str, Lis
     with open(outputFilename, 'w', encoding='utf-8') as f:
         f.write(f'category{delimiter}conv_id{delimiter}sentences\n')  # write the header
         for category, conv_id, sentences in data:
-            f.write(f'{category}{delimiter}{conv_id}{delimiter}"{" ".join(sentences)}"\n')
+            joined_sentences = " ".join(sentences).strip()
+            if joined_sentences:  # skip empty sentences
+                f.write(f'{category}{delimiter}{conv_id}{delimiter}"{joined_sentences}"\n')
 
 #%%
 dir = "/chunk-complaint/category/"
