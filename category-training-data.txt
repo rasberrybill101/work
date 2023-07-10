@@ -343,34 +343,33 @@ def extract_sentences(text):
 def missingTrainingData(file1: str, file2: str, n=10) -> List[Tuple[str, str, List[str]]]:
     missing_data = []
 
-    # Read conv_ids from file2
+    # Read categories from file2
     with open(file2, 'r') as f:
         reader = csv.DictReader(f, delimiter='\t')
-        file2_conv_ids = {row['conv_id'] for row in reader}
+        file2_categories = {row['category'] for row in reader}
 
-    # Read rows from file1 and check conv_id
+    # Read rows from file1 and check category
     with open(file1, 'r') as f:
         reader = csv.DictReader(f, delimiter='\t')
         for row in reader:
-            if row['conv_id'] not in file2_conv_ids:
-                category = row['reason_level_1']
-                conv_id = row['conv_id']
-                sentences = extract_sentences(row['plain_whisper'])[:n]
-                missing_data.append((category, conv_id, sentences))
+            category = row['reason_level_1']
+            if category not in file2_categories:
+                continue
+            conv_id = row['conv_id']
+            sentences = extract_sentences(row['plain_whisper'])[:n]
+            missing_data.append((category, conv_id, sentences))
 
     return missing_data
-
 
 #%%
 #================================================================
 # Serialize the missing training topN
 #================================================================
-def serializeMissingTraining(outputFilename: str, data: List[Tuple[str, str, List[str]]]):
-    with open(outputFilename, 'w') as f:
-        writer = csv.writer(f, delimiter='\t')
-        writer.writerow(['category', 'conv_id', 'sentences'])  # write the header
+def serializeMissingTraining(outputFilename: str, data: List[Tuple[str, str, List[str]]], delimiter: str = '\t'):
+    with open(outputFilename, 'w', encoding='utf-8') as f:
+        f.write(f'category{delimiter}conv_id{delimiter}sentences\n')  # write the header
         for category, conv_id, sentences in data:
-            writer.writerow([category, conv_id, ' '.join(sentences)])
+            f.write(f'{category}{delimiter}{conv_id}{delimiter}"{" ".join(sentences)}"\n')
 
 #%%
 dir = "/chunk-complaint/category/"
