@@ -1,0 +1,147 @@
+BERT Model Analysis
+----------------------------------------------------------
+#%%
+#=========================================================
+# View the input sentence embedding
+#=========================================================
+from transformers import BertTokenizer, BertModel, BertPreTrainedModel
+import torch
+from torch import nn
+
+class BertEmbeddingsModel(BertPreTrainedModel):
+    def __init__(self, config):
+        super().__init__(config)
+        self.embeddings = BertModel(config).embeddings
+
+    def forward(self, input_ids, token_type_ids=None, position_ids=None, inputs_embeds=None):
+        return self.embeddings(input_ids, token_type_ids, position_ids, inputs_embeds)
+
+# Load pre-trained model tokenizer (vocabulary)
+tokenizer = BertTokenizer.from_pretrained('bert-base-uncased')
+
+# Load the custom model
+model = BertEmbeddingsModel.from_pretrained('bert-base-uncased')
+
+# Tokenize input and convert to PyTorch tensors
+text = "Here is some text to tokenize"
+inputs = tokenizer(text, padding=True, truncation=True, return_tensors="pt")
+
+# Predict embeddings
+with torch.no_grad():
+    embeddings = model(**inputs)
+
+print(embeddings)
+
+#%%
+#=========================================================
+# Basic BERT prediction
+#=========================================================
+from transformers import BertTokenizer, BertForSequenceClassification
+import torch
+
+# Load pre-trained model tokenizer (vocabulary)
+tokenizer = BertTokenizer.from_pretrained('bert-base-uncased')
+
+# Tokenize input
+text = "Here is some text to tokenize"
+tokenized_text = tokenizer(text, padding=True, truncation=True, return_tensors="pt")
+
+# Load pre-trained model (weights)
+model = BertForSequenceClassification.from_pretrained('bert-base-uncased', num_labels=2)
+
+# Predict
+model.eval()
+with torch.no_grad():
+    logits = model(**tokenized_text)[0]
+
+# Get probabilities with softmax
+probs = torch.nn.functional.softmax(logits, dim=-1)
+
+print(probs)
+
+#%%
+#=========================================================
+# Similarity of BERT embeddings based on CLS token
+#=========================================================
+from scipy.spatial.distance import cosine
+from transformers import BertTokenizer, BertModel
+import torch
+
+# Function to get BERT embeddings
+def get_bert_embeddings(text):
+    tokenizer = BertTokenizer.from_pretrained('bert-base-uncased')
+    model = BertModel.from_pretrained('bert-base-uncased')
+    model.eval()
+    inputs = tokenizer(text, return_tensors="pt")
+    with torch.no_grad():
+        outputs = model(**inputs)
+    return outputs.last_hidden_state[0][0].numpy()  # Use the output of the [CLS] token
+
+# Get embeddings
+text1 = "This is the first sentence."
+text2 = "This is the second sentence."
+embedding1 = get_bert_embeddings(text1)
+embedding2 = get_bert_embeddings(text2)
+
+# Compute cosine similarity
+similarity = 1 - cosine(embedding1, embedding2)
+print(f'Similarity: {similarity}')
+
+#%%
+#=========================================================
+# Similarity of BERT embeddings based on abs diff between embeddings
+#=========================================================
+from transformers import BertTokenizer, BertModel
+import torch
+import numpy as np
+
+# Function to get BERT embeddings
+def get_bert_embeddings(text):
+    tokenizer = BertTokenizer.from_pretrained('bert-base-uncased')
+    model = BertModel.from_pretrained('bert-base-uncased')
+    model.eval()
+    inputs = tokenizer(text, return_tensors="pt")
+    with torch.no_grad():
+        outputs = model(**inputs)
+    return outputs.last_hidden_state[0][0].numpy()  # Use the output of the [CLS] token
+
+# Get embeddings
+text1 = "This is the first sentence."
+text2 = "This is the second sentence."
+embedding1 = get_bert_embeddings(text1)
+embedding2 = get_bert_embeddings(text2)
+
+# Compute differences
+differences = np.abs(embedding1 - embedding2)
+
+# Get the indices of the smallest n differences
+n = 10
+smallest_diff_indices = np.argsort(differences)[:n]
+
+# Print indices
+print(f'Indices of the {n} dimensions with the smallest differences: {smallest_diff_indices}')
+
+#%%
+#=========================================================
+# Visualization of the similarity of BERT embeddings
+#=========================================================
+import numpy as np
+
+# Suppose we have two sentence embeddings
+embedding1 = np.array([0.1, 0.2, 0.3, 0.4, 0.5])
+embedding2 = np.array([0.1, 0.25, 0.27, 0.35, 0.6])
+
+# Compute correlation matrix
+correlation_matrix = np.corrcoef(np.stack((embedding1, embedding2), axis=0))
+
+# Print correlation matrix
+print(correlation_matrix)
+
+import seaborn as sns
+import matplotlib.pyplot as plt
+
+# Create heatmap
+sns.heatmap(correlation_matrix, annot=True, fmt=".2f")
+
+# Show plot
+plt.show()

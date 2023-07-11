@@ -336,7 +336,7 @@ import csv
 import re
 from typing import List, Tuple
 
-def missingTrainingData(file1: str, file2: str, n=10, k=5) -> List[Tuple[str, str, List[str]]]:
+def missingTrainingData(file1: str, file2: str, n=14, k=6) -> List[Tuple[str, str, List[str]]]:
     missing_data = []
 
     # Read conv_ids and categories from file2
