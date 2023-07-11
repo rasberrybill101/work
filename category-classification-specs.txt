@@ -18,13 +18,15 @@ this is an example that has two signals, here is the {signal-1:first signal foun
 
 Thus file2 will have the same number of lines as file1, but will contain each string in file1 "sentence" where "sig-1" is replaced by the corresponding signal value in the "signal" column.
 
+#%%
 #=================================================================
 # reformat signals
 #=================================================================
 import csv
 
+def reformatSignals(inputFilename = "initial-category-signals.txt", outputFilename = "all-category-signals.txt"):
 # Open the input and output files
-with open("initial-category-signals.txt", 'r') as infile, open("all-category-signals.txt", 'w') as outfile:
+  with open(inputFilename, 'r') as infile, open(outputFilename, 'w') as outfile:
     
     # Create a CSV reader for a tab-separated file
     reader = csv.reader(infile, delimiter='\t')

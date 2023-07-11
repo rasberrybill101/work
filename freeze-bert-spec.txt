@@ -1,0 +1,47 @@
+from torch import nn
+from transformers import BertModel
+
+in_features = 768 # it's 768 because that's the size of the output provided by the underlying BERT model
+
+class BertWithCustomNNClassifier(nn.Module):
+    """
+    A pre-trained BERT model with a custom classifier.
+    The classifier is a neural network implemented in this class.
+    """
+    
+    def __init__(self, linear_size):
+        super(BertWithCustomNNClassifier, self).__init__()
+        self.bert = BertModel.from_pretrained(model_name)
+        self.dropout1 = nn.Dropout()
+        self.linear1 = nn.Linear(in_features=in_features, out_features=linear_size)
+        self.batch_norm1 = nn.BatchNorm1d(num_features=linear_size)
+        self.dropout2 = nn.Dropout(p=0.8)
+        self.linear2 = nn.Linear(in_features=linear_size, out_features=1)
+        self.batch_norm2 = nn.BatchNorm1d(num_features=1)
+        self.sigmoid = nn.Sigmoid()
+        
+    def forward(self, tokens, attention_mask):
+        bert_output = self.bert(input_ids=tokens, attention_mask=attention_mask)
+        x = self.dropout1(bert_output[1])
+        x = self.linear1(x)
+        x = self.dropout2(x)
+        x = self.batch_norm1(x)
+        x = self.linear2(x)
+        x = self.batch_norm2(x)
+        return self.sigmoid(x)
+        
+    def freeze_bert(self):
+        """
+        Freezes the parameters of BERT so when BertWithCustomNNClassifier is trained
+        only the wieghts of the custom classifier are modified.
+        """
+        for param in self.bert.named_parameters():
+            param[1].requires_grad=False
+    
+    def unfreeze_bert(self):
+        """
+        Unfreezes the parameters of BERT so when BertWithCustomNNClassifier is trained
+        both the wieghts of the custom classifier and of the underlying BERT are modified.
+        """
+        for param in self.bert.named_parameters():
+            param[1].requires_grad=True
