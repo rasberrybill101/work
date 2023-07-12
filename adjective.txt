@@ -5,6 +5,7 @@ conv_1,s1,s2,s3,s4,......,s42 => these are all the other lines
 where the value of s1 through s42 (or to the final column) in all other lines can have one of the following 5 values:
 "TP", "FP", "TN", "FN", or "--"
 
+Here is a modified requirement:
 Write the function "adjective(base_filename: s ="base_filename", k=5)" that will:
 Open an input file named base_filename + "_predicted_raw_metrics.txt" which contains the rows described as above
 Write each row to an output file named base_filename + "_predicted_final_metrics.txt" as follows:
@@ -26,16 +27,17 @@ Modify the following working implementation to write the function:
 #=======================================================================
 
 def adjective(base_filename, k=5):
-    # Open the input and output files
-	inputFilename = base_filename + "_predicted_raw_metrics.txt"
-	outputFilename = base_filename + "_predicted_final_metrics.txt"
-    with open(inputFilename, 'r') as infile, \
-         open(outputFilename, 'w') as outfile:
+    # Open the input file
+    inputFilename = base_filename + "_predicted_raw_metrics.txt"
+    with open(inputFilename, 'r') as infile:
 
         # Initialize a flag for the header line
         is_header = True
 
-        # Process each row in the input file
+        # Initialize a list to store the modified lines
+        lines = []
+
+        # First sweep
         for line in infile:
             # Split the line into fields
             fields = line.strip().split(',')
@@ -46,6 +48,24 @@ def adjective(base_filename, k=5):
             else:
                 is_header = False
             
+            # Store the modified line
+            lines.append(fields)
+
+    # Second sweep
+    for line in lines:
+        if line[0] != "conversation_filename":
+            found_tp = False
+            for i in range(1, len(line)):
+                if line[i] == "TP":
+                    found_tp = True
+                elif not found_tp and line[i] == "FN":
+                    line[i] = "TN"
+
+    # Open the output file
+    outputFilename = base_filename + "_predicted_final_metrics.txt"
+    with open(outputFilename, 'w') as outfile:
+        for line in lines:
             # Write the modified line to the output file
-            outfile.write(','.join(fields) + '\n')
-	print('final performance written to: ' + outputFilename)
+            outfile.write(','.join(line) + '\n')
+
+    print('final performance written to: ' + outputFilename)
