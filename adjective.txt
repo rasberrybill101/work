@@ -11,3 +11,24 @@ Write each row to an output file named base_filename + "_predicted_final_metrics
 Write the header unchanged
 Replace the first k columns after conv_id (ie. s1 through sk) with "TN"
 copy the other columns unchanged to the output file
+
+#=======================================================================
+# Create delay in prediction for output
+#=======================================================================
+
+def adjective(base_filename, k=5):
+    # Open the input and output files
+    with open(base_filename + "_predicted_raw_metrics.txt", 'r') as infile, \
+         open(base_filename + "_predicted_final_metrics.txt", 'w') as outfile:
+
+        # Process each row in the input file
+        for line in infile:
+            # Split the line into fields
+            fields = line.strip().split(',')
+            
+            # If it's not the header line, replace the first k fields with "TN"
+            if infile.tell() != len(line):  # This checks if we are at the first line
+                fields[1:k+1] = ['"TN"'] * k  # Column indices start from 0
+            
+            # Write the modified line to the output file
+            outfile.write(','.join(fields) + '\n')
