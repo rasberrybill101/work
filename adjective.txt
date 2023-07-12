@@ -61,6 +61,10 @@ def adjective(base_filename, k=5):
                 elif not found_tp and line[i] == "FN":
                     line[i] = "TN"
 
+                # If a "TP" is found, stop replacing "FN" values for the rest of that line
+                if found_tp:
+                    break
+
     # Open the output file
     outputFilename = base_filename + "_predicted_final_metrics.txt"
     with open(outputFilename, 'w') as outfile:
