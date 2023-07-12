@@ -123,6 +123,8 @@ def plotResults():
     plt.ylabel('Metric Value')
     plt.title('Step Metrics')
     plt.legend()
+	
+	plt.ylim(bottom=0)  # Ensure y-axis starts from 0
     
     plt.savefig('metrics.png')
     plt.show()
