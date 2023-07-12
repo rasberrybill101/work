@@ -9,11 +9,17 @@ Write the function "adjective(base_filename: s ="base_filename", k=5)" that will
 Open an input file named base_filename + "_predicted_raw_metrics.txt" which contains the rows described as above
 Write each row to an output file named base_filename + "_predicted_final_metrics.txt" as follows:
 Write the header unchanged
+Make 2 sweeps over all the remaining lines as follows:
+1) Sweep 1:
 Replace the first k columns after conv_id (ie. s1 through sk) with "TN"
-copy the other columns unchanged to the output file
+Leave the other columns unchanged to the output file
 
-At line: if infile.tell() != len(line):  # This checks if we are at the first line
-OSError: telling position disabled by next() call
+2) Sweep 2:
+Replace all "FN" values before the very first occurrence of "TP"
+
+Write the final column values to the output file.
+
+Modify the following working implementation to write the function:
 
 #=======================================================================
 # Create delay in prediction for output
@@ -21,8 +27,10 @@ OSError: telling position disabled by next() call
 
 def adjective(base_filename, k=5):
     # Open the input and output files
-    with open(base_filename + "_predicted_raw_metrics.txt", 'r') as infile, \
-         open(base_filename + "_predicted_final_metrics.txt", 'w') as outfile:
+	inputFilename = base_filename + "_predicted_raw_metrics.txt"
+	outputFilename = base_filename + "_predicted_final_metrics.txt"
+    with open(inputFilename, 'r') as infile, \
+         open(outputFilename, 'w') as outfile:
 
         # Initialize a flag for the header line
         is_header = True
@@ -34,9 +42,10 @@ def adjective(base_filename, k=5):
             
             # If it's not the header line, replace the first k fields with "TN"
             if not is_header:
-                fields[1:k+1] = ['"TN"'] * k  # Column indices start from 0
+                fields[1:k+1] = ['TN'] * k  # Column indices start from 0
             else:
                 is_header = False
             
             # Write the modified line to the output file
             outfile.write(','.join(fields) + '\n')
+	print('final performance written to: ' + outputFilename)
