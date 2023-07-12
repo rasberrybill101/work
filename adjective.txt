@@ -1,0 +1,13 @@
+Given a comma-separated text file whose file is dependent on the function arg "base_filename" as described below.
+The input file comprises of lines, each of which has the following structure:
+conversation_filename,"1","2","3","4","5","6",...,"42" => this is the header line
+conv_1,s1,s2,s3,s4,......,s42 => these are all the other lines
+where the value of s1 through s42 (or to the final column) in all other lines can have one of the following 5 values:
+"TP", "FP", "TN", "FN", or "--"
+
+Write the function "adjective(base_filename: s ="base_filename", k=5)" that will:
+Open an input file named base_filename + "_predicted_raw_metrics.txt" which contains the rows described as above
+Write each row to an output file named base_filename + "_predicted_final_metrics.txt" as follows:
+Write the header unchanged
+Replace the first k columns after conv_id (ie. s1 through sk) with "TN"
+copy the other columns unchanged to the output file
