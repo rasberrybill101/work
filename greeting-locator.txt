@@ -67,13 +67,20 @@ def getFirstN(conversation: str, n: int) -> str:
 
 def getPhrases():
     greeting_phrases = [
-        "(how|what) \w+ I (\w+\s){0,5}you(\s+\w+)?(today| tonight)?",
+        "(how|what) \w+ I (\w+\s){0,5}(you)?( today| tonight)?",
         "I will (\w+\s+) assist you( today)?",
-        "how (could|may|can) I (\w+\s){0,5}today('s)?( call)?",
-        "the pleasure of speaking with today",
+        "how (could|may|can) I (\w+\s+){0,5}today('s)?( call)?",
+        "how (can|may|could) help you( today|tonight)?",
+        "(a|the)? pleasure( of)? speaking with( you)?( today)?",
         "calling in here today",
-        "waiting to speak (\w+\s){0,5}today",
-        "(could|can|may) I have your name"
+        "waiting to speak (\w+\s+){0,5}today",
+        "(could|can|may) I have your (first and last )?name",
+        "(can you|I have )?(please )?(repeat )your first and last name",
+        "thank you (\w+\s+)for( providing )? that information",
+        "bear with( me| you)? for a few( moments| seconds)?",
+        "what (\w+\s+){0,8}calling about( today)?",
+        "this is (he|she)",
+        "how are you doing today"
     ]
     return greeting_phrases
 
@@ -95,7 +102,8 @@ def find_greeting(conversation: str, conv_id: str, greeting_phrases: List[str], 
             break  # Break the outer loop if a match is found
     return greeting_text, missing_match
 
-def one_shot(text):
+def one_shot(conversation):
+    sentences = extract_sentences(conversation)
     greeting_phrases = getPhrases()
     greeting_text = ""
     missing_match = None
