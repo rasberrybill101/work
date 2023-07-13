@@ -60,9 +60,9 @@ def extract_sentences(text):
     sentences = sentence_re.split(text)
     return sentences
 
-def find_greeting(conversation: str, greeting_phrases: List[str], next_k: int = 1) -> str:
+def find_greeting(conversation: str, greeting_phrases: List[str], next_k: int = 2) -> str:
     # Replace the ellipsis in greeting phrases with regex
-    greeting_phrases = [re.sub(r'\.\.\.', r'(\w+\s){0,4}', gp) for gp in greeting_phrases]
+    greeting_phrases = [re.sub(r'\.\.\.', r'(\\w+\\s){0,4}', gp) for gp in greeting_phrases]
     
     # Normalize the conversation to help with matching
     conversation_norm = re.sub(r'[^\w\s]', '', conversation.lower())
@@ -101,7 +101,7 @@ def save_greetings(inputFile: str = "train_data_v3_metadata.tsv", outputFile: st
         for row in tsv_reader:
             greeting_text = find_greeting(row['plain_whisper'], greeting_phrases)
             f_out.write(f"{row['conv_id']}\t{greeting_text}\n")  # write the row
-			
+
 #%%
 dir = '/chunk-complaint/category/'
 inputFilename = dir + 'train_data_v3_metadata.tsv'
