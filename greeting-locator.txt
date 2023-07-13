@@ -72,7 +72,7 @@ def getPhrases():
         "how (could|may|can) I (\w+\s+){0,5}today('s)?( call)?",
         "how (can|may|could) help you( today|tonight)?",
         "what (\w+\s+){0,8}calling about( today)?",
-        "(a|the)? pleasure( of)? speaking with( you)?( today)?",
+        "(a |the )?pleasure of speaking( with)?( you)?( today)?",
         "calling in here today",
         "waiting to speak (\w+\s+){0,5}today",
         "thank you (\w+\s+)for( providing )? that information",
