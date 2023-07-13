@@ -46,6 +46,8 @@ Write function "save_greetings(inputFile: str = "train_data_v3_metadata.tsv", ou
 conv_id
 greeting_text
 
+when saving the greetings and mismatches, can you please add a 3rd column labeled "category" whose value is the same as "reason_level_1" of the inputFilename. Make any code modifications to this final working implementation:
+
 #%%
 #====================================================================================
 # Locate greeting sentences
@@ -130,15 +132,17 @@ def save_greetings(inputFile: str, outputFile: str, missingMatchesFilename: str)
         print('total_lines: ' + str(total_lines))
         f_in.seek(0)  # reset the file pointer to the beginning
         tsv_reader = csv.DictReader(f_in, delimiter='\t')
-        f_out.write("conv_id\tgreeting_text\n")  # write the header
+        f_out.write("conv_id\tgreeting_text\tcategory\n")  # write the header
 
         missing_matches = []
         for line_num, row in enumerate(tsv_reader, 1):
             greeting_text, missing_match = find_greeting(row['plain_whisper'], row['conv_id'], greeting_phrases, 0, 6)
+            category = row['reason_level_1']
             if greeting_text:  # only write to file if greeting_text is not empty
-                f_out.write(f"{row['conv_id']}\t{greeting_text}\n")  # write the row
+                f_out.write(f"{row['conv_id']}\t{greeting_text}\t{category}\n")  # write the row
 
             if missing_match is not None:
+                missing_match = missing_match.strip() + f'\t{category}\n'
                 missing_matches.append(missing_match)
 
             print(f'Processed {line_num} / {total_lines} lines.')
