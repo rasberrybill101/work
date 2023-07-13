@@ -101,10 +101,13 @@ def save_greetings(inputFile: str, outputFile: str, missingMatchesFilename: str)
 
     with open(inputFile, 'r', newline='', encoding='utf-8') as f_in, open(outputFile, 'w', newline='', encoding='utf-8') as f_out:
         total_lines = sum(1 for _ in f_in)  # count total lines
+        f_in.seek(0)  # reset file pointer to the beginning
+        print('total_lines: ' + str(total_lines)
         tsv_reader = csv.DictReader(f_in, delimiter='\t')
         f_out.write("conv_id\tgreeting_text\n")  # write the header
 
         for line_num, row in enumerate(tsv_reader, 1):
+            print('processing..........')
             greeting_text = find_greeting(row['plain_whisper'], row['conv_id'], greeting_phrases, 0, missingMatchesFilename, 6)
             f_out.write(f"{row['conv_id']}\t{greeting_text}\n")  # write the row
 
