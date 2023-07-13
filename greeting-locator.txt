@@ -72,15 +72,17 @@ def getPhrases():
         "how (could|may|can) I (\w+\s+){0,5}today('s)?( call)?",
         "how (can|may|could) help you( today|tonight)?",
         "what (\w+\s+){0,8}calling about( today)?",
-        "(a |the )?pleasure of speaking( with)?( you)?( today)?",
+        "(a |the )?pleasure of (speaking|assisting|,making)( with)?( you)?( today)?",
         "calling in here today",
         "waiting to speak (\w+\s+){0,5}today",
         "thank you (\w+\s+)for( providing )? that information",
         "how are you doing today",
         "bear with( me| you)? for a few( moments| seconds)?",
         "this is (he|she)",
-        "(could|can|may) I have your (first and last )?name",
-        "(can you|I have )?(please )?(repeat )your first and last name",
+        "(could|can|may) I (have|get) your (first and last |full |last )?name",
+        "(can you|I have )?(please )?(repeat )your (first and last |full |last )name",
+        "(go ahead and )?get your (first and last |full |last )?name",
+        "and the name of your business"
     ]
     return greeting_phrases
 
