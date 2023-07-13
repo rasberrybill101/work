@@ -81,11 +81,10 @@ def find_greeting(conversation: str, conv_id: str, greeting_phrases: List[str], 
     sentences = extract_sentences(conversation)
 
     greeting_text = ""
-    missing_match = None
-    # Only consider the first 25 sentences
     for i, sentence in enumerate(sentences[:25]):
         # Normalize the sentence (remove punctuation and convert to lowercase)
         normalized_sentence = re.sub(r'[^\w\s]', '', sentence.lower())
+        missing_match = None  # Reset missing_match at the beginning of each loop
         for gp in greeting_phrases:
             if re.search(gp.lower(), normalized_sentence):
                 greeting_text = " ".join(sentences[:i + next_k + 1])
@@ -93,7 +92,7 @@ def find_greeting(conversation: str, conv_id: str, greeting_phrases: List[str], 
             else:
                 missing_match = conv_id + '\t' + getFirstN(conversation, first_n) + '\n'
         if greeting_text:
-            break
+            break  # Break the outer loop if a match is found
     return greeting_text, missing_match
 
 def one_shot(text):
@@ -110,7 +109,7 @@ def one_shot(text):
                 print('FOUND MATCH')
                 greeting_text = " ".join(sentences[:i + 1])
                 print(greeting_text)
-                
+
 def save_greetings(inputFile: str, outputFile: str, missingMatchesFilename: str):
     greeting_phrases = getPhrases()
 
