@@ -105,7 +105,7 @@ def save_greetings(inputFile: str, outputFile: str, missingMatchesFilename: str)
         f_out.write("conv_id\tgreeting_text\n")  # write the header
 
         for line_num, row in enumerate(tsv_reader, 1):
-            greeting_text = find_greeting(conversation=row['plain_whisper'], conv_id=row['conv_id'], greeting_phrases, next_k=0, missingMatchesFilename, first_n=6)
+            greeting_text = find_greeting(row['plain_whisper'], row['conv_id'], greeting_phrases, 0, missingMatchesFilename, 6)
             f_out.write(f"{row['conv_id']}\t{greeting_text}\n")  # write the row
 
             print(f'Processed {line_num} out of {total_lines} lines.')
