@@ -71,16 +71,16 @@ def getPhrases():
         "I will (\w+\s+) assist you( today)?",
         "how (could|may|can) I (\w+\s+){0,5}today('s)?( call)?",
         "how (can|may|could) help you( today|tonight)?",
+        "what (\w+\s+){0,8}calling about( today)?",
         "(a|the)? pleasure( of)? speaking with( you)?( today)?",
         "calling in here today",
         "waiting to speak (\w+\s+){0,5}today",
+        "thank you (\w+\s+)for( providing )? that information",
+        "how are you doing today",
+        "bear with( me| you)? for a few( moments| seconds)?",
+        "this is (he|she)",
         "(could|can|may) I have your (first and last )?name",
         "(can you|I have )?(please )?(repeat )your first and last name",
-        "thank you (\w+\s+)for( providing )? that information",
-        "bear with( me| you)? for a few( moments| seconds)?",
-        "what (\w+\s+){0,8}calling about( today)?",
-        "this is (he|she)",
-        "how are you doing today"
     ]
     return greeting_phrases
 
@@ -91,22 +91,24 @@ def find_greeting(conversation: str, conv_id: str, greeting_phrases: List[str], 
     for i, sentence in enumerate(sentences[:25]):
         # Normalize the sentence (remove punctuation and convert to lowercase)
         normalized_sentence = re.sub(r'[^\w\s]', '', sentence.lower())
-        missing_match = None  # Reset missing_match at the beginning of each loop
+        
+        missing_match = conv_id + '\t' + getFirstN(conversation, first_n) + '\n'  # Set missing_match at the start of each loop
+
         for gp in greeting_phrases:
             if re.search(gp.lower(), normalized_sentence):
                 greeting_text = " ".join(sentences[:i + next_k + 1])
+                missing_match = None  # Reset missing_match when a match is found
                 break
-            else:
-                missing_match = conv_id + '\t' + getFirstN(conversation, first_n) + '\n'
+
         if greeting_text:
             break  # Break the outer loop if a match is found
+
     return greeting_text, missing_match
 
 def one_shot(conversation):
     sentences = extract_sentences(conversation)
     greeting_phrases = getPhrases()
     greeting_text = ""
-    missing_match = None
     # Only consider the first 25 sentences
     for i, sentence in enumerate(sentences[:25]):
         # Normalize the sentence (remove punctuation and convert to lowercase)
