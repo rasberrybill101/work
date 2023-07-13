@@ -83,7 +83,7 @@ def find_greeting(conversation: str, conv_id: str, greeting_phrases: List[str], 
             break
     return greeting_text
 
-def save_greetings(inputFile: str = "train_data_v3_metadata.tsv", outputFile: str = "conv_greetings.txt", missingMatchesFilename: str):
+def save_greetings(inputFile: str, outputFile: str, missingMatchesFilename: str):
     greeting_phrases = [
         "how may I help you today",
         "how can I help you today",
@@ -100,12 +100,15 @@ def save_greetings(inputFile: str = "train_data_v3_metadata.tsv", outputFile: st
     ]
 
     with open(inputFile, 'r', newline='', encoding='utf-8') as f_in, open(outputFile, 'w', newline='', encoding='utf-8') as f_out:
+        total_lines = sum(1 for _ in f_in)  # count total lines
         tsv_reader = csv.DictReader(f_in, delimiter='\t')
         f_out.write("conv_id\tgreeting_text\n")  # write the header
 
-        for row in tsv_reader:
-            greeting_text = find_greeting(conversation=row['plain_whisper'], conv_id=row['conv_id'], greeting_phrases, next_k=0, missingMatchFilename, first_n=6)
+        for line_num, row in enumerate(tsv_reader, 1):
+            greeting_text = find_greeting(conversation=row['plain_whisper'], conv_id=row['conv_id'], greeting_phrases, next_k=0, missingMatchesFilename, first_n=6)
             f_out.write(f"{row['conv_id']}\t{greeting_text}\n")  # write the row
+
+            print(f'Processed {line_num} out of {total_lines} lines.')
 
 #%%
 dir = '/chunk-complaint/category/'
