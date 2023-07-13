@@ -11,7 +11,7 @@ Write a function "find_greeting(conversation: str, greeting_phrases: List[str])"
 
 "getGreeting()" should look in "conversation" for the first occurrence of any of the phrases in the list of greeting_phrases (which will be specified below). Once the phrase is found, the function should return all the text from the beginning of "conversation" to the the of the next k (next_k) sentences that immediately follows the sentence that contains the phrase.
 
-Here is the list of greeting_phrases:
+Here is the list of greeting_phrases, each of which is a regex:
     greeting_phrases = [
         "how can I help",
         "how may I help you today",
@@ -32,13 +32,6 @@ Here is the list of greeting_phrases:
         "can I have your name",
         "may I have your name"
     ]
-
-The ellipsis ... means up to 4 words. For instance:
-"how can I ... you today" can match any of the following:
-"how can I be of service to you today"
-"how can I provide service to you today"
-"how can I help you today"
-etc.
 
 We will be looking for the last occurrence of the introductory sentence, and then fetch the next k sentences (where k is an argument to the extraction function).
 
@@ -94,7 +87,6 @@ def find_greeting(conversation: str, conv_id: str, greeting_phrases: List[str], 
         # Normalize the sentence (remove punctuation and convert to lowercase)
         normalized_sentence = re.sub(r'[^\w\s]', '', sentence.lower())
         for gp in greeting_phrases:
-            # Normalize the greeting phrase (remove punctuation and convert to lowercase)
             if re.search(gp.lower(), normalized_sentence):
                 greeting_text = " ".join(sentences[:i + next_k + 1])
                 break
@@ -115,7 +107,9 @@ def one_shot(text):
         for gp in greeting_phrases:
             # Normalize the greeting phrase (remove punctuation and convert to lowercase)
             if re.search(gp.lower(), normalized_sentence):
+                print('FOUND MATCH')
                 greeting_text = " ".join(sentences[:i + 1])
+                print(greeting_text)
                 
 def save_greetings(inputFile: str, outputFile: str, missingMatchesFilename: str):
     greeting_phrases = getPhrases()
