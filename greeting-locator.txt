@@ -73,6 +73,8 @@ def find_greeting(conversation: str, greeting_phrases: List[str], next_k: int = 
         for gp in greeting_phrases:
             if re.search(gp, sentence):
                 greeting_text = " ".join(sentences[:i + next_k + 1])
+                print(f'Matched greeting phrase: "{gp}"')  # Debug line
+                print(f'Greeting text: "{greeting_text}"')  # Debug line
                 break
         if greeting_text:
             break
