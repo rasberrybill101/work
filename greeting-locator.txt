@@ -66,19 +66,20 @@ def getFirstN(conversation: str, n: int) -> str:
 
 def find_greeting(conversation: str, conv_id: str, greeting_phrases: List[str], next_k: int = 0, first_n: int = 6) -> (str, str):
     # Replace the ellipsis in greeting phrases with regex
-    greeting_phrases = [re.sub(r'\.\.\.', r'(\\w+\\s){0,3}', gp) for gp in greeting_phrases]
+    greeting_phrases = [re.sub(r'\.\.\.', r'(\\w+\\s){0,4}', gp) for gp in greeting_phrases]
     
     sentences = extract_sentences(conversation)
 
     greeting_text = ""
     missing_match = None
-    for i, sentence in enumerate(sentences):
+    # Only consider the first 25 sentences
+    for i, sentence in enumerate(sentences[:25]):
         # Normalize the sentence (remove punctuation and convert to lowercase)
         normalized_sentence = re.sub(r'[^\w\s]', '', sentence.lower())
         for gp in greeting_phrases:
             # Normalize the greeting phrase (remove punctuation and convert to lowercase)
             normalized_gp = re.sub(r'[^\w\s]', '', gp.lower())
-            if normalized_gp in normalized_sentence:
+            if re.search(normalized_gp, normalized_sentence):
                 greeting_text = " ".join(sentences[:i + next_k + 1])
                 break
             else:
@@ -89,6 +90,7 @@ def find_greeting(conversation: str, conv_id: str, greeting_phrases: List[str], 
 
 def save_greetings(inputFile: str, outputFile: str, missingMatchesFilename: str):
     greeting_phrases = [
+        "how can I help",
         "how may I help you today",
         "how can I help you today",
         "what can I do for you",
@@ -100,7 +102,10 @@ def save_greetings(inputFile: str, outputFile: str, missingMatchesFilename: str)
         "how can I provide you ... today",
         "how may I help you in today's call",
         "how may I ... you today",
-        "how can I ... you today"
+        "how can I ... you today",
+        "the pleasure of speaking with today",
+        "can I have your name",
+        "may I have your name"
     ]
 
     with open(inputFile, 'r', newline='', encoding='utf-8') as f_in, open(outputFile, 'w', newline='', encoding='utf-8') as f_out:
@@ -112,17 +117,16 @@ def save_greetings(inputFile: str, outputFile: str, missingMatchesFilename: str)
 
         missing_matches = []
         for line_num, row in enumerate(tsv_reader, 1):
-            print('processing..........')
             greeting_text, missing_match = find_greeting(row['plain_whisper'], row['conv_id'], greeting_phrases, 0, 6)
             f_out.write(f"{row['conv_id']}\t{greeting_text}\n")  # write the row
 
             if missing_match is not None:
                 missing_matches.append(missing_match)
 
-            print(f'Processed {line_num} out of {total_lines} lines.')
+            print(f'Processed {line_num} / {total_lines} lines.')
 
     # Write all missing matches to the file at once
-    with open(missingMatchesFilename, 'w', encoder='utf-8') as file:
+    with open(missingMatchesFilename, 'w', encoding='utf-8') as file:
         file.writelines(missing_matches)
 
 #%%
