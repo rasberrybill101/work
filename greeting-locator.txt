@@ -7,7 +7,7 @@ reason_level_1
 reason_level_2
 plain_whisper
 
-Write a function "getGreeting(conversation: str, greeting_phrases: List[str])" that will return the text from the beginning of the string "conversation" until the 2 sentences (configurable as next_k) after a phrase in the specified list of greeting phrases
+Write a function "find_greeting(conversation: str, greeting_phrases: List[str])" that will return the text from the beginning of the string "conversation" until the 2 sentences (configurable as next_k) after a phrase in the specified list of greeting phrases
 
 "getGreeting()" should look in "conversation" for the first occurrence of any of the phrases in the list of greeting_phrases (which will be specified below). Once the phrase is found, the function should return all the text from the beginning of "conversation" to the the of the next k (next_k) sentences that immediately follows the sentence that contains the phrase.
 
@@ -40,3 +40,70 @@ def extract_sentences(text):
     return sentences
 	
 when searching for a sentence in "conversation" that matches the phrase, use case-insensitive comparison and discard punctuations such as commas and periods in order to improve the chances of a match.
+
+Write function "save_greetings(inputFile: str = "train_data_v3_metadata.tsv", outputFile: str)", by applying the function getGreeting defined above to the text from the "plain_whisper" column of each line from the file train_data_v3_metadata.tsv and write the results to another file "conv_greetings.txt" using the tab separated columns:
+conv_id
+greeting_text
+
+#%%
+#====================================================================================
+# Locate greeting sentences
+#====================================================================================
+import re
+import csv
+from typing import List
+
+# Precompile the regular expression for sentence splitting
+sentence_re = re.compile(r'(?<!\w\.\w.)(?<![A-Z][a-z]\.)(?<=\.(?!\d)|\?|!)\s')
+
+def extract_sentences(text):
+    sentences = sentence_re.split(text)
+    return sentences
+
+def find_greeting(conversation: str, greeting_phrases: List[str], next_k: int = 1) -> str:
+    # Replace the ellipsis in greeting phrases with regex
+    greeting_phrases = [re.sub(r'\.\.\.', r'(\w+\s){0,4}', gp) for gp in greeting_phrases]
+    
+    # Normalize the conversation to help with matching
+    conversation_norm = re.sub(r'[^\w\s]', '', conversation.lower())
+    sentences = extract_sentences(conversation_norm)
+
+    greeting_text = ""
+    for i, sentence in enumerate(sentences):
+        for gp in greeting_phrases:
+            if re.search(gp, sentence):
+                greeting_text = " ".join(sentences[:i + next_k + 1])
+                break
+        if greeting_text:
+            break
+    return greeting_text
+
+def save_greetings(inputFile: str = "train_data_v3_metadata.tsv", outputFile: str = "conv_greetings.txt"):
+    greeting_phrases = [
+        "how may I help you today",
+        "how can I help you today",
+        "what can I do for you",
+        "what can I do for you today",
+        "what may I do for you today",
+        "how can I assist you today",
+        "how can I be of assistance ... today",
+        "I will be able to assist ... today",
+        "how can I provide you ... today",
+        "how may I help you in today's call",
+        "how may I ... you today",
+        "how can I ... you today"
+    ]
+
+    with open(inputFile, 'r', newline='', encoding='utf-8') as f_in, open(outputFile, 'w', newline='', encoding='utf-8') as f_out:
+        tsv_reader = csv.DictReader(f_in, delimiter='\t')
+        f_out.write("conv_id\tgreeting_text\n")  # write the header
+
+        for row in tsv_reader:
+            greeting_text = find_greeting(row['plain_whisper'], greeting_phrases)
+            f_out.write(f"{row['conv_id']}\t{greeting_text}\n")  # write the row
+			
+#%%
+dir = '/chunk-complaint/category/'
+inputFilename = dir + 'train_data_v3_metadata.tsv'
+outputFilename = dir + 'conv_greetings.txt'
+save_greetings(inputFilename, outputFilename)

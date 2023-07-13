@@ -105,4 +105,4 @@ The directory structure of the web app will be as follows
     /training
 	   train_data_v3_metadata.tsv
 	   
-locate the utility functions as appropriate. These functions will be used during calls that will originate from POST or GET requests in the UI.
+place the utility python functions in an appropriate location. These functions will be used during calls that will originate from POST or GET requests in the UI.
