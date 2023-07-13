@@ -78,7 +78,7 @@ def find_greeting(conversation: str, conv_id: str, greeting_phrases: List[str], 
                 break
             else:
                 with open(missingMatchFilename, 'a') as file:  # 'a' mode appends to the file
-                    file.write(conv_id + ' : ' + getFirstN(conversation, first_n) + '\n')
+                    file.write(conv_id + '\t' + getFirstN(conversation, first_n) + '\n')
         if greeting_text:
             break
     return greeting_text
