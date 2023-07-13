@@ -456,14 +456,14 @@ def mostFrequentNGrams(df, column='reason_level_1', ngram=1, topK=1):
 
 XXXXXXXXXXXXXXXXXXXXXXXXXXXX highlight sentences in a text passage XXXXXXXXXXXXXXXX
 I want to do some visualization around the conversations that have been analyzed so far.
-The visualization code will be in javascript. The analysis and results will be on the server side. Server side will be based on Python Fast. The server should be accessible to all IP addresses and should run on port 9595.
+The visualization code will be in javascript. The analysis and results will be on the server side. Server side will be based on Python Fast. The server should be accessible to all IP addresses and should run on port 9111.
 Here is the specification of the UI:
 There will be 4 main areas on the screen
 top - horizontal container across the top of the screen (width == screen width)
 main - remaining area below the top
-main consists of 2 main areas (left and right), separated by a vertical line (about 3 pixels thick and dark green color) that starts from just below end of top, and runs to bottom of main.
-right (70% of the screen width) - split into two areas by a horizontal line.
-right_above - upper part of right will be 80% of the height of right. Will contain text that will come from the server.
+main consists of 2 areas (left and right), separated by a vertical line (about 3 pixels thick and dark green color) that starts from just below end of top, and runs to bottom of main.
+"right" (70% of the screen width) - split into two areas by a horizontal line.
+right_above - upper part of right will be 80% of the height of "right". "right_above" will contain text that will come from the server.
 right_below - will contain additional information from server
 left - will be 30% of the screen width. Will contain a vertical stacked list of "flat" buttons. When a button on the list is clicked, it will trigger a call to the server (for instance through a "fetch"). The results of the fetch will be in json format. Each element of the json (ui.top, ui.right_above, ui.right_below) will be displayed in top, right-above, or left-above depending on a "mappingDictionary" element which will be returned as part of the response from the server. mappingDictionary will look like this:
 {
@@ -493,7 +493,7 @@ A scroll bar will be needed on the "left" since the list of items to create the 
 
 Additionally: the area "right_above" may sometimes be used to display an image
 Note that an image may be used in "right_above" if the string has .png or .jpg extension. The server will have added the image to its images folder. For example:
-http://server-host:9595/images/image1.png
+http://server-host:9111/images/image1.png
 
 The buttons on the "left" area should also be triggered by arrow keys entering, so that the keyboard can be used (in addition to mouse clicks) for triggering the action of the buttons. Please include this event handling to work the same as mouse clicks.
 
@@ -505,7 +505,7 @@ The buttons on the "left" area should also be triggered by arrow keys entering, 
   /js
     main.js
   /images
-    // Your images here
+    // images here
 
 ---- html
 <!DOCTYPE html>
@@ -624,7 +624,7 @@ body {
 ---- js
 window.onload = async function() {
   // Fetch initial data for dropdown options and button labels
-  let response = await fetch("http://your-server-address:9595/initial-data");
+  let response = await fetch("http://your-server-address:9111/initial-data");
   let data = await response.json();
 
   // Use data to populate left section with buttons
@@ -688,7 +688,7 @@ async function handleDropdownSelection(e) {
   let dropdownSelection = e.target.textContent;
 
   // Fetch data from server based on dropdown selection
-  let response = await fetch(`http://your-server-address:9595/data?dropdown=${dropdownSelection}`);
+  let response = await fetch(`http://your-server-address:9111/data?dropdown=${dropdownSelection}`);
   let data = await response.json();
 
   // Use data to populate areas
@@ -823,4 +823,4 @@ async def handle_button_click(button_label: str):
     }
 
 if __name__ == "__main__":
-    uvicorn.run(app, host="0.0.0.0", port=9595)
+    uvicorn.run(app, host="0.0.0.0", port=9111)

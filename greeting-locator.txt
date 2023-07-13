@@ -1,0 +1,42 @@
+========================== get greeting sentences ===============
+Given a tab-separated file "train_data_v3_metadata.tsv" with columns: 
+conv_id
+label
+call_duration
+reason_level_1
+reason_level_2
+plain_whisper
+
+Write a function "getGreeting(conversation: str, greeting_phrases: List[str])" that will return the text from the beginning of the string "conversation" until the 2 sentences (configurable as next_k) after a phrase in the specified list of greeting phrases
+
+"getGreeting()" should look in "conversation" for the first occurrence of any of the phrases in the list of greeting_phrases (which will be specified below). Once the phrase is found, the function should return all the text from the beginning of "conversation" to the the of the next k (next_k) sentences that immediately follows the sentence that contains the phrase.
+
+Here is the list of greeting_phrases:
+how may I help you today
+how can I help you today
+what can I do for you
+what can I do for you today
+what may I do for you today
+how can I assist you today
+how can I be of assistance ... today
+I will be able to assist ... today
+how can I provide you ... today
+how may I help you in today's call
+how may I ... you today
+how can I ... you today
+
+The ellipsis ... means up to 4 words. For instance:
+"how can I ... you today" can match any of the following:
+"how can I be of service to you today"
+"how can I provide service to you today"
+"how can I help you today"
+etc.
+
+We will be looking for the last occurrence of the introductory sentence, and then fetch the next k sentences (where k is an argument to the extraction function).
+
+A sentence is defined according to the following function:
+def extract_sentences(text):
+	sentences = re.split(r'(?<!\w\.\w.)(?<![A-Z][a-z]\.)(?<=\.(?!\d)|\?|!)\s', text)
+    return sentences
+	
+when searching for a sentence in "conversation" that matches the phrase, use case-insensitive comparison and discard punctuations such as commas and periods in order to improve the chances of a match.
