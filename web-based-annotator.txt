@@ -27,6 +27,7 @@ def extract_sentences(text):
 9) "get_all_token_count" returns the number of words in plain_whisper column of all conv_ids
 10) "get_distinct_token_count" returns the number of unique words in plain_whisper column of all conv_ids
 
+front-end
 The directory structure of the web app will be as follows
 
   /html
