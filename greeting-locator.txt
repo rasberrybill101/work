@@ -45,8 +45,8 @@ when searching for a sentence in "conversation" that matches the phrase, use cas
 Write function "save_greetings(inputFile: str = "train_data_v3_metadata.tsv", outputFile: str)", by applying the function getGreeting defined above to the text from the "plain_whisper" column of each line from the file train_data_v3_metadata.tsv and write the results to another file "conv_greetings.txt" using the tab separated columns:
 conv_id
 greeting_text
+category .... is the reason_level_1 column from the input file
 
-when saving the greetings and mismatches, can you please add a 3rd column labeled "category" whose value is the same as "reason_level_1" of the inputFilename. Make any code modifications to this final working implementation:
 
 #%%
 #====================================================================================
